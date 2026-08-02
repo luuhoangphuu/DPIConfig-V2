@@ -1,14 +1,26 @@
 <%- include('../partials/header', { title: 'Đăng nhập' }) %>
-<div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
   <div class="col-md-4 animate__animated animate__fadeInDown">
-    <div class="card shadow-lg border-0 rounded-4">
+    <div class="card shadow-lg border-0 rounded-4" style="background: rgba(255,255,255,0.95);">
       <div class="card-body p-5">
-        <h3 class="text-center mb-4 fw-bold text-primary">🔐 DPIConfig Admin</h3>
-        <% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>
+        <h3 class="text-center mb-4 fw-bold" style="color: var(--primary);">🔐 DPIConfig Admin</h3>
+        <% if (error) { %><div class="alert alert-danger animate__animated animate__shakeX"><%= error %></div><% } %>
         <form method="POST" action="/admin/login">
-          <div class="mb-3"><label class="form-label fw-semibold">Email</label><div class="input-group"><span class="input-group-text"><i class="fas fa-envelope"></i></span><input type="email" name="email" class="form-control" required autofocus></div></div>
-          <div class="mb-4"><label class="form-label fw-semibold">Mật khẩu</label><div class="input-group"><span class="input-group-text"><i class="fas fa-lock"></i></span><input type="password" name="password" class="form-control" required></div></div>
-          <button type="submit" class="btn btn-primary w-100 btn-lg rounded-3">Đăng nhập</button>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              <input type="email" name="email" class="form-control" required autofocus>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Mật khẩu</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input type="password" name="password" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-lg w-100 rounded-3 text-white" style="background: var(--primary);">Đăng nhập</button>
         </form>
       </div>
     </div>

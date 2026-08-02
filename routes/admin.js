@@ -9,7 +9,6 @@ const { Key, Log } = require('../models');
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 
-// Chống brute-force login: 5 lần sai trong 15 phút sẽ bị chặn 15 phút
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
   freeRetries: 5,
@@ -52,7 +51,6 @@ router.get('/dashboard', async (req, res) => {
   const activeKeys = await Key.count({ where: { is_active: true } });
   const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
   const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-  // Số thiết bị đã kích hoạt (có HWID không null)
   const devicesActivated = await Key.count({ where: { hwid: { [Op.ne]: null } } });
   const recentLogs = await Log.findAll({ limit: 8, order: [['createdAt', 'DESC']], include: Key });
   res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
@@ -70,7 +68,7 @@ router.get('/keys', async (req, res) => {
 });
 
 router.post('/keys/create', async (req, res) => {
-  const { tier, duration, prefix } = req.body;
+  const { tier, duration, prefix, hwid } = req.body; // Nhận thêm hwid từ form
   let expires_at;
   if (duration === 'forever') expires_at = new Date('2099-12-31');
   else {
@@ -79,8 +77,10 @@ router.post('/keys/create', async (req, res) => {
   }
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   const key = `${prefix || 'DPIC'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-  await Key.create({ key, tier, expires_at, created_by: req.session.admin.email });
-  await Log.create({ action: 'key_created', details: `Admin tạo key ${key}`, ip_address: req.ip });
+  
+  // Nếu admin nhập HWID, gán trực tiếp vào key
+  await Key.create({ key, tier, expires_at, hwid: hwid || null, created_by: req.session.admin.email });
+  await Log.create({ action: 'key_created', details: `Admin tạo key ${key}` + (hwid ? ` với HWID ${hwid}` : ''), ip_address: req.ip });
   res.redirect('/admin/keys?created=1');
 });
 

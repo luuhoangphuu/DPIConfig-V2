@@ -1,12 +1,27 @@
 <nav class="sidebar d-flex flex-column py-4 animate__animated animate__slideInLeft">
   <div class="text-center mb-4">
-    <i class="fas fa-shield-haltered text-white fa-2x"></i>
-    <h5 class="text-white mt-2 fw-bold">DPIConfig</h5>
+    <i class="fas fa-shield-haltered text-white fa-3x mb-2"></i>
+    <h5 class="text-white fw-bold">DPIConfig</h5>
     <small class="text-white-50">Pro Manager</small>
   </div>
   <ul class="nav flex-column mt-3">
-    <li class="nav-item"><a href="/admin/dashboard" class="nav-link <%= currentPage=='dashboard' ? 'active' : '' %>"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
-    <li class="nav-item"><a href="/admin/keys" class="nav-link <%= currentPage=='keys' ? 'active' : '' %>"><i class="fas fa-key me-2"></i> Quản lý Key</a></li>
+    <li class="nav-item">
+      <a href="/admin/dashboard" class="nav-link <%= currentPage == 'dashboard' ? 'active' : '' %>">
+        <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/admin/keys" class="nav-link <%= currentPage == 'keys' ? 'active' : '' %>">
+        <i class="fas fa-key"></i> <span>Quản lý Key</span>
+      </a>
+    </li>
+    <li class="nav-item mt-auto">
+      <a href="/admin/logout" class="nav-link text-danger">
+        <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+      </a>
+    </li>
   </ul>
-  <div class="mt-auto text-center text-white-50 small"><i class="fas fa-user-circle me-1"></i> <%= user.email %></div>
+  <div class="mt-auto text-center text-white-50 small">
+    <i class="fas fa-user-circle me-1"></i> <%= user.email %>
+  </div>
 </nav>

@@ -112,7 +112,7 @@
   </div>
 </div>
 
-<!-- Modal Tạo Key -->
+<!-- Modal Tạo Key (có ô nhập HWID) -->
 <div class="modal fade" id="createKeyModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -145,6 +145,11 @@
               <option value="forever">♾️ Vĩnh viễn</option>
             </select>
           </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Gán ngay cho thiết bị (HWID)</label>
+            <input type="text" name="hwid" class="form-control" placeholder="Nhập HWID nếu muốn gán cứng, để trống nếu chưa">
+            <small class="text-muted">Key sẽ tự động khóa vào thiết bị này khi được kích hoạt.</small>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn text-white" style="background: var(--primary);">Tạo Key</button>
@@ -155,7 +160,6 @@
 </div>
 <%- include('../partials/scripts') %>
 <script>
-  // Kích hoạt tooltip cho toàn bộ trang
   var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
   var tooltipList = tooltipTriggerList.map(function (el) {
     return new bootstrap.Tooltip(el, { placement: 'top' });
