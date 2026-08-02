@@ -2,18 +2,75 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
-    <h2 class="fw-bold mb-4"><i class="fas fa-chart-line me-2 text-primary"></i>Tổng quan</h2>
+    <h2 class="fw-bold mb-4 animate__animated animate__fadeInDown"><i class="fas fa-chart-line me-2" style="color: var(--primary);"></i>Tổng quan hệ thống</h2>
+    
     <div class="row g-4 mb-4">
-      <div class="col-xl-3 col-md-6"><div class="card card-stats bg-primary p-3"><div class="d-flex justify-content-between align-items-center"><div><h6>Tổng Key</h6><h2><%= totalKeys %></h2></div><i class="fas fa-key icon-bg"></i></div></div></div>
-      <div class="col-xl-3 col-md-6"><div class="card card-stats bg-success p-3"><div class="d-flex justify-content-between align-items-center"><div><h6>Đang hoạt động</h6><h2><%= activeKeys %></h2></div><i class="fas fa-check-circle icon-bg"></i></div></div></div>
-      <div class="col-xl-3 col-md-6"><div class="card card-stats bg-danger p-3"><div class="d-flex justify-content-between align-items-center"><div><h6>Hết hạn</h6><h2><%= expiredKeys %></h2></div><i class="fas fa-exclamation-triangle icon-bg"></i></div></div></div>
-      <div class="col-xl-3 col-md-6"><div class="card card-stats bg-warning p-3"><div class="d-flex justify-content-between align-items-center"><div><h6>VIP</h6><h2><%= vipKeys %></h2></div><i class="fas fa-crown icon-bg"></i></div></div></div>
+      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp">
+        <div class="card card-stats p-3" style="background: linear-gradient(45deg, #6C5CE7, #A29BFE);">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase fw-bold">Tổng Key</h6>
+              <h2 class="fw-bold mb-0"><%= totalKeys %></h2>
+            </div>
+            <i class="fas fa-key icon-bg"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-1s">
+        <div class="card card-stats p-3" style="background: linear-gradient(45deg, #00B894, #55EFC4);">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase fw-bold">Đang hoạt động</h6>
+              <h2 class="fw-bold mb-0"><%= activeKeys %></h2>
+            </div>
+            <i class="fas fa-check-circle icon-bg"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-2s">
+        <div class="card card-stats p-3" style="background: linear-gradient(45deg, #E17055, #FDCB6E);">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase fw-bold">Hết hạn</h6>
+              <h2 class="fw-bold mb-0"><%= expiredKeys %></h2>
+            </div>
+            <i class="fas fa-exclamation-triangle icon-bg"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-3s">
+        <div class="card card-stats p-3" style="background: linear-gradient(45deg, #FD79A8, #E84393);">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase fw-bold">Thiết bị đã kích hoạt</h6>
+              <h2 class="fw-bold mb-0"><%= devicesActivated %></h2>
+            </div>
+            <i class="fas fa-mobile-alt icon-bg"></i>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white fw-bold fs-5"><i class="fas fa-history me-2 text-primary"></i>Hoạt động gần đây</div>
-      <div class="card-body p-0"><table class="table table-hover mb-0"><thead class="table-light"><tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr></thead><tbody>
-      <% recentLogs.forEach(log => { %><tr><td><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td><td><span class="badge bg-primary"><%= log.action %></span></td><td><%= log.details %></td></tr><% }) %>
-      </tbody></table></div>
+
+    <div class="card border-0 shadow-sm animate__animated animate__fadeInUp animate__delay-4s">
+      <div class="card-header bg-white fw-bold fs-5">
+        <i class="fas fa-history me-2" style="color: var(--primary);"></i>Hoạt động gần đây
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr>
+          </thead>
+          <tbody>
+            <% recentLogs.forEach(log => { %>
+              <tr>
+                <td><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td>
+                <td><span class="badge" style="background: var(--primary);"><%= log.action %></span></td>
+                <td><%= log.details %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

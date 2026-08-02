@@ -3,10 +3,22 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
+const ExpressBrute = require('express-brute');
 const { Key, Log } = require('../models');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+
+// Chống brute-force login: 5 lần sai trong 15 phút sẽ bị chặn 15 phút
+const store = new ExpressBrute.MemoryStore();
+const bruteforce = new ExpressBrute(store, {
+  freeRetries: 5,
+  minWait: 15*60*1000,
+  maxWait: 15*60*1000,
+  failCallback: function (req, res, next, nextValidRequestDate) {
+    res.status(429).send('Quá nhiều lần đăng nhập sai. Hãy thử lại sau 15 phút.');
+  }
+});
 
 function requireAdmin(req, res, next) {
   if (req.session && req.session.admin) return next();
@@ -18,7 +30,7 @@ router.get('/login', (req, res) => {
   res.render('admin/login', { error: null });
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', bruteforce.prevent, async (req, res) => {
   const { email, password } = req.body;
   const valid = email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
   if (valid) {
@@ -40,8 +52,10 @@ router.get('/dashboard', async (req, res) => {
   const activeKeys = await Key.count({ where: { is_active: true } });
   const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
   const vipKeys = await Key.count({ where: { tier: 'VIP' } });
+  // Số thiết bị đã kích hoạt (có HWID không null)
+  const devicesActivated = await Key.count({ where: { hwid: { [Op.ne]: null } } });
   const recentLogs = await Log.findAll({ limit: 8, order: [['createdAt', 'DESC']], include: Key });
-  res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, recentLogs });
+  res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
 });
 
 router.get('/keys', async (req, res) => {

@@ -2,17 +2,162 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'keys' }) %>
   <div class="main-content flex-grow-1">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="fw-bold"><i class="fas fa-key me-2 text-primary"></i>Danh sách Key</h2>
-      <button class="btn btn-primary btn-lg rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#createKeyModal"><i class="fas fa-plus me-2"></i>Tạo Key Mới</button>
+    <div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
+      <h2 class="fw-bold"><i class="fas fa-key me-2" style="color: var(--primary);"></i>Danh sách Key</h2>
+      <button class="btn btn-lg rounded-pill shadow text-white" style="background: var(--primary);" data-bs-toggle="modal" data-bs-target="#createKeyModal">
+        <i class="fas fa-plus me-2"></i>Tạo Key Mới
+      </button>
     </div>
-    <form class="mb-4"><div class="input-group"><span class="input-group-text bg-white border-end-0 rounded-pill-start"><i class="fas fa-search text-muted"></i></span><input type="text" name="search" class="form-control border-start-0 rounded-pill" placeholder="Tìm key, HWID..." value="<%= search %>"><button class="btn btn-primary rounded-pill ms-2" type="submit">Tìm</button></div></form>
-    <div class="card border-0 shadow-sm"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover table-keys mb-0"><thead><tr><th>Key</th><th>HWID</th><th>Tier</th><th>Hạn</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>
-      <% keys.forEach(k => { %><tr class="<%= new Date(k.expires_at) < new Date() ? 'table-danger' : '' %>"><td><code class="bg-light p-2 rounded"><%= k.key %></code></td><td><%= k.hwid || '<span class="text-muted">Chưa gán</span>' %></td><td><span class="badge bg-<%= k.tier==='VIP'?'warning text-dark':'secondary' %>"><%= k.tier %></span></td><td><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td><td><%= k.is_active ? '<span class="text-success fw-bold">✅</span>' : '<span class="text-danger fw-bold">❌</span>' %></td><td><div class="btn-group btn-group-sm"><form method="POST" action="/admin/keys/toggle/<%= k.id %>" class="d-inline"><button class="btn btn-<%= k.is_active?'warning':'success' %> btn-action"><i class="fas fa-power-off"></i></button></form><form method="POST" action="/admin/keys/unbind/<%= k.id %>" class="d-inline"><button class="btn btn-info btn-action"><i class="fas fa-unlink"></i></button></form><button class="btn btn-secondary btn-action" data-bs-toggle="modal" data-bs-target="#extendModal<%= k.id %>"><i class="fas fa-calendar-plus"></i></button><form method="POST" action="/admin/keys/delete/<%= k.id %>" class="d-inline" onsubmit="return confirm('Xoá?')"><button class="btn btn-danger btn-action"><i class="fas fa-trash-alt"></i></button></form></div><div class="modal fade" id="extendModal<%= k.id %>" tabindex="-1"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h5>Gia hạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button type="submit" class="btn btn-primary">OK</button></div></form></div></div></td></tr><% }) %>
-    </tbody></table></div></div></div>
-    <nav class="mt-4"><ul class="pagination justify-content-center"><% for(let i=1; i<=totalPages; i++) { %><li class="page-item <%= i===currentPage?'active':'' %>"><a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a></li><% } %></ul></nav>
+
+    <form class="mb-4 animate__animated animate__fadeInUp">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0 rounded-pill-start"><i class="fas fa-search text-muted"></i></span>
+        <input type="text" name="search" class="form-control search-box border-start-0" placeholder="Tìm key, HWID..." value="<%= search %>">
+        <button class="btn rounded-pill ms-2 text-white" style="background: var(--primary);" type="submit">Tìm</button>
+      </div>
+    </form>
+
+    <div class="card border-0 shadow-sm animate__animated animate__fadeInUp">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-keys mb-0">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th><i class="fas fa-mobile-alt me-1"></i> Thiết bị (HWID)</th>
+                <th>Tier</th>
+                <th>Hạn</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% keys.forEach(k => { %>
+                <tr class="<%= new Date(k.expires_at) < new Date() ? 'table-danger' : '' %>">
+                  <td><code class="bg-light p-2 rounded"><%= k.key %></code></td>
+                  <td>
+                    <% if (k.hwid) { %>
+                      <span class="badge bg-success" data-bs-toggle="tooltip" title="<%= k.hwid %>">
+                        <i class="fas fa-link me-1"></i> Đã gán
+                      </span>
+                      <br><small class="text-muted"><%= k.hwid.substring(0, 12) %>…</small>
+                    <% } else { %>
+                      <span class="badge bg-secondary" data-bs-toggle="tooltip" title="Chưa có thiết bị nào kích hoạt">
+                        <i class="fas fa-unlink me-1"></i> Chưa gán
+                      </span>
+                    <% } %>
+                  </td>
+                  <td><span class="badge-tier badge bg-<%= k.tier === 'VIP' ? 'warning text-dark' : 'secondary' %>"><%= k.tier %></span></td>
+                  <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td>
+                  <td>
+                    <%= k.is_active ? '<span class="text-success fw-bold">✅ Hoạt động</span>' : '<span class="text-danger fw-bold">❌ Khoá</span>' %>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <form method="POST" action="/admin/keys/toggle/<%= k.id %>" class="d-inline">
+                        <button class="btn btn-<%= k.is_active ? 'warning' : 'success' %> btn-action" title="<%= k.is_active ? 'Khoá' : 'Mở' %>">
+                          <i class="fas fa-power-off"></i>
+                        </button>
+                      </form>
+                      <% if (k.hwid) { %>
+                      <form method="POST" action="/admin/keys/unbind/<%= k.id %>" class="d-inline">
+                        <button class="btn btn-info btn-action" title="Gỡ liên kết thiết bị">
+                          <i class="fas fa-unlink"></i>
+                        </button>
+                      </form>
+                      <% } %>
+                      <button class="btn btn-secondary btn-action" data-bs-toggle="modal" data-bs-target="#extendModal<%= k.id %>" title="Gia hạn">
+                        <i class="fas fa-calendar-plus"></i>
+                      </button>
+                      <form method="POST" action="/admin/keys/delete/<%= k.id %>" class="d-inline" onsubmit="return confirm('Xác nhận xoá key?')">
+                        <button class="btn btn-danger btn-action" title="Xoá"><i class="fas fa-trash-alt"></i></button>
+                      </form>
+                    </div>
+                    <!-- Modal gia hạn -->
+                    <div class="modal fade" id="extendModal<%= k.id %>" tabindex="-1">
+                      <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-calendar-alt me-2"></i>Gia hạn Key</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            <label class="fw-bold">Ngày hết hạn mới:</label>
+                            <input type="date" name="new_expiry" class="form-control mt-2" required>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="submit" class="btn text-white" style="background: var(--primary);">Cập nhật</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <nav class="mt-4 animate__animated animate__fadeInUp">
+      <ul class="pagination justify-content-center">
+        <% for(let i=1; i<=totalPages; i++) { %>
+          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
   </div>
 </div>
+
 <!-- Modal Tạo Key -->
-<div class="modal fade" id="createKeyModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5><i class="fas fa-plus-circle me-2"></i>Tạo Key Mới</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form method="POST" action="/admin/keys/create"><div class="modal-body"><div class="mb-3"><label class="form-label fw-bold">Tiền tố</label><input type="text" name="prefix" class="form-control" value="DPIC"></div><div class="mb-3"><label class="form-label fw-bold">Hạng</label><select name="tier" class="form-select"><option value="VIP">🌟 VIP</option><option value="Normal">🔹 Thường</option></select></div><div class="mb-3"><label class="form-label fw-bold">Thời hạn</label><select name="duration" class="form-select"><option value="1">1 ngày</option><option value="7">7 ngày</option><option value="15">15 ngày</option><option value="30">30 ngày</option><option value="90">90 ngày</option><option value="365">1 năm</option><option value="forever">♾️ Vĩnh viễn</option></select></div></div><div class="modal-footer"><button type="submit" class="btn btn-primary">Tạo Key</button></div></form></div></div></div>
+<div class="modal fade" id="createKeyModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Tạo Key Mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/admin/keys/create">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Tiền tố</label>
+            <input type="text" name="prefix" class="form-control" value="DPIC">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Hạng</label>
+            <select name="tier" class="form-select">
+              <option value="VIP">🌟 VIP</option>
+              <option value="Normal">🔹 Thường</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Thời hạn</label>
+            <select name="duration" class="form-select">
+              <option value="1">1 ngày</option>
+              <option value="7">7 ngày</option>
+              <option value="15">15 ngày</option>
+              <option value="30">30 ngày</option>
+              <option value="90">90 ngày</option>
+              <option value="365">1 năm</option>
+              <option value="forever">♾️ Vĩnh viễn</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn text-white" style="background: var(--primary);">Tạo Key</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 <%- include('../partials/scripts') %>
+<script>
+  // Kích hoạt tooltip cho toàn bộ trang
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (el) {
+    return new bootstrap.Tooltip(el, { placement: 'top' });
+  });
+</script>
