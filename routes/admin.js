@@ -76,7 +76,7 @@ router.post('/keys/create', async (req, res) => {
     expires_at = new Date(); expires_at.setDate(expires_at.getDate() + days);
   }
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-  const key = `${prefix || 'DPIC'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+  const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   
   // Nếu admin nhập HWID, gán trực tiếp vào key
   await Key.create({ key, tier, expires_at, hwid: hwid || null, created_by: req.session.admin.email });
