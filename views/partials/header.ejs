@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-bs-theme="dark">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,31 +14,40 @@
     * { font-family: 'Inter', sans-serif; }
     :root {
       --sidebar-width: 260px;
-      --primary: #6C5CE7;
-      --primary-hover: #5A4BD1;
-      --bg-dark: #0C0C1D;
-      --bg-card: rgba(255,255,255,0.03);
-      --border-color: rgba(255,255,255,0.06);
-      --text-primary: #E0E0E0;
-      --text-muted: #888;
-      --success: #2ECC71;
-      --danger: #E74C3C;
-      --warning: #F39C12;
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --bg-main: #F9FAFB;
+      --bg-white: #FFFFFF;
+      --border-color: #E5E7EB;
+      --text-primary: #111827;
+      --text-muted: #6B7280;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
     }
     body {
-      background: var(--bg-dark);
+      background: var(--bg-main);
       color: var(--text-primary);
       overflow-x: hidden;
     }
     #particles-js {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    }
+    .bg-gradient-animated {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
-      background: radial-gradient(ellipse at 50% 0%, #1a1a35 0%, #0C0C1D 70%);
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #f0f9ff 50%, #e0f2fe 75%);
+      background-size: 200% 200%;
+      animation: gradientMove 15s ease infinite;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 0%; }
+      50% { background-position: 100% 100%; }
+      100% { background-position: 0% 0%; }
     }
     .sidebar {
-      background: rgba(12,12,29,0.85); backdrop-filter: blur(15px);
-      border-right: 1px solid var(--border-color);
+      background: var(--bg-white); border-right: 1px solid var(--border-color);
       width: var(--sidebar-width); min-height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000;
-      display: flex; flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
     }
     .sidebar .nav-link {
       color: var(--text-muted); font-weight: 500; padding: 10px 20px; margin: 4px 12px;
@@ -46,44 +55,46 @@
     }
     .sidebar .nav-link i { width: 20px; margin-right: 10px; }
     .sidebar .nav-link:hover, .sidebar .nav-link.active {
-      background: rgba(108,92,231,0.15); color: white;
+      background: #EEF2FF; color: var(--primary);
     }
-    .sidebar .nav-link.active { background: rgba(108,92,231,0.25); }
+    .sidebar .nav-link.active { background: #E0E7FF; font-weight: 600; }
     .main-content { margin-left: var(--sidebar-width); padding: 32px; }
     .stat-card {
-      background: var(--bg-card); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
-      border-radius: 16px; padding: 24px; transition: all 0.3s;
+      background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 16px;
+      padding: 24px; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(108,92,231,0.2); }
-    .stat-icon { font-size: 2rem; opacity: 0.8; }
+    .stat-card:hover { box-shadow: 0 8px 25px rgba(79,70,229,0.1); transform: translateY(-2px); }
+    .stat-icon { font-size: 2rem; }
     .table-custom { border-collapse: separate; border-spacing: 0 6px; width: 100%; }
     .table-custom thead th {
       background: transparent; color: var(--text-muted); font-weight: 600; border: none; padding: 12px 16px;
     }
     .table-custom tbody tr {
-      background: var(--bg-card); backdrop-filter: blur(10px); border-radius: 12px; transition: 0.2s;
+      background: var(--bg-white); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      transition: 0.2s;
     }
-    .table-custom tbody tr:hover { background: rgba(255,255,255,0.05); }
+    .table-custom tbody tr:hover { background: #F9FAFB; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     .table-custom td { padding: 14px 16px; border: none; vertical-align: middle; }
     .toggle-switch { position: relative; display: inline-block; width: 44px; height: 22px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: 0.3s; border-radius: 34px; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #D1D5DB; transition: 0.3s; border-radius: 34px; }
     .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(22px); }
     .countdown.safe { color: var(--success); }
     .countdown.warning { color: var(--warning); }
     .countdown.danger { color: var(--danger); }
-    .modal-content { background: rgba(20,20,40,0.95); backdrop-filter: blur(20px); border: 1px solid var(--border-color); border-radius: 16px; }
-    .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; border-radius: 8px; }
-    .form-control:focus, .form-select:focus { background: rgba(255,255,255,0.1); border-color: var(--primary); box-shadow: 0 0 0 0.2rem rgba(108,92,231,0.25); }
+    .modal-content { border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .form-control, .form-select { border: 1px solid var(--border-color); border-radius: 8px; }
+    .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 0.2rem rgba(79,70,229,0.25); }
     .btn-primary { background: var(--primary); border: none; border-radius: 8px; }
     .btn-primary:hover { background: var(--primary-hover); }
-    .btn-outline { border: 1px solid var(--border-color); color: white; border-radius: 8px; background: transparent; }
-    .btn-outline:hover { background: rgba(255,255,255,0.05); }
+    .btn-outline { border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; background: transparent; }
+    .btn-outline:hover { background: #F3F4F6; }
     .page-link { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; margin: 0 4px; }
     .page-item.active .page-link { background: var(--primary); border-color: var(--primary); color: white; }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
+  <div class="bg-gradient-animated"></div>

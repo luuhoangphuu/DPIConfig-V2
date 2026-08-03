@@ -9,8 +9,8 @@
       </button>
     </div>
     <form class="mb-4"><div class="input-group">
-      <span class="input-group-text bg-transparent border-0 text-muted"><i class="fas fa-search"></i></span>
-      <input type="text" name="search" class="form-control bg-transparent border-0 shadow-none text-white" placeholder="Tìm key, HWID..." value="<%= search %>">
+      <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+      <input type="text" name="search" class="form-control border-0 shadow-none" placeholder="Tìm key, HWID..." value="<%= search %>">
       <button class="btn btn-outline" type="submit">Tìm</button>
     </div></form>
     <div class="table-responsive">
@@ -19,7 +19,7 @@
         <tbody>
           <% keys.forEach(k => { %>
             <tr>
-              <td><code style="background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px;"><%= k.key %></code></td>
+              <td><code style="background:#F3F4F6; padding:4px 8px; border-radius:4px;"><%= k.key %></code></td>
               <td>
                 <% if (k.hwid) { %>
                   <span class="badge bg-success" data-bs-toggle="tooltip" title="<%= k.hwid %>"><i class="fas fa-link"></i> Đã gán</span>
@@ -44,7 +44,7 @@
                   <button class="btn btn-sm btn-outline" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn"><i class="fas fa-calendar-plus"></i></button>
                   <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('Xoá key này?')"><button class="btn btn-sm btn-outline text-danger" title="Xoá"><i class="fas fa-trash"></i></button></form>
                 </div>
-                <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h6 class="modal-title">Gia hạn key</h6><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary btn-sm">Cập nhật</button></div></form></div></div>
+                <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h6 class="modal-title">Gia hạn key</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary btn-sm">Cập nhật</button></div></form></div></div>
               </td>
             </tr>
           <% }) %>
@@ -57,7 +57,7 @@
   </div>
 </div>
 <div class="modal fade" id="createKeyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">Tạo Key Mới</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+  <div class="modal-header"><h5 class="modal-title">Tạo Key Mới</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <form method="POST" action="/admin/keys/create">
     <div class="modal-body">
       <div class="mb-3"><label class="form-label">Tiền tố</label><input name="prefix" class="form-control" value="DPIC"></div>
