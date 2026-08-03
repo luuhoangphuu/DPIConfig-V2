@@ -39,8 +39,9 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('Database connected.');
-    await sequelize.sync();
-    console.log('Models synced.');
+    // Đồng bộ model, tự động thêm cột/bảng mới (alter: true) - an toàn cho dev
+    await sequelize.sync({ alter: true });
+    console.log('Models synced (alter).');
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) { console.error('Startup error:', err); }
 }
