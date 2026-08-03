@@ -1,27 +1,28 @@
-<nav class="sidebar d-flex flex-column py-4">
-  <div class="text-center mb-4">
-    <i class="fas fa-ghost text-white fa-3x mb-2" style="filter: drop-shadow(0 0 15px var(--neon-pink));"></i>
-    <h5 class="glitch text-white fw-bold" data-text="DPICONFIG">DPICONFIG</h5>
-    <small style="color: var(--neon-cyan); letter-spacing: 2px;">NEON-X</small>
+<nav class="sidebar py-4 animate__animated animate__slideInLeft">
+  <div class="text-center mb-4 px-3">
+    <div class="mb-2"><i class="fas fa-shield-alt text-white fa-2x" style="opacity:0.9;"></i></div>
+    <h5 class="fw-bold text-white mb-0">DPIConfig</h5>
+    <small style="color: var(--text-muted);">Quản lý key</small>
   </div>
   <ul class="nav flex-column mt-3">
     <li class="nav-item">
       <a href="/admin/dashboard" class="nav-link <%= currentPage == 'dashboard' ? 'active' : '' %>">
-        <i class="fas fa-chart-pie me-2"></i> <span>Dashboard</span>
+        <i class="fas fa-chart-pie"></i> Dashboard
       </a>
     </li>
     <li class="nav-item">
       <a href="/admin/keys" class="nav-link <%= currentPage == 'keys' ? 'active' : '' %>">
-        <i class="fas fa-key me-2"></i> <span>Key Manager</span>
-      </a>
-    </li>
-    <li class="nav-item mt-auto">
-      <a href="/admin/logout" class="nav-link text-danger">
-        <i class="fas fa-power-off me-2"></i> <span>Logout</span>
+        <i class="fas fa-key"></i> Quản lý Key
       </a>
     </li>
   </ul>
-  <div class="mt-auto text-center text-white-50 small">
-    <i class="fas fa-terminal me-1"></i> <%= user.email %>
+  <div class="mt-auto px-3 pb-3">
+    <div class="d-flex align-items-center text-white mb-3">
+      <i class="fas fa-user-circle me-2" style="font-size:1.4rem;"></i>
+      <span class="small"><%= user.email %></span>
+    </div>
+    <a href="/admin/logout" class="btn btn-outline w-100 text-danger border-danger">
+      <i class="fas fa-sign-out-alt me-1"></i> Đăng xuất
+    </a>
   </div>
 </nav>

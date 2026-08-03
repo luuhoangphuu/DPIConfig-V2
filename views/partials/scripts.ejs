@@ -1,131 +1,57 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // ========== CUSTOM CURSOR ==========
-  const cursor = document.querySelector('.cursor');
-  const cursorDot = document.querySelector('.cursor-dot');
-  let mouseX = 0, mouseY = 0;
-  let cursorX = 0, cursorY = 0;
-
-  document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    cursorDot.style.left = mouseX + 'px';
-    cursorDot.style.top = mouseY + 'px';
-    
-    // Trail effect
-    const trail = document.createElement('div');
-    trail.className = 'cursor-trail';
-    trail.style.left = mouseX + 'px';
-    trail.style.top = mouseY + 'px';
-    document.body.appendChild(trail);
-    setTimeout(() => trail.remove(), 500);
-  });
-
-  function animateCursor() {
-    cursorX += (mouseX - cursorX) * 0.2;
-    cursorY += (mouseY - cursorY) * 0.2;
-    cursor.style.left = cursorX + 'px';
-    cursor.style.top = cursorY + 'px';
-    requestAnimationFrame(animateCursor);
-  }
-  animateCursor();
-
-  // Hover effect on links/buttons
-  const hoverElements = document.querySelectorAll('a, button, .btn, input, select, .neon-toggle');
-  hoverElements.forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursor.style.transform = 'scale(2)';
-      cursor.style.borderColor = 'var(--neon-pink)';
-    });
-    el.addEventListener('mouseleave', () => {
-      cursor.style.transform = 'scale(1)';
-      cursor.style.borderColor = 'var(--neon-cyan)';
-    });
-  });
-
-  // ========== tsparticles NETWORK ==========
-  tsParticles.load("tsparticles", {
-    fpsLimit: 60,
+  // Particles
+  particlesJS('particles-js', {
     particles: {
-      number: { value: 50, density: { enable: true, value_area: 1000 } },
-      color: { value: ["#00f2fe", "#f093fb", "#f9d423"] },
-      shape: { type: "circle" },
-      opacity: { value: 0.5, random: true },
+      number: { value: 60, density: { enable: true, value_area: 1000 } },
+      color: { value: '#ffffff' },
+      shape: { type: 'circle' },
+      opacity: { value: 0.3, random: true },
       size: { value: 2, random: true },
-      links: { enable: true, distance: 150, color: "#00f2fe", opacity: 0.2, width: 1 },
-      move: { enable: true, speed: 1.5, direction: "none", random: true, outModes: "out" }
+      line_linked: { enable: true, distance: 120, color: '#6C5CE7', opacity: 0.15, width: 1 },
+      move: { enable: true, speed: 1, direction: 'none', random: true }
     },
     interactivity: {
-      events: { onHover: { enable: true, mode: "repulse" }, onClick: { enable: true, mode: "push" } },
-      modes: { repulse: { distance: 100 }, push: { quantity: 2 } }
+      events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
+      modes: { repulse: { distance: 80 } }
     },
     retina_detect: true
   });
 
-  // ========== PAGE TRANSITION ==========
-  const transition = document.getElementById('pageTransition');
-  window.addEventListener('beforeunload', () => {
-    transition.classList.add('active');
-  });
-  window.addEventListener('load', () => {
-    transition.classList.remove('active');
-  });
+  // Toast
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('created') === '1') {
+    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Key đã được tạo!', timer: 2000, showConfirmButton: false, background: '#1e1e2f', color: '#fff' });
+  }
 
-  // ========== SHORTCUTS ==========
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'n') {
-      e.preventDefault();
-      document.getElementById('createKeyBtn')?.click();
-    }
-    if (e.ctrlKey && e.key === 'k') {
-      e.preventDefault();
-      document.querySelector('.search-box')?.focus();
-    }
-  });
-
-  // ========== COUNTDOWN TIMER ==========
+  // Countdown
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
       const now = Date.now();
       const diff = expiry - now;
-      const absDiff = Math.abs(diff);
-      const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((absDiff % (1000 * 60)) / 1000);
-      let text = '';
       if (diff <= 0) {
-        text = 'EXPIRED';
-        el.className = 'countdown text-danger fw-bold';
-      } else if (diff < 3600000) {
-        text = minutes + 'm ' + seconds + 's';
-        el.className = 'countdown text-warning fw-bold';
+        el.textContent = 'Hết hạn';
+        el.className = 'countdown danger';
       } else {
-        text = days + 'd ' + hours + 'h ' + minutes + 'm';
-        el.className = 'countdown text-success fw-bold';
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        if (days > 0) {
+          el.textContent = days + ' ngày ' + hours + ' giờ';
+          el.className = days <= 3 ? 'countdown warning' : 'countdown safe';
+        } else {
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          el.textContent = hours + ' giờ ' + minutes + ' phút';
+          el.className = 'countdown warning';
+        }
       }
-      el.textContent = text;
     });
   }
-  setInterval(updateCountdowns, 1000);
+  setInterval(updateCountdowns, 60000);
   document.addEventListener('DOMContentLoaded', updateCountdowns);
-
-  // ========== TOAST & ANIMATIONS ==========
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('created') === '1') {
-    Swal.fire({
-      icon: 'success',
-      title: 'KEY GENERATED',
-      text: 'Hệ thống đã tạo key mới thành công.',
-      background: '#0f0f1a',
-      color: '#fff',
-      confirmButtonColor: '#00f2fe',
-      timer: 3000
-    });
-    // Xóa param để tránh hiện lại khi refresh
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
+  // Kích hoạt tooltip
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el) });
 </script>
 </body>
 </html>
