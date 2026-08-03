@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
 const { Key, Log } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
 const apiLimiter = require('../middleware/rateLimiter');
@@ -54,6 +53,5 @@ router.post('/extend', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: 'Lỗi server' }); }
 });
 
-// KHÔNG còn route /create-key nữa -> chỉ admin web mới tạo được key
-
+// Không còn route /create-key – chỉ admin web mới có thể tạo key
 module.exports = router;
