@@ -1,3 +1,4 @@
+const { Key, Log, KeyDevice } = require('../models');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -68,6 +69,10 @@ router.get('/keys', async (req, res) => {
 });
 
 router.post('/keys/create', async (req, res) => {
+    const { tier, duration, prefix, hwid, max_devices } = req.body;
+    let maxDev = tier === 'VIP' ? 1 : 9;
+    if (max_devices) maxDev = parseInt(max_devices) || maxDev;
+    console.log('Creating key with max devices:', maxDev);
   const { tier, duration, prefix, hwid } = req.body; // Nhận thêm hwid từ form
   let expires_at;
   if (duration === 'forever') expires_at = new Date('2099-12-31');
