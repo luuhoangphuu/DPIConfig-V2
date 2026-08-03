@@ -1,56 +1,35 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Particles.js
+  // Particles
   particlesJS.load('particles-js', '/css/particles.json', function() {});
   if (typeof window.pJSDom === 'undefined' || window.pJSDom.length === 0) {
     particlesJS('particles-js', {
-      particles: {
-        number: { value: 80, density: { enable: true, value_area: 800 } },
-        color: { value: '#ffffff' },
-        shape: { type: 'circle' },
-        opacity: { value: 0.5, random: true },
-        size: { value: 3, random: true },
-        line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.4, width: 1 },
-        move: { enable: true, speed: 2, direction: 'none', random: true }
-      },
-      interactivity: {
-        detect_on: 'canvas',
-        events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
-        modes: { repulse: { distance: 100 }, push: { particles_nb: 4 } }
-      },
+      particles: { number: { value: 80, density: { enable: true, value_area: 800 } }, color: { value: '#ffffff' }, shape: { type: 'circle' }, opacity: { value: 0.5, random: true }, size: { value: 3, random: true }, line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.4, width: 1 }, move: { enable: true, speed: 2, direction: 'none', random: true } },
+      interactivity: { events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } }, modes: { repulse: { distance: 100 }, push: { particles_nb: 4 } } },
       retina_detect: true
     });
   }
 
-  // Dark Mode Toggle
-  const darkModeToggle = document.getElementById('darkModeToggle');
+  // Dark Mode
   const html = document.documentElement;
-  const icon = darkModeToggle.querySelector('i');
-
+  const darkToggle = document.getElementById('darkModeToggle');
+  const icon = darkToggle.querySelector('i');
   function setDarkMode(isDark) {
     if (isDark) {
       html.setAttribute('data-bs-theme', 'dark');
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
+      icon.classList.replace('fa-moon', 'fa-sun');
       localStorage.setItem('darkMode', 'true');
     } else {
       html.setAttribute('data-bs-theme', 'light');
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
+      icon.classList.replace('fa-sun', 'fa-moon');
       localStorage.setItem('darkMode', 'false');
     }
   }
+  const saved = localStorage.getItem('darkMode') === 'true';
+  setDarkMode(saved);
+  darkToggle.addEventListener('click', () => setDarkMode(html.getAttribute('data-bs-theme') !== 'dark'));
 
-  // Load saved preference
-  const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-  setDarkMode(savedDarkMode);
-
-  darkModeToggle.addEventListener('click', () => {
-    const current = html.getAttribute('data-bs-theme') === 'dark';
-    setDarkMode(!current);
-  });
-
-  // Toast thông báo
+  // Toast
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('created') === '1') {
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Key đã được tạo!', timer: 2000, showConfirmButton: false });
@@ -59,36 +38,26 @@
     Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Tạo key thất bại!' });
   }
 
-  // Kích hoạt tooltip
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  var tooltipList = tooltipTriggerList.map(function (el) {
-    return new bootstrap.Tooltip(el, { placement: 'top' });
-  });
-
-  // Hàm xuất CSV (gọi từ keys.ejs)
-  function exportTableToCSV(filename) {
-    const table = document.querySelector('table');
-    const rows = table.querySelectorAll('tr');
-    let csv = [];
-    for (let i = 0; i < rows.length; i++) {
-      const row = [], cols = rows[i].querySelectorAll('td, th');
-      cols.forEach(col => {
-        // Bỏ qua cột cuối (Hành động)
-        if (col.cellIndex < cols.length - 1) {
-          let text = col.innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
-          row.push('"' + text + '"');
-        }
-      });
-      csv.push(row.join(','));
-    }
-    const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
-    const downloadLink = document.createElement('a');
-    downloadLink.download = filename;
-    downloadLink.href = window.URL.createObjectURL(csvFile);
-    downloadLink.style.display = 'none';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
+  // Countdown timer cho các key (gán class="countdown" và data-expiry)
+  function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(el => {
+      const expiry = new Date(el.getAttribute('data-expiry')).getTime();
+      const now = Date.now();
+      const diff = expiry - now;
+      if (diff <= 0) {
+        el.innerHTML = 'Hết hạn';
+        el.classList.add('expired');
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        el.innerHTML = days + 'd ' + hours + 'h ' + minutes + 'm';
+        el.classList.remove('expired');
+      }
+    });
   }
+  setInterval(updateCountdowns, 60000); // cập nhật mỗi phút
+  document.addEventListener('DOMContentLoaded', updateCountdowns);
 </script>
 </body>
 </html>

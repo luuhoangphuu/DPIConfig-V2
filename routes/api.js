@@ -54,23 +54,6 @@ router.post('/extend', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: 'Lỗi server' }); }
 });
 
-router.post('/create-key', async (req, res) => {
-  try {
-    const { tier, duration, prefix, hwid } = req.body;
-    if (!tier || !duration) return res.json({ success: false, error: 'Thiếu tier hoặc duration' });
-    let expires_at;
-    if (duration === 'forever') expires_at = new Date('2099-12-31');
-    else {
-      const days = parseInt(duration);
-      if (isNaN(days)) return res.json({ success: false, error: 'Duration không hợp lệ' });
-      expires_at = new Date(); expires_at.setDate(expires_at.getDate() + days);
-    }
-    const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `${prefix || 'DPIC'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-    const newKey = await Key.create({ key, tier, expires_at, hwid: hwid || null, created_by: 'api' });
-    await Log.create({ action: 'key_created_api', details: `API tạo key ${key}` + (hwid ? ` với HWID ${hwid}` : ''), ip_address: req.ip, key_id: newKey.id });
-    res.json({ success: true, key: newKey.key, tier: newKey.tier, expires_at: newKey.expires_at });
-  } catch (e) { res.status(500).json({ success: false, error: 'Lỗi server' }); }
-});
+// KHÔNG còn route /create-key nữa -> chỉ admin web mới tạo được key
 
 module.exports = router;
