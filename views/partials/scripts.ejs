@@ -1,12 +1,21 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Particles nhẹ nhàng
+  // === HIỆU ỨNG NỀN MÉO MÓ KHI DI CHUỘT ===
+  const bgInteractive = document.getElementById('bgInteractive');
+  document.addEventListener('mousemove', (e) => {
+    const x = e.clientX / window.innerWidth;
+    const y = e.clientY / window.innerHeight;
+    const gradient = `radial-gradient(circle at ${x*100}% ${y*100}%, rgba(79,70,229,0.15) 0%, transparent 70%)`;
+    bgInteractive.style.background = gradient;
+  });
+
+  // === PARTICLES NHẸ NHÀNG ===
   particlesJS('particles-js', {
     particles: {
       number: { value: 40, density: { enable: true, value_area: 1000 } },
       color: { value: '#4F46E5' },
       shape: { type: 'circle' },
-      opacity: { value: 0.15, random: true },
+      opacity: { value: 0.12, random: true },
       size: { value: 3, random: true },
       line_linked: { enable: false },
       move: { enable: true, speed: 0.8, direction: 'none', random: true }
@@ -18,36 +27,70 @@
     retina_detect: true
   });
 
-  // Âm thanh click nhẹ nhàng (Web Audio API)
+  // === ÂM THANH ĐA DẠNG ===
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playClickSound() {
+
+  function playTone(frequency, type, duration, volume = 0.1) {
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    oscillator.frequency.value = frequency;
+    oscillator.type = type;
+    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
     oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + 0.1);
+    oscillator.stop(audioCtx.currentTime + duration);
   }
 
-  // Gắn sự kiện click cho các phần tử tương tác
+  // Click nút thường (button, .btn)
+  function playClickNormal() {
+    playTone(600, 'sine', 0.08, 0.08);
+  }
+
+  // Toggle ON (bật)
+  function playToggleOn() {
+    playTone(800, 'sine', 0.1, 0.1);
+    setTimeout(() => playTone(1200, 'sine', 0.08, 0.08), 50);
+  }
+
+  // Toggle OFF (tắt)
+  function playToggleOff() {
+    playTone(400, 'triangle', 0.15, 0.1);
+  }
+
+  // Modal mở
+  function playModalOpen() {
+    playTone(500, 'sine', 0.2, 0.06);
+    setTimeout(() => playTone(700, 'sine', 0.15, 0.06), 80);
+  }
+
+  // Gắn sự kiện
   document.addEventListener('click', function(e) {
     const target = e.target;
-    if (target.closest('button, .btn, .nav-link, .toggle-switch, .page-link, .form-check-input')) {
-      playClickSound();
+    // Toggle switch
+    if (target.closest('.toggle-switch input')) {
+      const checkbox = target.closest('.toggle-switch input');
+      if (checkbox.checked) playToggleOn();
+      else playToggleOff();
+    }
+    // Modal (khi bấm nút mở modal)
+    else if (target.closest('[data-bs-toggle="modal"]')) {
+      playModalOpen();
+    }
+    // Các nút khác
+    else if (target.closest('button, .btn, .nav-link, .page-link')) {
+      playClickNormal();
     }
   });
 
-  // Toast
+  // === TOAST ===
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('created') === '1') {
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Key đã được tạo!', timer: 2000, showConfirmButton: false });
   }
 
-  // Countdown
+  // === COUNTDOWN ===
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
@@ -73,7 +116,7 @@
   setInterval(updateCountdowns, 60000);
   document.addEventListener('DOMContentLoaded', updateCountdowns);
 
-  // Tooltip
+  // === TOOLTIP ===
   var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
   var tooltipList = tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el) });
 </script>
