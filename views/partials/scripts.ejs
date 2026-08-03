@@ -1,68 +1,56 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Matrix rain particles
-  particlesJS('particles-js', {
-    particles: {
-      number: { value: 100, density: { enable: true, value_area: 1000 } },
-      color: { value: '#0f0' },
-      shape: { type: 'circle' },
-      opacity: { value: 0.4, random: true },
-      size: { value: 2, random: true },
-      line_linked: { enable: false },
-      move: {
-        enable: true, speed: 1.5, direction: 'bottom', random: true,
-        straight: false, out_mode: 'out', bounce: false
-      }
-    },
-    interactivity: {
-      events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
-      modes: { repulse: { distance: 60 } }
-    },
-    retina_detect: true
-  });
-
-  // Toast
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('created') === '1') {
-    Swal.fire({ icon: 'success', title: 'KEY GENERATED', text: 'A new key has been added to the system.', background: '#0a0a0a', color: '#0f0', confirmButtonColor: '#0f0' });
+  particlesJS.load('particles-js', '/css/particles.json', function() {});
+  if (typeof window.pJSDom === 'undefined' || window.pJSDom.length === 0) {
+    particlesJS('particles-js', {
+      particles: {
+        number: { value: 50, density: { enable: true, value_area: 1000 } },
+        color: { value: '#6C5CE7' },
+        shape: { type: 'circle' },
+        opacity: { value: 0.3, random: true },
+        size: { value: 2.5, random: true },
+        line_linked: { enable: true, distance: 120, color: '#6C5CE7', opacity: 0.2, width: 1 },
+        move: { enable: true, speed: 1, direction: 'none', random: true }
+      },
+      interactivity: {
+        events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
+        modes: { repulse: { distance: 80 } }
+      },
+      retina_detect: true
+    });
   }
 
-  // Countdown
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('created') === '1') {
+    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Key đã được tạo!', timer: 2000, showConfirmButton: false, background: '#1e1e2f', color: '#fff' });
+  }
+
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
       const now = Date.now();
       const diff = expiry - now;
       if (diff <= 0) {
-        el.textContent = 'EXPIRED';
+        el.textContent = 'Hết hạn';
         el.className = 'countdown danger';
       } else {
         const days = Math.floor(diff / (1000*60*60*24));
         const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
         const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-        el.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h ${minutes}m`;
-        el.className = days <= 3 ? 'countdown warning' : 'countdown safe';
+        if (days > 0) {
+          el.textContent = days + ' ngày ' + hours + ' giờ';
+          el.className = days <= 3 ? 'countdown warning' : 'countdown safe';
+        } else {
+          el.textContent = hours + ' giờ ' + minutes + ' phút';
+          el.className = 'countdown warning';
+        }
       }
     });
   }
   setInterval(updateCountdowns, 60000);
   document.addEventListener('DOMContentLoaded', updateCountdowns);
-
-  // Typing effect cho tiêu đề Dashboard (nếu có)
-  const typingEl = document.querySelector('.typing-text');
-  if (typingEl) {
-    const text = typingEl.textContent;
-    typingEl.textContent = '';
-    let i = 0;
-    function type() {
-      if (i < text.length) {
-        typingEl.textContent += text.charAt(i);
-        i++;
-        setTimeout(type, 50);
-      }
-    }
-    type();
-  }
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el) });
 </script>
 </body>
 </html>
