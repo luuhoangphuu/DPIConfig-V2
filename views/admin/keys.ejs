@@ -1,57 +1,123 @@
-<%- include('../partials/header', { title: 'Quản lý Key' }) %>
+<%- include('../partials/header', { title: 'Key Manager' }) %>
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'keys' }) %>
   <div class="main-content flex-grow-1">
-    <div class="d-flex justify-content-between mb-4 animate__animated animate__fadeInDown">
-      <h2 class="fw-bold" style="color: #00f2fe;"><i class="fas fa-key me-2"></i>Danh sách Key</h2>
-      <button class="btn btn-primary rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#createKeyModal"><i class="fas fa-plus me-2"></i>Tạo Key Mới</button>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="glitch fw-bold" data-text="KEY DATABASE">KEY DATABASE</h2>
+      <button class="btn btn-outline-neon rounded-pill px-4 py-2" data-bs-toggle="modal" data-bs-target="#createKeyModal" id="createKeyBtn">
+        <i class="fas fa-plus-circle me-2"></i> GENERATE KEY
+      </button>
     </div>
-    <div class="card bg-transparent border-0 shadow-sm"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover table-keys mb-0">
-      <thead><tr><th>Key</th><th>HWID</th><th>Tier</th><th>Hết hạn</th><th>Còn lại</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
-      <tbody>
-        <% keys.forEach(k => { %>
-          <tr>
-            <td><code class="bg-dark p-2 rounded"><%= k.key %></code></td>
-            <td><%= k.hwid ? '<span class="badge bg-success"><i class="fas fa-link"></i> Đã gán</span>' : '<span class="badge bg-secondary"><i class="fas fa-unlink"></i> Chưa gán</span>' %></td>
-            <td><span class="badge-tier badge bg-<%= k.tier === 'VIP' ? 'warning text-dark' : 'secondary' %>"><%= k.tier %></span></td>
-            <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td>
-            <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
-            <td><%= k.is_active ? '<span class="text-success">✅</span>' : '<span class="text-danger">❌</span>' %></td>
-            <td>
-              <div class="d-flex align-items-center gap-2">
-                <form method="POST" action="/admin/keys/toggle/<%= k.id %>" class="d-flex align-items-center">
-                  <label class="toggle-switch">
-                    <input type="checkbox" <%= k.is_active ? 'checked' : '' %> onchange="this.form.submit()">
-                    <span class="slider"></span>
-                  </label>
-                </form>
-                <% if (k.hwid) { %><form method="POST" action="/admin/keys/unbind/<%= k.id %>"><button class="btn btn-sm btn-info"><i class="fas fa-unlink"></i></button></form><% } %>
-                <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>"><i class="fas fa-calendar-plus"></i></button>
-                <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('Xoá?')"><button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button></form>
-              </div>
-              <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h5>Gia hạn</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary">OK</button></div></form></div></div>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table></div></div></div>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="input-group mb-3">
+          <span class="input-group-text bg-transparent border-neon-cyan text-neon-cyan"><i class="fas fa-search"></i></span>
+          <input type="text" id="searchBox" class="form-control bg-transparent border-neon-cyan text-white search-box" placeholder="Search Keys or HWID..." value="<%= search %>">
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-transparent border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-cyber">
+            <thead>
+              <tr><th>KEY CODE</th><th>HWID</th><th>TIER</th><th>EXPIRY</th><th>REMAINING</th><th>STATUS</th><th>ACTIONS</th></tr>
+            </thead>
+            <tbody>
+              <% keys.forEach(k => { %>
+                <tr>
+                  <td><code class="text-neon-cyan"><%= k.key %></code></td>
+                  <td>
+                    <% if (k.hwid) { %>
+                      <span class="badge bg-success bg-opacity-25 text-success border border-success">LINKED</span>
+                    <% } else { %>
+                      <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary">UNUSED</span>
+                    <% } %>
+                  </td>
+                  <td><span class="badge bg-<%= k.tier === 'VIP' ? 'warning' : 'info' %> bg-opacity-25 text-<%= k.tier === 'VIP' ? 'warning' : 'info' %>"><%= k.tier %></span></td>
+                  <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td>
+                  <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
+                  <td>
+                    <div class="form-check form-switch d-flex align-items-center">
+                      <label class="neon-toggle">
+                        <input type="checkbox" <%= k.is_active ? 'checked' : '' %> onchange="toggleKey('<%= k.id %>', this)">
+                        <span class="neon-slider"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <% if (k.hwid) { %><button class="btn btn-sm btn-outline-info" onclick="unbindKey('<%= k.id %>')"><i class="fas fa-unlink"></i></button><% } %>
+                      <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>"><i class="fas fa-calendar-plus"></i></button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="deleteKey('<%= k.id %>')"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <!-- Modal Gia hạn -->
+                    <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><div class="modal-content bg-dark text-white"><div class="modal-header border-neon-cyan"><h5>EXTEND KEY</h5></div><div class="modal-body"><input type="date" id="newExpiry<%= k.id %>" class="form-control bg-dark text-white"></div><div class="modal-footer"><button class="btn btn-neon-cyan" onclick="extendKey('<%= k.id %>')">CONFIRM</button></div></div></div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
     <nav class="mt-4"><ul class="pagination justify-content-center">
-      <% for(let i=1; i<=totalPages; i++) { %><li class="page-item <%= i===currentPage ? 'active' : '' %>"><a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a></li><% } %>
+      <% for(let i=1; i<=totalPages; i++) { %><li class="page-item <%= i===currentPage ? 'active' : '' %>"><a class="page-link bg-dark text-neon-cyan border-neon-cyan" href="?page=<%= i %>&search=<%= search %>"><%= i %></a></li><% } %>
     </ul></nav>
   </div>
 </div>
 
-<!-- Modal Tạo Key (có ô HWID) -->
-<div class="modal fade" id="createKeyModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
-  <div class="modal-header"><h5><i class="fas fa-plus-circle"></i> Tạo Key Mới</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<!-- Modal Tạo Key -->
+<div class="modal fade" id="createKeyModal"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-white border-neon-cyan">
+  <div class="modal-header border-neon-cyan"><h5 class="glitch" data-text="NEW KEY">NEW KEY</h5></div>
   <form method="POST" action="/admin/keys/create">
     <div class="modal-body">
-      <div class="mb-3"><label>Tiền tố</label><input name="prefix" class="form-control" value="DPIC"></div>
-      <div class="mb-3"><label>Hạng</label><select name="tier" class="form-select"><option value="VIP">🌟 VIP</option><option value="Normal">🔹 Thường</option></select></div>
-      <div class="mb-3"><label>Thời hạn</label><select name="duration" class="form-select"><option value="1">1 ngày</option><option value="7">7 ngày</option><option value="15">15 ngày</option><option value="30">30 ngày</option><option value="90">90 ngày</option><option value="365">1 năm</option><option value="forever">♾️ Vĩnh viễn</option></select></div>
-      <div class="mb-3"><label>Gán thiết bị (HWID)</label><input name="hwid" class="form-control" placeholder="Để trống nếu chưa"></div>
+      <div class="mb-3"><label>Prefix</label><input name="prefix" class="form-control bg-dark text-white" value="DPIC"></div>
+      <div class="mb-3"><label>Tier</label><select name="tier" class="form-select bg-dark text-white"><option value="VIP">VIP</option><option value="Normal">NORMAL</option></select></div>
+      <div class="mb-3"><label>Duration</label><select name="duration" class="form-select bg-dark text-white"><option value="1">1 Day</option><option value="7">7 Days</option><option value="15">15 Days</option><option value="30">30 Days</option><option value="90">90 Days</option><option value="365">1 Year</option><option value="forever">FOREVER</option></select></div>
+      <div class="mb-3"><label>HWID (Optional)</label><input name="hwid" class="form-control bg-dark text-white" placeholder="Leave blank for floating key"></div>
     </div>
-    <div class="modal-footer"><button type="submit" class="btn btn-primary">Tạo Key</button></div>
+    <div class="modal-footer"><button type="submit" class="btn btn-neon-cyan">GENERATE</button></div>
   </form>
 </div></div></div>
+
 <%- include('../partials/scripts') %>
+<script>
+  // Hàm AJAX để toggle/unbind/delete mà không cần reload trang (nâng cao UX)
+  async function toggleKey(id, checkbox) {
+    const res = await fetch(`/admin/keys/toggle/${id}`, { method: 'POST' });
+    if (res.redirected) window.location.href = res.url;
+  }
+  async function unbindKey(id) {
+    if (!confirm('Gỡ liên kết HWID?')) return;
+    const res = await fetch(`/admin/keys/unbind/${id}`, { method: 'POST' });
+    if (res.redirected) window.location.reload();
+  }
+  async function deleteKey(id) {
+    if (!confirm('XÓA KEY VĨNH VIỄN?')) return;
+    const res = await fetch(`/admin/keys/delete/${id}`, { method: 'POST' });
+    if (res.redirected) window.location.reload();
+  }
+  async function extendKey(id) {
+    const newExpiry = document.getElementById('newExpiry' + id).value;
+    if (!newExpiry) return;
+    const res = await fetch(`/admin/keys/extend/${id}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'new_expiry=' + encodeURIComponent(newExpiry)
+    });
+    if (res.redirected) window.location.reload();
+  }
+
+  // Search tự động
+  document.getElementById('searchBox').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const query = this.value;
+      window.location.search = '?search=' + encodeURIComponent(query);
+    }
+  });
+</script>

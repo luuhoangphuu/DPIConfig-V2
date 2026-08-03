@@ -2,32 +2,79 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
-    <h2 class="fw-bold mb-4 animate__animated animate__fadeInDown" style="color: #00f2fe;"><i class="fas fa-chart-line me-2"></i>Tổng quan hệ thống</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="glitch fw-bold" data-text="SYSTEM OVERVIEW">SYSTEM OVERVIEW</h2>
+      <div class="text-end text-white-50">
+        <i class="fas fa-clock me-2"></i><span id="liveTime">00:00:00</span>
+      </div>
+    </div>
+
     <div class="row g-4 mb-4">
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp">
-        <div class="card-stats p-3 position-relative">
-          <div class="d-flex justify-content-between"><div><h6>Tổng Key</h6><h2 id="countTotal" data-target="<%= totalKeys %>">0</h2></div><i class="fas fa-key icon-bg"></i></div>
+      <div class="col-xl-3 col-md-6">
+        <div class="cyber-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-uppercase small" style="color: var(--neon-cyan);">Total Keys</span>
+              <h2 class="fw-bold mb-0" id="countTotal" data-target="<%= totalKeys %>">0</h2>
+            </div>
+            <i class="fas fa-database fa-2x" style="color: var(--neon-cyan); opacity: 0.5;"></i>
+          </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-1s">
-        <div class="card-stats p-3 position-relative">
-          <div class="d-flex justify-content-between"><div><h6>Đang hoạt động</h6><h2 id="countActive" data-target="<%= activeKeys %>">0</h2></div><i class="fas fa-check-circle icon-bg"></i></div>
+      <div class="col-xl-3 col-md-6">
+        <div class="cyber-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-uppercase small" style="color: #2ecc71;">Active</span>
+              <h2 class="fw-bold mb-0" id="countActive" data-target="<%= activeKeys %>">0</h2>
+            </div>
+            <i class="fas fa-check-shield fa-2x" style="color: #2ecc71; opacity: 0.5;"></i>
+          </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-2s">
-        <div class="card-stats p-3 position-relative">
-          <div class="d-flex justify-content-between"><div><h6>Hết hạn</h6><h2 id="countExpired" data-target="<%= expiredKeys %>">0</h2></div><i class="fas fa-exclamation-triangle icon-bg"></i></div>
+      <div class="col-xl-3 col-md-6">
+        <div class="cyber-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-uppercase small" style="color: #e74c3c;">Expired</span>
+              <h2 class="fw-bold mb-0" id="countExpired" data-target="<%= expiredKeys %>">0</h2>
+            </div>
+            <i class="fas fa-radiation-alt fa-2x" style="color: #e74c3c; opacity: 0.5;"></i>
+          </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-3s">
-        <div class="card-stats p-3 position-relative">
-          <div class="d-flex justify-content-between"><div><h6>Thiết bị đã kích hoạt</h6><h2 id="countDevices" data-target="<%= devicesActivated %>">0</h2></div><i class="fas fa-mobile-alt icon-bg"></i></div>
+      <div class="col-xl-3 col-md-6">
+        <div class="cyber-card p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-uppercase small" style="color: #f093fb;">Devices</span>
+              <h2 class="fw-bold mb-0" id="countDevices" data-target="<%= devicesActivated %>">0</h2>
+            </div>
+            <i class="fas fa-microchip fa-2x" style="color: #f093fb; opacity: 0.5;"></i>
+          </div>
         </div>
       </div>
     </div>
-    <div class="card bg-transparent border-0 shadow-none"><div class="card-header fw-bold" style="color: #00f2fe;">Hoạt động gần đây</div><div class="card-body p-0"><table class="table table-hover table-keys"><thead><tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr></thead><tbody>
-      <% recentLogs.forEach(log => { %><tr><td><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td><td><span class="badge bg-info"><%= log.action %></span></td><td><%= log.details %></td></tr><% }) %>
-    </tbody></table></div></div>
+
+    <div class="card bg-transparent border-0">
+      <div class="card-header bg-transparent border-bottom border-neon-cyan fw-bold text-uppercase">Recent Activity</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-cyber">
+            <thead><tr><th>Timestamp</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody>
+              <% recentLogs.forEach(log => { %>
+                <tr>
+                  <td><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td>
+                  <td><span class="badge bg-outline-neon"><%= log.action %></span></td>
+                  <td><%= log.details %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <%- include('../partials/scripts') %>
@@ -38,5 +85,13 @@
     new countUp.CountUp('countActive', <%= activeKeys %>).start();
     new countUp.CountUp('countExpired', <%= expiredKeys %>).start();
     new countUp.CountUp('countDevices', <%= devicesActivated %>).start();
+    
+    // Live Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveTime').textContent = now.toLocaleTimeString('vi-VN');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
   });
 </script>
