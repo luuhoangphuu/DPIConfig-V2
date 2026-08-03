@@ -4,9 +4,14 @@
   <div class="main-content flex-grow-1">
     <div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
       <h2 class="fw-bold"><i class="fas fa-key me-2" style="color: var(--primary);"></i>Danh sách Key</h2>
-      <button class="btn btn-lg rounded-pill shadow text-white" style="background: var(--primary);" data-bs-toggle="modal" data-bs-target="#createKeyModal">
-        <i class="fas fa-plus me-2"></i>Tạo Key Mới
-      </button>
+      <div>
+        <button class="btn btn-outline-primary rounded-pill me-2" onclick="exportTableToCSV('keys.csv')">
+          <i class="fas fa-download me-2"></i>Xuất CSV
+        </button>
+        <button class="btn btn-lg rounded-pill shadow text-white" style="background: var(--primary);" data-bs-toggle="modal" data-bs-target="#createKeyModal">
+          <i class="fas fa-plus me-2"></i>Tạo Key Mới
+        </button>
+      </div>
     </div>
 
     <form class="mb-4 animate__animated animate__fadeInUp">
@@ -27,6 +32,7 @@
                 <th><i class="fas fa-mobile-alt me-1"></i> Thiết bị (HWID)</th>
                 <th>Tier</th>
                 <th>Hạn</th>
+                <th>Ngày tạo</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
@@ -49,28 +55,31 @@
                   </td>
                   <td><span class="badge-tier badge bg-<%= k.tier === 'VIP' ? 'warning text-dark' : 'secondary' %>"><%= k.tier %></span></td>
                   <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td>
+                  <td><%= k.createdAt ? new Date(k.createdAt).toLocaleDateString('vi-VN') : 'N/A' %></td>
                   <td>
                     <%= k.is_active ? '<span class="text-success fw-bold">✅ Hoạt động</span>' : '<span class="text-danger fw-bold">❌ Khoá</span>' %>
                   </td>
                   <td>
-                    <div class="btn-group btn-group-sm">
-                      <form method="POST" action="/admin/keys/toggle/<%= k.id %>" class="d-inline">
-                        <button class="btn btn-<%= k.is_active ? 'warning' : 'success' %> btn-action" title="<%= k.is_active ? 'Khoá' : 'Mở' %>">
-                          <i class="fas fa-power-off"></i>
-                        </button>
+                    <div class="d-flex align-items-center gap-2">
+                      <form method="POST" action="/admin/keys/toggle/<%= k.id %>" class="d-inline-flex align-items-center" id="toggleForm<%= k.id %>">
+                        <label class="toggle-switch">
+                          <input type="checkbox" <%= k.is_active ? 'checked' : '' %> onchange="document.getElementById('toggleForm<%= k.id %>').submit();">
+                          <span class="slider"></span>
+                        </label>
+                        <span class="toggle-label"><%= k.is_active ? 'Mở' : 'Khoá' %></span>
                       </form>
                       <% if (k.hwid) { %>
                       <form method="POST" action="/admin/keys/unbind/<%= k.id %>" class="d-inline">
-                        <button class="btn btn-info btn-action" title="Gỡ liên kết thiết bị">
+                        <button class="btn btn-info btn-action btn-sm" title="Gỡ liên kết thiết bị">
                           <i class="fas fa-unlink"></i>
                         </button>
                       </form>
                       <% } %>
-                      <button class="btn btn-secondary btn-action" data-bs-toggle="modal" data-bs-target="#extendModal<%= k.id %>" title="Gia hạn">
+                      <button class="btn btn-secondary btn-action btn-sm" data-bs-toggle="modal" data-bs-target="#extendModal<%= k.id %>" title="Gia hạn">
                         <i class="fas fa-calendar-plus"></i>
                       </button>
                       <form method="POST" action="/admin/keys/delete/<%= k.id %>" class="d-inline" onsubmit="return confirm('Xác nhận xoá key?')">
-                        <button class="btn btn-danger btn-action" title="Xoá"><i class="fas fa-trash-alt"></i></button>
+                        <button class="btn btn-danger btn-action btn-sm" title="Xoá"><i class="fas fa-trash-alt"></i></button>
                       </form>
                     </div>
                     <!-- Modal gia hạn -->
@@ -112,7 +121,7 @@
   </div>
 </div>
 
-<!-- Modal Tạo Key (có ô nhập HWID) -->
+<!-- Modal Tạo Key (giữ nguyên) -->
 <div class="modal fade" id="createKeyModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -159,9 +168,3 @@
   </div>
 </div>
 <%- include('../partials/scripts') %>
-<script>
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  var tooltipList = tooltipTriggerList.map(function (el) {
-    return new bootstrap.Tooltip(el, { placement: 'top' });
-  });
-</script>

@@ -2,15 +2,17 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
-    <h2 class="fw-bold mb-4 animate__animated animate__fadeInDown"><i class="fas fa-chart-line me-2" style="color: var(--primary);"></i>Tổng quan hệ thống</h2>
-    
+    <h2 class="fw-bold mb-4 animate__animated animate__fadeInDown typing" id="typingTitle">
+      <i class="fas fa-chart-line me-2" style="color: var(--primary);"></i>Tổng quan hệ thống
+    </h2>
+
     <div class="row g-4 mb-4">
       <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp">
         <div class="card card-stats p-3" style="background: linear-gradient(45deg, #6C5CE7, #A29BFE);">
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h6 class="text-uppercase fw-bold">Tổng Key</h6>
-              <h2 class="fw-bold mb-0"><%= totalKeys %></h2>
+              <h2 class="fw-bold mb-0" id="countTotalKeys" data-target="<%= totalKeys %>">0</h2>
             </div>
             <i class="fas fa-key icon-bg"></i>
           </div>
@@ -21,7 +23,7 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h6 class="text-uppercase fw-bold">Đang hoạt động</h6>
-              <h2 class="fw-bold mb-0"><%= activeKeys %></h2>
+              <h2 class="fw-bold mb-0" id="countActiveKeys" data-target="<%= activeKeys %>">0</h2>
             </div>
             <i class="fas fa-check-circle icon-bg"></i>
           </div>
@@ -32,7 +34,7 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h6 class="text-uppercase fw-bold">Hết hạn</h6>
-              <h2 class="fw-bold mb-0"><%= expiredKeys %></h2>
+              <h2 class="fw-bold mb-0" id="countExpiredKeys" data-target="<%= expiredKeys %>">0</h2>
             </div>
             <i class="fas fa-exclamation-triangle icon-bg"></i>
           </div>
@@ -43,7 +45,7 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h6 class="text-uppercase fw-bold">Thiết bị đã kích hoạt</h6>
-              <h2 class="fw-bold mb-0"><%= devicesActivated %></h2>
+              <h2 class="fw-bold mb-0" id="countDevices" data-target="<%= devicesActivated %>">0</h2>
             </div>
             <i class="fas fa-mobile-alt icon-bg"></i>
           </div>
@@ -51,7 +53,27 @@
       </div>
     </div>
 
-    <div class="card border-0 shadow-sm animate__animated animate__fadeInUp animate__delay-4s">
+    <!-- Biểu đồ -->
+    <div class="row mb-4 animate__animated animate__fadeInUp animate__delay-4s">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white fw-bold">Phân phối Key theo hạng</div>
+          <div class="card-body">
+            <canvas id="tierChart" style="max-height: 250px;"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white fw-bold">Trạng thái Key</div>
+          <div class="card-body">
+            <canvas id="statusChart" style="max-height: 250px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm animate__animated animate__fadeInUp animate__delay-5s">
       <div class="card-header bg-white fw-bold fs-5">
         <i class="fas fa-history me-2" style="color: var(--primary);"></i>Hoạt động gần đây
       </div>
@@ -75,3 +97,69 @@
   </div>
 </div>
 <%- include('../partials/scripts') %>
+<script>
+  // CountUp animation
+  document.addEventListener('DOMContentLoaded', function () {
+    const countUpOptions = { duration: 2, useEasing: true };
+    const elements = ['countTotalKeys', 'countActiveKeys', 'countExpiredKeys', 'countDevices'];
+    elements.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const target = parseInt(el.getAttribute('data-target')) || 0;
+        const countUp = new countUp.CountUp(el, target, countUpOptions);
+        if (!countUp.error) countUp.start();
+        else el.innerText = target;
+      }
+    });
+
+    // Typing effect
+    const titleEl = document.getElementById('typingTitle');
+    if (titleEl) {
+      const text = titleEl.innerText;
+      titleEl.innerText = '';
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          titleEl.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(type, 50);
+        }
+      }
+      type();
+    }
+
+    // Chart.js: Tier distribution
+    const tierCtx = document.getElementById('tierChart');
+    if (tierCtx) {
+      new Chart(tierCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['VIP', 'Normal'],
+          datasets: [{
+            data: [<%= vipKeys %>, <%= totalKeys - vipKeys %>],
+            backgroundColor: ['#FD79A8', '#B2BEC3'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    // Chart.js: Active vs Expired
+    const statusCtx = document.getElementById('statusChart');
+    if (statusCtx) {
+      new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Hoạt động', 'Hết hạn', 'Khoá'],
+          datasets: [{
+            data: [<%= activeKeys %>, <%= expiredKeys %>, <%= totalKeys - activeKeys - expiredKeys %>],
+            backgroundColor: ['#00B894', '#E17055', '#FDCB6E'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+  });
+</script>
