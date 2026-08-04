@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieSession = require('cookie-session');
 const path = require('path');
+const { DataTypes } = require('sequelize');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
@@ -40,18 +41,20 @@ async function start() {
     await sequelize.authenticate();
     console.log('Database connected.');
 
-    // Thêm cột is_active nếu chưa có (cho bảng key_devices)
-    try {
-      await sequelize.query(`
-        ALTER TABLE key_devices 
-        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-      `);
-      console.log('Column is_active ensured on key_devices.');
-    } catch (alterError) {
-      console.warn('Failed to add column is_active (may already exist):', alterError.message);
+    // Thêm cột is_active nếu chưa có (dùng queryInterface để an toàn)
+    const queryInterface = sequelize.getQueryInterface();
+    const tableInfo = await queryInterface.describeTable('key_devices');
+    if (!tableInfo.is_active) {
+      await queryInterface.addColumn('key_devices', 'is_active', {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      });
+      console.log('Added column is_active to key_devices.');
+    } else {
+      console.log('Column is_active already exists.');
     }
 
-    // Đồng bộ model (sẽ không xóa dữ liệu)
+    // Đồng bộ model (sẽ thêm các thay đổi khác nếu có)
     await sequelize.sync({ alter: true });
     console.log('Models synced (alter).');
 
