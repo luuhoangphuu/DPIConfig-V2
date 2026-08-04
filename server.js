@@ -6,6 +6,7 @@ const cron = require('node-cron');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
+const portalRoutes = require('./routes/portal');
 const { Key } = require('./models');
 const { notifyKeyExpiringSoon } = require('./utils/email');
 const { Op } = require('sequelize');
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 
 app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
+app.use('/portal', portalRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
 
 const PORT = process.env.PORT || 3000;
