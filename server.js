@@ -38,27 +38,16 @@ const PORT = process.env.PORT || 3000;
 async function start() {
   try {
     await sequelize.authenticate();
-    console.log('Database connected.');
-
-    // Thêm cột thủ công bằng SQL – không thể fail
-    await sequelize.query(`
-      ALTER TABLE key_devices 
-      ADD COLUMN IF NOT EXISTS device_name VARCHAR(255);
-    `);
-    await sequelize.query(`
-      ALTER TABLE key_devices 
-      ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-    `);
-    console.log('Columns device_name and is_active ready.');
-
-    // Đồng bộ model (sẽ bỏ qua nếu bảng đã đúng)
+    console.log('DB connected.');
+    // Thêm cột nếu chưa có (bảo đảm không lỗi)
+    await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS device_name VARCHAR(255);`);
+    await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`);
+    console.log('Columns ensured.');
     await sequelize.sync({ alter: true });
     console.log('Models synced.');
-
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
     console.error('Startup error:', err);
   }
 }
-
 start();

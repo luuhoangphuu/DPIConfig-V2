@@ -15,25 +15,23 @@ const bruteforce = new ExpressBrute(store, {
   failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai. Thử lại sau 15 phút.')
 });
 
-function requireAdmin(req, res, next) {
-  if (req.session && req.session.admin) return next();
-  res.redirect('/admin/login');
-}
+function requireAdmin(req, res, next) { if (req.session?.admin) return next(); res.redirect('/admin/login'); }
 
 router.get('/login', (req, res) => {
-  if (req.session && req.session.admin) return res.redirect('/admin/dashboard');
+  if (req.session?.admin) return res.redirect('/admin/dashboard');
   res.render('admin/login', { error: null });
 });
 
 router.post('/login', bruteforce.prevent, async (req, res) => {
   const { email, password } = req.body;
-  const valid = email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
-  if (valid) { req.session.admin = { email }; return res.redirect('/admin/dashboard'); }
+  if (email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+    req.session.admin = { email };
+    return res.redirect('/admin/dashboard');
+  }
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
 router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
-
 router.use(requireAdmin);
 
 router.get('/dashboard', async (req, res) => {
@@ -47,21 +45,16 @@ router.get('/dashboard', async (req, res) => {
 });
 
 router.get('/keys', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 15;
-    const offset = (page - 1) * limit;
-    const search = req.query.search || '';
-    let where = {};
-    if (search) { where = { [Op.or]: [{ key: { [Op.iLike]: `%${search}%` } }] }; }
-    const { count, rows: keys } = await Key.findAndCountAll({
-      where,
-      order: [['createdAt', 'DESC']],
-      include: [{ model: KeyDevice, as: 'devices', required: false }],
-      limit, offset
-    });
-    res.render('admin/keys', { user: req.session.admin, keys, currentPage: page, totalPages: Math.ceil(count / limit), search });
-  } catch (e) { console.error(e); res.status(500).send('Lỗi máy chủ'); }
+  const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
+  const search = req.query.search || '';
+  let where = {};
+  if (search) where = { [Op.or]: [{ key: { [Op.iLike]: `%${search}%` } }] };
+  const { count, rows: keys } = await Key.findAndCountAll({
+    where, order: [['createdAt', 'DESC']],
+    include: [{ model: KeyDevice, as: 'devices', required: false }],
+    limit, offset
+  });
+  res.render('admin/keys', { user: req.session.admin, keys, currentPage: page, totalPages: Math.ceil(count/limit), search });
 });
 
 router.post('/keys/create', async (req, res) => {
@@ -70,59 +63,41 @@ router.post('/keys/create', async (req, res) => {
   if (max_devices) maxDev = parseInt(max_devices) || maxDev;
   let expires_at;
   if (duration === 'forever') expires_at = new Date('2099-12-31');
-  else { const days = parseInt(duration) || 30; expires_at = new Date(); expires_at.setDate(expires_at.getDate() + days); }
+  else { const days = parseInt(duration)||30; expires_at = new Date(); expires_at.setDate(expires_at.getDate()+days); }
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-  const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+  const key = `${prefix||'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.session.admin.email });
-  await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} thiết bị`, ip_address: req.ip });
+  await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} TB`, ip_address: req.ip });
   res.redirect('/admin/keys?created=1');
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) { key.is_active = !key.is_active; await key.save(); await Log.create({ action: key.is_active ? 'key_unlocked' : 'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
+  if (key) { key.is_active = !key.is_active; await key.save(); await Log.create({ action: key.is_active?'key_unlocked':'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
   res.redirect('/admin/keys');
 });
 
 router.post('/keys/kick-all/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) {
-    await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } });
-    await Log.create({ action: 'kick_all_devices', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id });
-  }
+  if (key) { await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } }); await Log.create({ action: 'kick_all', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
   res.redirect('/admin/keys');
 });
 
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) {
-    await KeyDevice.destroy({ where: { key_id: key.id } });
-    await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id });
-  }
+  if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
   res.redirect('/admin/keys');
 });
 
-router.post('/keys/toggle-device/:deviceId', requireAdmin, async (req, res) => {
+router.post('/keys/toggle-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
-  if (device) {
-    device.is_active = !device.is_active;
-    await device.save();
-    await Log.create({
-      action: device.is_active ? 'device_unlocked' : 'device_kicked',
-      details: `Thiết bị ${device.hwid} của key ${device.Key.key} đã ${device.is_active ? 'mở khóa' : 'bị khóa'}`,
-      ip_address: req.ip, key_id: device.key_id
-    });
-  }
+  if (device) { device.is_active = !device.is_active; await device.save(); await Log.create({ action: device.is_active?'device_unlocked':'device_kicked', details: `TB ${device.hwid} của key ${device.Key.key} ${device.is_active?'mở':'bị khóa'}`, ip_address: req.ip, key_id: device.key_id }); }
   res.redirect('/admin/keys');
 });
 
-router.post('/keys/unbind-device/:deviceId', requireAdmin, async (req, res) => {
+router.post('/keys/unbind-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
-  if (device) {
-    const keyKey = device.Key.key;
-    await device.destroy();
-    await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn thiết bị ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id });
-  }
+  if (device) { const keyKey = device.Key.key; await device.destroy(); await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn TB ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id }); }
   res.redirect('/admin/keys');
 });
 
@@ -139,7 +114,7 @@ router.post('/keys/delete/:id', async (req, res) => {
   res.redirect('/admin/keys');
 });
 
-router.get('/keys/devices/:id', requireAdmin, async (req, res) => {
+router.get('/keys/devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
   if (!key) return res.json({ success: false });
   res.json({ success: true, devices: key.devices || [] });
