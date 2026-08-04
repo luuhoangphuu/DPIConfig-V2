@@ -2,28 +2,35 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const axios = require('axios');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
-const { Key, Log, KeyDevice } = require('../models');
+const { Key, Log, KeyDevice, KeyToken } = require('../models');
 const {
   notifyKeyCreated, notifyKeyToggled, notifyKeyDeleted,
   notifyKickAll, notifyDeleteAllDevices,
   notifyDeviceToggled, notifyDeviceDeleted
-} = require('../utils/email'); // Đổi từ telegram sang email
+} = require('../utils/email');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const LINK4M_API_TOKEN = process.env.LINK4M_API_TOKEN || '';
+const BASE_URL = process.env.BASE_URL || 'https://dpiconfig-api.onrender.com';
 
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
   freeRetries: 5, minWait: 15*60*1000, maxWait: 15*60*1000,
-  failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai. Thử lại sau 15 phút.')
+  failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai.')
 });
 
-function requireAdmin(req, res, next) { if (req.session?.admin) return next(); res.redirect('/admin/login'); }
+function requireAdmin(req, res, next) {
+  if (req.session && req.session.admin) return next();
+  res.redirect('/admin/login');
+}
 
+// ========== AUTH ==========
 router.get('/login', (req, res) => {
-  if (req.session?.admin) return res.redirect('/admin/dashboard');
+  if (req.session && req.session.admin) return res.redirect('/admin/dashboard');
   res.render('admin/login', { error: null });
 });
 
@@ -36,9 +43,14 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
-router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
+router.get('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/admin/login');
+});
+
 router.use(requireAdmin);
 
+// ========== DASHBOARD ==========
 router.get('/dashboard', async (req, res) => {
   const totalKeys = await Key.count();
   const activeKeys = await Key.count({ where: { is_active: true } });
@@ -49,6 +61,7 @@ router.get('/dashboard', async (req, res) => {
   res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
 });
 
+// ========== KEY MANAGEMENT ==========
 router.get('/keys', async (req, res) => {
   const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
   const search = req.query.search || '';
@@ -73,7 +86,7 @@ router.post('/keys/create', async (req, res) => {
   const key = `${prefix||'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.session.admin.email });
   await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} TB`, ip_address: req.ip });
-  notifyKeyCreated(key, maxDev);  // gửi email
+  notifyKeyCreated(key, maxDev);
   res.redirect('/admin/keys?created=1');
 });
 
@@ -152,6 +165,71 @@ router.get('/keys/devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
   if (!key) return res.json({ success: false });
   res.json({ success: true, devices: key.devices || [] });
+});
+
+// ========== TOKEN MANAGEMENT (có link4m) ==========
+router.get('/tokens', async (req, res) => {
+  const tokens = await KeyToken.findAll({ order: [['createdAt', 'DESC']] });
+  res.render('admin/tokens', { user: req.session.admin, tokens });
+});
+
+router.post('/tokens/create', async (req, res) => {
+  const { key } = req.body;
+  if (!key) return res.redirect('/admin/tokens?error=missing_key');
+  const token = crypto.randomBytes(16).toString('hex');
+  await KeyToken.create({ token, key, created_by: req.session.admin.email });
+  await Log.create({ action: 'token_created', details: `Token ${token} cho key ${key}`, ip_address: req.ip });
+
+  const claimUrl = `${BASE_URL}/portal/claim/${token}`;
+  let shortLink = null;
+
+  if (LINK4M_API_TOKEN) {
+    try {
+      const response = await axios.get('https://link4m.co/api-shorten/v2', {
+        params: { api: LINK4M_API_TOKEN, url: claimUrl }
+      });
+      if (response.data && response.data.shortenedUrl) {
+        shortLink = response.data.shortenedUrl;
+      }
+    } catch (err) {
+      console.error('link4m error:', err.message);
+    }
+  }
+
+  const tokens = await KeyToken.findAll({ order: [['createdAt', 'DESC']] });
+  res.render('admin/tokens', {
+    user: req.session.admin,
+    tokens,
+    newToken: token,
+    shortLink,
+    claimUrl
+  });
+});
+
+router.post('/tokens/delete/:id', async (req, res) => {
+  const token = await KeyToken.findByPk(req.params.id);
+  if (token) {
+    await token.destroy();
+    await Log.create({ action: 'token_deleted', details: `Xóa token ${token.token}`, ip_address: req.ip });
+  }
+  res.redirect('/admin/tokens');
+});
+
+// ========== BOT API ==========
+const BOT_API_SECRET = process.env.BOT_API_SECRET || process.env.AUTO_KEY_SECRET || 'bot-secret';
+router.post('/api/create-key', async (req, res) => {
+  const { secret, tier, duration } = req.body;
+  if (secret !== BOT_API_SECRET) return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
+  try {
+    const chosenTier = (tier === 'Normal') ? 'Normal' : 'VIP';
+    let days = parseInt(duration) || 30;
+    const expires_at = new Date(); expires_at.setDate(expires_at.getDate() + days);
+    const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
+    const key = `HoangPhu-${randomPart.match(/.{1,4}/g).join('-')}`;
+    const newKey = await Key.create({ key, tier: chosenTier, expires_at, max_devices: chosenTier==='VIP'?1:9, created_by: 'bot-api' });
+    await Log.create({ action: 'bot_api_key_created', details: `Bot API tạo key ${key}`, ip_address: req.ip });
+    res.json({ success: true, key, tier: chosenTier, expires_at });
+  } catch (err) { res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
 });
 
 module.exports = router;
