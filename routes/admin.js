@@ -28,7 +28,7 @@ function requireAdmin(req, res, next) {
   res.redirect('/admin/login');
 }
 
-// ========== AUTH ==========
+// AUTH
 router.get('/login', (req, res) => {
   if (req.session && req.session.admin) return res.redirect('/admin/dashboard');
   res.render('admin/login', { error: null });
@@ -43,14 +43,10 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
-router.get('/logout', (req, res) => {
-  req.session = null;
-  res.redirect('/admin/login');
-});
-
+router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// ========== DASHBOARD ==========
+// DASHBOARD
 router.get('/dashboard', async (req, res) => {
   const totalKeys = await Key.count();
   const activeKeys = await Key.count({ where: { is_active: true } });
@@ -61,7 +57,7 @@ router.get('/dashboard', async (req, res) => {
   res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
 });
 
-// ========== KEY MANAGEMENT ==========
+// KEY MANAGEMENT
 router.get('/keys', async (req, res) => {
   const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
   const search = req.query.search || '';
@@ -167,7 +163,7 @@ router.get('/keys/devices/:id', async (req, res) => {
   res.json({ success: true, devices: key.devices || [] });
 });
 
-// ========== TOKEN MANAGEMENT (có link4m) ==========
+// TOKEN MANAGEMENT
 router.get('/tokens', async (req, res) => {
   const tokens = await KeyToken.findAll({ order: [['createdAt', 'DESC']] });
   res.render('admin/tokens', { user: req.session.admin, tokens });
@@ -182,38 +178,23 @@ router.post('/tokens/create', async (req, res) => {
 
   const claimUrl = `${BASE_URL}/portal/claim/${token}`;
   let shortLink = null;
-
   if (LINK4M_API_TOKEN) {
     try {
       const response = await axios.get('https://link4m.co/api-shorten/v2', {
         params: { api: LINK4M_API_TOKEN, url: claimUrl }
       });
-      if (response.data && response.data.shortenedUrl) {
-        shortLink = response.data.shortenedUrl;
-      }
-    } catch (err) {
-      console.error('link4m error:', err.message);
-    }
+      if (response.data && response.data.shortenedUrl) shortLink = response.data.shortenedUrl;
+    } catch (err) { console.error('link4m error:', err.message); }
   }
 
   const tokens = await KeyToken.findAll({ order: [['createdAt', 'DESC']] });
-  res.render('admin/tokens', {
-    user: req.session.admin,
-    tokens,
-    newToken: token,
-    shortLink,
-    claimUrl
-  });
+  res.render('admin/tokens', { user: req.session.admin, tokens, newToken: token, shortLink, claimUrl });
 });
 
 router.post('/tokens/delete/:id', async (req, res) => {
   const token = await KeyToken.findByPk(req.params.id);
-  if (token) {
-    await token.destroy();
-    await Log.create({ action: 'token_deleted', details: `Xóa token ${token.token}`, ip_address: req.ip });
-  }
+  if (token) { await token.destroy(); await Log.create({ action: 'token_deleted', details: `Xóa token ${token.token}`, ip_address: req.ip }); }
   res.redirect('/admin/tokens');
 });
-
 
 module.exports = router;
