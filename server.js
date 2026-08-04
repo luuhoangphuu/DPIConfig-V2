@@ -41,9 +41,21 @@ async function start() {
     await sequelize.authenticate();
     console.log('Database connected.');
 
-    // Thêm cột is_active nếu chưa có (dùng queryInterface để an toàn)
     const queryInterface = sequelize.getQueryInterface();
     const tableInfo = await queryInterface.describeTable('key_devices');
+
+    // Thêm cột device_name nếu chưa có
+    if (!tableInfo.device_name) {
+      await queryInterface.addColumn('key_devices', 'device_name', {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      });
+      console.log('Added column device_name to key_devices.');
+    } else {
+      console.log('Column device_name already exists.');
+    }
+
+    // Thêm cột is_active nếu chưa có
     if (!tableInfo.is_active) {
       await queryInterface.addColumn('key_devices', 'is_active', {
         type: DataTypes.BOOLEAN,
@@ -54,7 +66,7 @@ async function start() {
       console.log('Column is_active already exists.');
     }
 
-    // Đồng bộ model (sẽ thêm các thay đổi khác nếu có)
+    // Đồng bộ model (sẽ thêm các ràng buộc, index nếu cần)
     await sequelize.sync({ alter: true });
     console.log('Models synced (alter).');
 
