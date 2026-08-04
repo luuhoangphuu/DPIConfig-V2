@@ -1,96 +1,48 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // === HIỆU ỨNG NỀN MÉO MÓ KHI DI CHUỘT ===
-  const bgInteractive = document.getElementById('bgInteractive');
-  document.addEventListener('mousemove', (e) => {
-    const x = e.clientX / window.innerWidth;
-    const y = e.clientY / window.innerHeight;
-    const gradient = `radial-gradient(circle at ${x*100}% ${y*100}%, rgba(79,70,229,0.15) 0%, transparent 70%)`;
-    bgInteractive.style.background = gradient;
+  particlesJS.load('particles-js', '/css/particles.json', function(){});
+  if (typeof window.pJSDom === 'undefined' || window.pJSDom.length === 0) {
+    particlesJS('particles-js', {
+      particles: { number: { value: 40, density: { enable: true, value_area: 1000 } }, color: { value: '#4F46E5' }, shape: { type: 'circle' }, opacity: { value: 0.15, random: true }, size: { value: 3, random: true }, line_linked: { enable: false }, move: { enable: true, speed: 0.8, direction: 'none', random: true } },
+      interactivity: { events: { onhover: { enable: true, mode: 'repulse' } }, modes: { repulse: { distance: 60 } } },
+      retina_detect: true
+    });
+  }
+
+  // Dark Mode Toggle
+  const html = document.documentElement;
+  const toggleBtn = document.getElementById('darkModeToggle');
+  const icon = toggleBtn.querySelector('i');
+
+  function setDarkMode(isDark) {
+    if (isDark) {
+      html.setAttribute('data-bs-theme', 'dark');
+      icon.classList.remove('fa-moon');
+      icon.classList.add('fa-sun');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      html.setAttribute('data-bs-theme', 'light');
+      icon.classList.remove('fa-sun');
+      icon.classList.add('fa-moon');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }
+
+  const savedDark = localStorage.getItem('darkMode') === 'true';
+  setDarkMode(savedDark);
+
+  toggleBtn.addEventListener('click', () => {
+    const current = html.getAttribute('data-bs-theme') === 'dark';
+    setDarkMode(!current);
   });
 
-  // === PARTICLES NHẸ NHÀNG ===
-  particlesJS('particles-js', {
-    particles: {
-      number: { value: 40, density: { enable: true, value_area: 1000 } },
-      color: { value: '#4F46E5' },
-      shape: { type: 'circle' },
-      opacity: { value: 0.12, random: true },
-      size: { value: 3, random: true },
-      line_linked: { enable: false },
-      move: { enable: true, speed: 0.8, direction: 'none', random: true }
-    },
-    interactivity: {
-      events: { onhover: { enable: true, mode: 'repulse' } },
-      modes: { repulse: { distance: 60 } }
-    },
-    retina_detect: true
-  });
-
-  // === ÂM THANH ĐA DẠNG ===
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  function playTone(frequency, type, duration, volume = 0.1) {
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + duration);
-  }
-
-  // Click nút thường (button, .btn)
-  function playClickNormal() {
-    playTone(600, 'sine', 0.08, 0.08);
-  }
-
-  // Toggle ON (bật)
-  function playToggleOn() {
-    playTone(800, 'sine', 0.1, 0.1);
-    setTimeout(() => playTone(1200, 'sine', 0.08, 0.08), 50);
-  }
-
-  // Toggle OFF (tắt)
-  function playToggleOff() {
-    playTone(400, 'triangle', 0.15, 0.1);
-  }
-
-  // Modal mở
-  function playModalOpen() {
-    playTone(500, 'sine', 0.2, 0.06);
-    setTimeout(() => playTone(700, 'sine', 0.15, 0.06), 80);
-  }
-
-  // Gắn sự kiện
-  document.addEventListener('click', function(e) {
-    const target = e.target;
-    // Toggle switch
-    if (target.closest('.toggle-switch input')) {
-      const checkbox = target.closest('.toggle-switch input');
-      if (checkbox.checked) playToggleOn();
-      else playToggleOff();
-    }
-    // Modal (khi bấm nút mở modal)
-    else if (target.closest('[data-bs-toggle="modal"]')) {
-      playModalOpen();
-    }
-    // Các nút khác
-    else if (target.closest('button, .btn, .nav-link, .page-link')) {
-      playClickNormal();
-    }
-  });
-
-  // === TOAST ===
+  // Toast
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('created') === '1') {
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Key đã được tạo!', timer: 2000, showConfirmButton: false });
   }
 
-  // === COUNTDOWN ===
+  // Countdown
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
@@ -103,20 +55,16 @@
         const days = Math.floor(diff / (1000*60*60*24));
         const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
         const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-        if (days > 0) {
-          el.textContent = days + ' ngày ' + hours + ' giờ';
-          el.className = days <= 3 ? 'countdown warning' : 'countdown safe';
-        } else {
-          el.textContent = hours + ' giờ ' + minutes + ' phút';
-          el.className = 'countdown warning';
-        }
+        if (days > 0) el.textContent = days + ' ngày ' + hours + ' giờ';
+        else el.textContent = hours + ' giờ ' + minutes + ' phút';
+        el.className = days <= 3 ? 'countdown warning' : 'countdown safe';
       }
     });
   }
   setInterval(updateCountdowns, 60000);
   document.addEventListener('DOMContentLoaded', updateCountdowns);
 
-  // === TOOLTIP ===
+  // Tooltip
   var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
   var tooltipList = tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el) });
 </script>

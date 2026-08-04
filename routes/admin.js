@@ -5,6 +5,11 @@ const crypto = require('crypto');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
 const { Key, Log, KeyDevice } = require('../models');
+const {
+  notifyKeyCreated, notifyKeyToggled, notifyKeyDeleted,
+  notifyKickAll, notifyDeleteAllDevices,
+  notifyDeviceToggled, notifyDeviceDeleted
+} = require('../utils/email'); // Đổi từ telegram sang email
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -68,36 +73,60 @@ router.post('/keys/create', async (req, res) => {
   const key = `${prefix||'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.session.admin.email });
   await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} TB`, ip_address: req.ip });
+  notifyKeyCreated(key, maxDev);  // gửi email
   res.redirect('/admin/keys?created=1');
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) { key.is_active = !key.is_active; await key.save(); await Log.create({ action: key.is_active?'key_unlocked':'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
+  if (key) {
+    key.is_active = !key.is_active;
+    await key.save();
+    await Log.create({ action: key.is_active?'key_unlocked':'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id });
+    notifyKeyToggled(key.key, key.is_active);
+  }
   res.redirect('/admin/keys');
 });
 
 router.post('/keys/kick-all/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) { await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } }); await Log.create({ action: 'kick_all', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
+  if (key) {
+    await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } });
+    await Log.create({ action: 'kick_all', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id });
+    notifyKickAll(key.key);
+  }
   res.redirect('/admin/keys');
 });
 
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id }); }
+  if (key) {
+    await KeyDevice.destroy({ where: { key_id: key.id } });
+    await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id });
+    notifyDeleteAllDevices(key.key);
+  }
   res.redirect('/admin/keys');
 });
 
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
-  if (device) { device.is_active = !device.is_active; await device.save(); await Log.create({ action: device.is_active?'device_unlocked':'device_kicked', details: `TB ${device.hwid} của key ${device.Key.key} ${device.is_active?'mở':'bị khóa'}`, ip_address: req.ip, key_id: device.key_id }); }
+  if (device) {
+    device.is_active = !device.is_active;
+    await device.save();
+    await Log.create({ action: device.is_active?'device_unlocked':'device_kicked', details: `TB ${device.hwid} của key ${device.Key.key} ${device.is_active?'mở':'bị khóa'}`, ip_address: req.ip, key_id: device.key_id });
+    notifyDeviceToggled(device.Key.key, device.hwid, device.is_active);
+  }
   res.redirect('/admin/keys');
 });
 
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
-  if (device) { const keyKey = device.Key.key; await device.destroy(); await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn TB ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id }); }
+  if (device) {
+    const keyKey = device.Key.key;
+    await device.destroy();
+    await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn TB ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id });
+    notifyDeviceDeleted(keyKey, device.hwid);
+  }
   res.redirect('/admin/keys');
 });
 
@@ -110,7 +139,12 @@ router.post('/keys/extend/:id', async (req, res) => {
 
 router.post('/keys/delete/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
-  if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); await key.destroy(); await Log.create({ action: 'key_deleted', details: `Xoá key ${key.key}`, ip_address: req.ip }); }
+  if (key) {
+    await KeyDevice.destroy({ where: { key_id: key.id } });
+    await key.destroy();
+    await Log.create({ action: 'key_deleted', details: `Xoá key ${key.key}`, ip_address: req.ip });
+    notifyKeyDeleted(key.key);
+  }
   res.redirect('/admin/keys');
 });
 
