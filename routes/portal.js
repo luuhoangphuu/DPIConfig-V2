@@ -29,20 +29,4 @@ router.get('/getkey', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
 });
 
-// Tạo key tự động (bot)
-router.get('/getnewkey', async (req, res) => {
-  const { secret, tier, duration } = req.query;
-  if (secret !== AUTO_KEY_SECRET) return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
-  try {
-    const chosenTier = (tier === 'Normal') ? 'Normal' : 'VIP';
-    let days = parseInt(duration) || 30;
-    const expires_at = new Date(); expires_at.setDate(expires_at.getDate() + days);
-    const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `HoangPhu-${randomPart.match(/.{1,4}/g).join('-')}`;
-    const newKey = await Key.create({ key, tier: chosenTier, expires_at, max_devices: chosenTier==='VIP'?1:9, created_by: 'auto-bot' });
-    await Log.create({ action: 'auto_key_created', details: `Bot tự động tạo key ${key}`, ip_address: req.ip });
-    res.json({ success: true, key, tier: chosenTier, expires_at });
-  } catch (err) { res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
-});
-
 module.exports = router;

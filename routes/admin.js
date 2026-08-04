@@ -215,21 +215,5 @@ router.post('/tokens/delete/:id', async (req, res) => {
   res.redirect('/admin/tokens');
 });
 
-// ========== BOT API ==========
-const BOT_API_SECRET = process.env.BOT_API_SECRET || process.env.AUTO_KEY_SECRET || 'bot-secret';
-router.post('/api/create-key', async (req, res) => {
-  const { secret, tier, duration } = req.body;
-  if (secret !== BOT_API_SECRET) return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
-  try {
-    const chosenTier = (tier === 'Normal') ? 'Normal' : 'VIP';
-    let days = parseInt(duration) || 30;
-    const expires_at = new Date(); expires_at.setDate(expires_at.getDate() + days);
-    const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `HoangPhu-${randomPart.match(/.{1,4}/g).join('-')}`;
-    const newKey = await Key.create({ key, tier: chosenTier, expires_at, max_devices: chosenTier==='VIP'?1:9, created_by: 'bot-api' });
-    await Log.create({ action: 'bot_api_key_created', details: `Bot API tạo key ${key}`, ip_address: req.ip });
-    res.json({ success: true, key, tier: chosenTier, expires_at });
-  } catch (err) { res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
-});
 
 module.exports = router;
