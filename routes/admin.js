@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const axios = require('axios');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
-const { Key, Log, KeyDevice, KeyToken } = require('../models');
+const { Key, Log, KeyDevice } = require('../models');
 const {
   notifyKeyCreated, notifyKeyToggled, notifyKeyDeleted,
   notifyKickAll, notifyDeleteAllDevices,
@@ -14,8 +13,6 @@ const {
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
-const LINK4M_API_TOKEN = process.env.LINK4M_API_TOKEN || '';
-const BASE_URL = process.env.BASE_URL || 'https://dpiconfig-api.onrender.com';
 
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
@@ -161,40 +158,6 @@ router.get('/keys/devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
   if (!key) return res.json({ success: false });
   res.json({ success: true, devices: key.devices || [] });
-});
-
-// TOKEN MANAGEMENT
-router.get('/tokens', async (req, res) => {
-  const tokens = await KeyToken.findAll({ order: [['createdAt', 'DESC']] });
-  res.render('admin/tokens', { user: req.session.admin, tokens });
-});
-
-router.post('/tokens/create', async (req, res) => {
-  const { key } = req.body;
-  if (!key) return res.redirect('/admin/tokens?error=missing_key');
-  const token = crypto.randomBytes(16).toString('hex');
-  await KeyToken.create({ token, key, created_by: req.session.admin.email });
-  await Log.create({ action: 'token_created', details: `Token ${token} cho key ${key}`, ip_address: req.ip });
-
-  const claimUrl = `${BASE_URL}/portal/claim/${token}`;
-  let shortLink = null;
-  if (LINK4M_API_TOKEN) {
-    try {
-      const response = await axios.get('https://link4m.co/api-shorten/v2', {
-        params: { api: LINK4M_API_TOKEN, url: claimUrl }
-      });
-      if (response.data && response.data.shortenedUrl) shortLink = response.data.shortenedUrl;
-    } catch (err) { console.error('link4m error:', err.message); }
-  }
-
-  const tokens = await KeyToken.findAll({ order: [['createdAt', 'DESC']] });
-  res.render('admin/tokens', { user: req.session.admin, tokens, newToken: token, shortLink, claimUrl });
-});
-
-router.post('/tokens/delete/:id', async (req, res) => {
-  const token = await KeyToken.findByPk(req.params.id);
-  if (token) { await token.destroy(); await Log.create({ action: 'token_deleted', details: `Xóa token ${token.token}`, ip_address: req.ip }); }
-  res.redirect('/admin/tokens');
 });
 
 module.exports = router;

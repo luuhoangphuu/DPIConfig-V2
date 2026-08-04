@@ -5,7 +5,6 @@ const path = require('path');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
-const portalRoutes = require('./routes/portal');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -32,7 +31,6 @@ app.use((req, res, next) => {
 
 app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
-app.use('/portal', portalRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
 
 const PORT = process.env.PORT || 3000;
@@ -42,7 +40,6 @@ async function start() {
     await sequelize.authenticate();
     console.log('DB connected.');
 
-    // Thêm cột nếu thiếu (an toàn)
     await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS device_name VARCHAR(255);`);
     await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`);
     console.log('Columns ensured.');
