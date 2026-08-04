@@ -9,14 +9,17 @@
     <form class="mb-4"><div class="input-group"><span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span><input type="text" name="search" class="form-control border-0 shadow-none" placeholder="Tìm key..." value="<%= search %>"><button class="btn btn-outline" type="submit">Tìm</button></div></form>
     <div class="table-responsive">
       <table class="table-custom w-100">
-        <thead><tr><th>Key</th><th>Hạng</th><th>Tối đa</th><th>Active</th><th>Hết hạn</th><th>Còn lại</th><th>Trạng thái</th><th></th></tr></thead>
+        <thead><tr><th>Key</th><th>Hạng</th><th>Tối đa</th><th>Đã dùng</th><th>Hết hạn</th><th>Còn lại</th><th>Trạng thái</th><th></th></tr></thead>
         <tbody>
-          <% keys.forEach(k => { %>
+          <% keys.forEach(k => { 
+               const deviceList = k.devices || [];
+               const activeDevices = deviceList.filter(d => d.is_active).length;
+          %>
             <tr>
               <td><code style="background:#F3F4F6; padding:4px 8px; border-radius:4px;"><%= k.key %></code></td>
               <td><span class="badge bg-<%= k.tier === 'VIP' ? 'warning text-dark' : 'light text-dark' %>"><%= k.tier %></span></td>
               <td><%= k.max_devices %></td>
-              <td><%= k.devices ? k.devices.filter(d => d.is_active).length : 0 %></td>
+              <td><%= activeDevices %> / <%= k.max_devices %></td>
               <td class="small"><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td>
               <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
               <td>
@@ -28,8 +31,8 @@
                 <div class="d-flex gap-1">
                   <button class="btn btn-sm btn-outline view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị"><i class="fas fa-list"></i></button>
                   <button class="btn btn-sm btn-outline" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn"><i class="fas fa-calendar-plus"></i></button>
-                  <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Khóa tất cả thiết bị của key này? (giữ suất)')"><button class="btn btn-sm btn-outline text-warning" title="Khóa tất cả thiết bị"><i class="fas fa-ban"></i></button></form>
-                  <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('XÓA VĨNH VIỄN tất cả thiết bị? (giải phóng suất)')"><button class="btn btn-sm btn-outline text-danger" title="Xóa tất cả thiết bị"><i class="fas fa-trash-alt"></i></button></form>
+                  <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Khóa tất cả thiết bị của key này? (giữ suất)')"><button class="btn btn-sm btn-outline text-warning" title="Khóa tất cả"><i class="fas fa-ban"></i></button></form>
+                  <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('XÓA VĨNH VIỄN tất cả thiết bị? (giải phóng suất)')"><button class="btn btn-sm btn-outline text-danger" title="Xóa tất cả"><i class="fas fa-trash-alt"></i></button></form>
                 </div>
                 <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h6 class="modal-title">Gia hạn key</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary btn-sm">Cập nhật</button></div></form></div></div>
               </td>
