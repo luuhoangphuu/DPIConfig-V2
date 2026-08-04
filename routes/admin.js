@@ -41,24 +41,27 @@ router.get('/dashboard', async (req, res) => {
   const activeKeys = await Key.count({ where: { is_active: true } });
   const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
   const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-  const devicesActivated = await KeyDevice.count();
+  const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
   const recentLogs = await Log.findAll({ limit: 8, order: [['createdAt', 'DESC']], include: Key });
   res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
 });
 
 router.get('/keys', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 15;
-  const offset = (page - 1) * limit;
-  const search = req.query.search || '';
-  let where = {};
-  if (search) where = { [Op.or]: [{ key: { [Op.iLike]: `%${search}%` } }] };
-  const { count, rows: keys } = await Key.findAndCountAll({
-    where, order: [['createdAt', 'DESC']],
-    include: [{ model: KeyDevice, as: 'devices', attributes: ['id', 'hwid', 'device_name', 'is_active', 'createdAt'] }],
-    limit, offset
-  });
-  res.render('admin/keys', { user: req.session.admin, keys, currentPage: page, totalPages: Math.ceil(count / limit), search });
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 15;
+    const offset = (page - 1) * limit;
+    const search = req.query.search || '';
+    let where = {};
+    if (search) { where = { [Op.or]: [{ key: { [Op.iLike]: `%${search}%` } }] }; }
+    const { count, rows: keys } = await Key.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      include: [{ model: KeyDevice, as: 'devices', required: false }],
+      limit, offset
+    });
+    res.render('admin/keys', { user: req.session.admin, keys, currentPage: page, totalPages: Math.ceil(count / limit), search });
+  } catch (e) { console.error(e); res.status(500).send('Lỗi máy chủ'); }
 });
 
 router.post('/keys/create', async (req, res) => {
@@ -81,7 +84,6 @@ router.post('/keys/toggle/:id', async (req, res) => {
   res.redirect('/admin/keys');
 });
 
-// KHÓA TẤT CẢ THIẾT BỊ (set is_active = false)
 router.post('/keys/kick-all/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -91,7 +93,6 @@ router.post('/keys/kick-all/:id', async (req, res) => {
   res.redirect('/admin/keys');
 });
 
-// XÓA VĨNH VIỄN TẤT CẢ THIẾT BỊ (giải phóng suất)
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -101,7 +102,6 @@ router.post('/keys/delete-all-devices/:id', async (req, res) => {
   res.redirect('/admin/keys');
 });
 
-// Khóa/mở khóa từng thiết bị (kick)
 router.post('/keys/toggle-device/:deviceId', requireAdmin, async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
   if (device) {
@@ -109,14 +109,13 @@ router.post('/keys/toggle-device/:deviceId', requireAdmin, async (req, res) => {
     await device.save();
     await Log.create({
       action: device.is_active ? 'device_unlocked' : 'device_kicked',
-      details: `Thiết bị ${device.hwid}` + (device.device_name ? ` (${device.device_name})` : '') + ` của key ${device.Key.key} đã ${device.is_active ? 'mở khóa' : 'bị khóa'}`,
+      details: `Thiết bị ${device.hwid} của key ${device.Key.key} đã ${device.is_active ? 'mở khóa' : 'bị khóa'}`,
       ip_address: req.ip, key_id: device.key_id
     });
   }
   res.redirect('/admin/keys');
 });
 
-// Xóa vĩnh viễn một thiết bị
 router.post('/keys/unbind-device/:deviceId', requireAdmin, async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
   if (device) {
@@ -140,11 +139,10 @@ router.post('/keys/delete/:id', async (req, res) => {
   res.redirect('/admin/keys');
 });
 
-// API lấy danh sách thiết bị (cho modal)
 router.get('/keys/devices/:id', requireAdmin, async (req, res) => {
-  const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', attributes: ['id', 'hwid', 'device_name', 'is_active', 'createdAt'] }] });
+  const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
   if (!key) return res.json({ success: false });
-  res.json({ success: true, devices: key.devices });
+  res.json({ success: true, devices: key.devices || [] });
 });
 
 module.exports = router;
