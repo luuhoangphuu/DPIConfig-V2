@@ -6,26 +6,46 @@
     <div class="row g-4 mb-5">
       <div class="col-md-3 animate__animated animate__fadeInUp">
         <div class="stat-card">
-          <div class="stat-label">Tổng Key</div>
-          <div class="stat-value"><%= totalKeys %></div>
+          <div class="stat-icon" style="background: rgba(108,92,231,0.1); color: #6C5CE7;">
+            <i class="fas fa-key"></i>
+          </div>
+          <div>
+            <div class="stat-label">Tổng Key</div>
+            <div class="stat-value"><%= totalKeys %></div>
+          </div>
         </div>
       </div>
       <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-1s">
         <div class="stat-card">
-          <div class="stat-label">Đang hoạt động</div>
-          <div class="stat-value" style="color:#059669;"><%= activeKeys %></div>
+          <div class="stat-icon" style="background: rgba(5,150,105,0.1); color: #059669;">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div>
+            <div class="stat-label">Đang hoạt động</div>
+            <div class="stat-value" style="color:#059669;"><%= activeKeys %></div>
+          </div>
         </div>
       </div>
       <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-2s">
         <div class="stat-card">
-          <div class="stat-label">Hết hạn</div>
-          <div class="stat-value" style="color:#DC2626;"><%= expiredKeys %></div>
+          <div class="stat-icon" style="background: rgba(220,38,38,0.1); color: #DC2626;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div>
+            <div class="stat-label">Hết hạn</div>
+            <div class="stat-value" style="color:#DC2626;"><%= expiredKeys %></div>
+          </div>
         </div>
       </div>
       <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-3s">
         <div class="stat-card">
-          <div class="stat-label">Thiết bị đã kích hoạt</div>
-          <div class="stat-value" style="color:#D97706;"><%= devicesActivated %></div>
+          <div class="stat-icon" style="background: rgba(217,119,6,0.1); color: #D97706;">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <div>
+            <div class="stat-label">Thiết bị đã kích hoạt</div>
+            <div class="stat-value" style="color:#D97706;"><%= devicesActivated %></div>
+          </div>
         </div>
       </div>
     </div>
