@@ -2,72 +2,49 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
-    <h4 class="fw-bold mb-4 animate__animated animate__fadeInDown" style="font-family:'Orbitron'; color: var(--neon-blue);">
-      <i class="fas fa-satellite me-2"></i>SYSTEM STATUS
-    </h4>
-    <div class="row g-4 mb-4">
+    <h4 class="fw-bold mb-4">Tổng quan hệ thống</h4>
+    <div class="row g-4 mb-5">
       <div class="col-md-3 animate__animated animate__fadeInUp">
-        <div class="glass-card stat-card">
-          <div class="label">TOTAL KEYS</div>
-          <div class="value" style="color: var(--neon-blue);"><%= totalKeys %></div>
+        <div class="stat-card">
+          <div class="stat-label">Tổng Key</div>
+          <div class="stat-value"><%= totalKeys %></div>
         </div>
       </div>
       <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-1s">
-        <div class="glass-card stat-card">
-          <div class="label">ACTIVE</div>
-          <div class="value" style="color: #10b981;"><%= activeKeys %></div>
+        <div class="stat-card">
+          <div class="stat-label">Đang hoạt động</div>
+          <div class="stat-value" style="color:#059669;"><%= activeKeys %></div>
         </div>
       </div>
       <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-2s">
-        <div class="glass-card stat-card">
-          <div class="label">EXPIRED</div>
-          <div class="value" style="color: #ef4444;"><%= expiredKeys %></div>
+        <div class="stat-card">
+          <div class="stat-label">Hết hạn</div>
+          <div class="stat-value" style="color:#DC2626;"><%= expiredKeys %></div>
         </div>
       </div>
       <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-3s">
-        <div class="glass-card stat-card">
-          <div class="label">DEVICES</div>
-          <div class="value" style="color: #fbbf24;"><%= devicesActivated %></div>
+        <div class="stat-card">
+          <div class="stat-label">Thiết bị đã kích hoạt</div>
+          <div class="stat-value" style="color:#D97706;"><%= devicesActivated %></div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4 mb-4">
-      <div class="col-md-6 animate__animated animate__fadeInUp animate__delay-4s">
-        <div class="glass-card">
-          <h6 class="fw-bold mb-3" style="font-family:'Orbitron';">KEY TIER DISTRIBUTION</h6>
-          <canvas id="tierChart" height="200"></canvas>
-        </div>
-      </div>
-      <div class="col-md-6 animate__animated animate__fadeInUp animate__delay-4s">
-        <div class="glass-card">
-          <h6 class="fw-bold mb-3" style="font-family:'Orbitron';">RECENT ACTIVITY</h6>
-          <div class="timeline">
-            <% recentLogs.forEach(log => { %>
-              <div class="d-flex mb-3 align-items-center">
-                <div class="bg-primary rounded-circle p-2 me-3"><i class="fas fa-circle text-white" style="font-size:0.5rem;"></i></div>
-                <div>
-                  <small class="text-muted"><%= new Date(log.createdAt).toLocaleString('vi-VN') %></small><br>
-                  <span class="badge bg-primary me-2"><%= log.action %></span>
-                  <span class="text-muted"><%= log.details %></span>
-                </div>
-              </div>
-            <% }) %>
-          </div>
-        </div>
-      </div>
+    <h5 class="fw-bold mb-3">Hoạt động gần đây</h5>
+    <div class="table-responsive">
+      <table class="table-custom w-100">
+        <thead><tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr></thead>
+        <tbody>
+          <% recentLogs.forEach(log => { %>
+            <tr>
+              <td class="text-muted" style="font-size:0.85rem;"><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td>
+              <td><span class="badge bg-primary bg-opacity-10 text-primary"><%= log.action %></span></td>
+              <td class="text-muted"><%= log.details %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
 <%- include('../partials/scripts') %>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-  new Chart(document.getElementById('tierChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['VIP', 'Normal'],
-      datasets: [{ data: [<%= vipKeys %>, <%= totalKeys - vipKeys %>], backgroundColor: ['#fbbf24','#6b7280'], borderWidth: 0 }]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: 'white' } } } }
-  });
-</script>
