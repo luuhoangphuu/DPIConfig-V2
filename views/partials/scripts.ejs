@@ -123,6 +123,14 @@
     animate();
   })();
 
+  // ==================== SERVER TIME HIỂN THỊ ====================
+  function updateServerTime() {
+    const now = new Date();
+    document.getElementById('serverTimeValue').textContent = now.toISOString();
+  }
+  updateServerTime();
+  setInterval(updateServerTime, 1000);
+
   // ==================== DARK MODE ====================
   const html = document.documentElement;
   const toggleBtn = document.getElementById('darkModeToggle');

@@ -9,14 +9,14 @@
     <div class="mb-3 animate__animated animate__fadeInUp"><input type="text" name="search" class="search-input" placeholder="Tìm key..." value="<%= search %>"></div>
     <div class="table-responsive animate__animated animate__fadeInUp">
       <table class="table-custom w-100">
-        <thead><tr><th>Key</th><th>Hạng</th><th>TB</th><th>Hết hạn</th><th>Còn</th><th></th><th></th></tr></thead>
+        <thead><tr><th>Key</th><th>Hạng</th><th>TB</th><th>Hết hạn (ISO)</th><th>Còn</th><th></th><th></th></tr></thead>
         <tbody>
           <% keys.forEach(k => { const devs = k.devices || []; const active = devs.filter(d => d.is_active).length; %>
             <tr>
               <td><code style="font-size:0.9rem;"><%= k.key %></code></td>
               <td><span class="badge-tier <%= k.tier==='VIP' ? 'badge-vip' : 'badge-normal' %>"><%= k.tier %></span></td>
               <td><%= active %>/<%= k.max_devices %></td>
-              <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %></td>
+              <td style="font-size:0.8rem;"><%= new Date(k.expires_at).toISOString() %></td>
               <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
               <td>
                 <form method="POST" action="/admin/keys/toggle/<%= k.id %>"><label class="toggle-switch"><input type="checkbox" <%= k.is_active?'checked':'' %> onchange="this.form.submit()"><span class="slider"></span></label></form>

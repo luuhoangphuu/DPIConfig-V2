@@ -57,7 +57,7 @@
         <tbody>
           <% recentLogs.forEach(log => { %>
             <tr>
-              <td class="text-muted" style="font-size:0.85rem;"><%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %></td>
+              <td class="text-muted" style="font-size:0.85rem;"><%= new Date(log.createdAt).toISOString() %></td>
               <td><span class="badge bg-primary bg-opacity-10 text-primary"><%= log.action %></span></td>
               <td class="text-muted"><%= log.details %></td>
             </tr>
