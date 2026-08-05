@@ -1,71 +1,94 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Sóng nước (water ripple) tương tác chuột
+  // Mạng lưới (mesh) tương tác chuột
   (function() {
-    const canvas = document.getElementById('waterCanvas');
+    const canvas = document.getElementById('meshCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
-    let ripples = [];
-    const maxRipples = 20;
-    const baseHue = 260; // tím HSL
+    const points = [];
+    const numPoints = 100;
+    const connectDist = 120;
+    const mouseRadius = 150;
+    const repelForce = 6;
+    let mouse = { x: -1000, y: -1000 };
 
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      initPoints();
     }
     window.addEventListener('resize', resize);
-    resize();
 
-    // Tạo gợn sóng khi di chuột (mỗi 100ms để không quá nhiều)
-    let lastRippleTime = 0;
-    document.addEventListener('mousemove', (e) => {
-      const now = Date.now();
-      if (now - lastRippleTime > 80) {
-        ripples.push({
-          x: e.clientX,
-          y: e.clientY,
-          radius: 0,
-          maxRadius: 150 + Math.random() * 100,
-          opacity: 0.6,
-          hue: baseHue + Math.random() * 30 - 15
+    function initPoints() {
+      points.length = 0;
+      for (let i = 0; i < numPoints; i++) {
+        points.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          baseX: 0,
+          baseY: 0
         });
-        lastRippleTime = now;
-        // Giới hạn số lượng
-        if (ripples.length > maxRipples) ripples.shift();
       }
+    }
+    initPoints();
+
+    document.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    document.addEventListener('mouseleave', () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
     });
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-      
-      // Vẽ nền tối nhẹ
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
-      ctx.fillRect(0, 0, width, height);
 
-      for (let i = ripples.length - 1; i >= 0; i--) {
-        const r = ripples[i];
-        r.radius += 2;
-        r.opacity -= 0.008;
+      // Cập nhật vị trí
+      for (let p of points) {
+        // Di chuyển tự do chậm
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
 
-        if (r.opacity <= 0) {
-          ripples.splice(i, 1);
-          continue;
+        // Đẩy ra khỏi chuột
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouseRadius && dist > 0) {
+          const angle = Math.atan2(dy, dx);
+          const force = (mouseRadius - dist) / mouseRadius * repelForce;
+          p.x += Math.cos(angle) * force;
+          p.y += Math.sin(angle) * force;
         }
+      }
 
+      // Vẽ đường nối
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const dx = points[i].x - points[j].x;
+          const dy = points[i].y - points[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < connectDist) {
+            ctx.beginPath();
+            ctx.moveTo(points[i].x, points[i].y);
+            ctx.lineTo(points[j].x, points[j].y);
+            ctx.strokeStyle = `rgba(108, 92, 231, ${0.15 * (1 - dist / connectDist)})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Vẽ điểm
+      for (let p of points) {
         ctx.beginPath();
-        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `hsla(${r.hue}, 70%, 70%, ${r.opacity})`;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Vẽ thêm vòng trong
-        if (r.radius > 20) {
-          ctx.beginPath();
-          ctx.arc(r.x, r.y, r.radius * 0.6, 0, Math.PI * 2);
-          ctx.strokeStyle = `hsla(${r.hue}, 70%, 80%, ${r.opacity * 0.5})`;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(108, 92, 231, 0.7)';
+        ctx.fill();
       }
 
       requestAnimationFrame(animate);
