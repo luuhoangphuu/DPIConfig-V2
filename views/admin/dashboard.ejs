@@ -3,48 +3,75 @@
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
     <div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
-      <h4 class="fw-bold mb-0">Tổng quan hệ thống</h4>
-      <span class="text-muted small"><i class="far fa-calendar-alt me-1"></i> <%= new Date().toLocaleDateString('vi-VN') %></span>
+      <div>
+        <h4 class="fw-bold mb-1">Tổng quan hệ thống</h4>
+        <p class="text-muted mb-0"><%= new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+      </div>
     </div>
+
     <div class="row g-4 mb-4">
       <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp">
         <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <span class="stat-icon">🔑</span>
-            <span class="text-muted small">Tất cả</span>
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="label">Tổng Key</div>
+              <div class="value"><%= totalKeys %></div>
+            </div>
+            <div class="icon"><i class="fas fa-key text-primary"></i></div>
           </div>
-          <h3 class="fw-bold mb-0" id="countTotal"><%= totalKeys %></h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-1s">
         <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <span class="stat-icon">✅</span>
-            <span class="text-muted small">Hoạt động</span>
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="label">Đang hoạt động</div>
+              <div class="value text-success"><%= activeKeys %></div>
+            </div>
+            <div class="icon"><i class="fas fa-check-circle text-success"></i></div>
           </div>
-          <h3 class="fw-bold mb-0" id="countActive"><%= activeKeys %></h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-2s">
         <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <span class="stat-icon">⏳</span>
-            <span class="text-muted small">Hết hạn</span>
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="label">Hết hạn</div>
+              <div class="value text-danger"><%= expiredKeys %></div>
+            </div>
+            <div class="icon"><i class="fas fa-exclamation-triangle text-danger"></i></div>
           </div>
-          <h3 class="fw-bold mb-0" id="countExpired"><%= expiredKeys %></h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-3s">
         <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <span class="stat-icon">📱</span>
-            <span class="text-muted small">Thiết bị</span>
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="label">Thiết bị đã kích hoạt</div>
+              <div class="value text-warning"><%= devicesActivated %></div>
+            </div>
+            <div class="icon"><i class="fas fa-mobile-alt text-warning"></i></div>
           </div>
-          <h3 class="fw-bold mb-0" id="countDevices"><%= devicesActivated %></h3>
         </div>
       </div>
     </div>
-    <div class="stat-card p-3 animate__animated animate__fadeInUp animate__delay-4s">
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6 animate__animated animate__fadeInUp animate__delay-4s">
+        <div class="stat-card p-3">
+          <h6 class="fw-bold mb-3">Phân phối Key theo hạng</h6>
+          <canvas id="tierChart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="col-md-6 animate__animated animate__fadeInUp animate__delay-4s">
+        <div class="stat-card p-3">
+          <h6 class="fw-bold mb-3">Trạng thái Key</h6>
+          <canvas id="statusChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card p-3 animate__animated animate__fadeInUp animate__delay-5s">
       <h6 class="fw-bold mb-3">Hoạt động gần đây</h6>
       <div class="table-responsive">
         <table class="table-custom w-100">
@@ -64,13 +91,32 @@
   </div>
 </div>
 <%- include('../partials/scripts') %>
-<script src="https://cdn.jsdelivr.net/npm/countup.js@2.5.0/dist/countUp.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const options = { duration: 1.5, useEasing: true };
-    new countUp.CountUp('countTotal', <%= totalKeys %>, options).start();
-    new countUp.CountUp('countActive', <%= activeKeys %>, options).start();
-    new countUp.CountUp('countExpired', <%= expiredKeys %>, options).start();
-    new countUp.CountUp('countDevices', <%= devicesActivated %>, options).start();
+  // Biểu đồ hạng
+  new Chart(document.getElementById('tierChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['VIP', 'Normal'],
+      datasets: [{
+        data: [<%= vipKeys %>, <%= totalKeys - vipKeys %>],
+        backgroundColor: ['#F59E0B', '#6B7280'],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+  // Biểu đồ trạng thái
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Hoạt động', 'Hết hạn', 'Đã khóa'],
+      datasets: [{
+        data: [<%= activeKeys %>, <%= expiredKeys %>, <%= totalKeys - activeKeys - expiredKeys %>],
+        backgroundColor: ['#10B981', '#EF4444', '#F59E0B'],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
   });
 </script>

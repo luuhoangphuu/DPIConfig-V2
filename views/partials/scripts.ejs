@@ -1,84 +1,42 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Particles
   particlesJS.load('particles-js', '/css/particles.json', function(){});
   if (typeof window.pJSDom === 'undefined' || window.pJSDom.length === 0) {
     particlesJS('particles-js', {
-      particles: { number: { value: 40, density: { enable: true, value_area: 1000 } }, color: { value: '#4F46E5' }, shape: { type: 'circle' }, opacity: { value: 0.15, random: true }, size: { value: 3, random: true }, line_linked: { enable: false }, move: { enable: true, speed: 0.8, direction: 'none', random: true } },
-      interactivity: { events: { onhover: { enable: true, mode: 'repulse' } }, modes: { repulse: { distance: 60 } } },
-      retina_detect: true
+      particles: { number: { value: 40 }, color: { value: '#4F46E5' }, opacity: { value: 0.15 }, size: { value: 3 }, line_linked: { enable: false }, move: { enable: true, speed: 0.8 } },
+      interactivity: { events: { onhover: { enable: true, mode: 'repulse' } } }
     });
   }
 
-  // Dark Mode Toggle
+  // Dark mode
   const html = document.documentElement;
   const toggleBtn = document.getElementById('darkModeToggle');
   const icon = toggleBtn.querySelector('i');
   function setDarkMode(isDark) {
-    if (isDark) {
-      html.setAttribute('data-bs-theme', 'dark');
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
-      localStorage.setItem('darkMode', 'true');
-    } else {
-      html.setAttribute('data-bs-theme', 'light');
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
-      localStorage.setItem('darkMode', 'false');
-    }
+    if (isDark) { html.setAttribute('data-bs-theme', 'dark'); icon.classList.replace('fa-moon','fa-sun'); localStorage.setItem('darkMode','true'); }
+    else { html.setAttribute('data-bs-theme', 'light'); icon.classList.replace('fa-sun','fa-moon'); localStorage.setItem('darkMode','false'); }
   }
-  const savedDark = localStorage.getItem('darkMode') === 'true';
-  setDarkMode(savedDark);
-  toggleBtn.addEventListener('click', () => setDarkMode(html.getAttribute('data-bs-theme') !== 'dark'));
-
-  // Toast
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('created') === '1') {
-    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Key đã được tạo!', timer: 2000, showConfirmButton: false });
-  }
+  setDarkMode(localStorage.getItem('darkMode') === 'true');
+  toggleBtn.addEventListener('click', ()=> setDarkMode(html.getAttribute('data-bs-theme') !== 'dark'));
 
   // Countdown
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
-      const now = Date.now();
-      const diff = expiry - now;
-      if (diff <= 0) {
-        el.textContent = 'Hết hạn';
-        el.className = 'countdown danger';
-      } else {
-        const days = Math.floor(diff / (1000*60*60*24));
-        const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-        const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-        if (days > 0) el.textContent = days + ' ngày ' + hours + ' giờ';
-        else el.textContent = hours + ' giờ ' + minutes + ' phút';
-        el.className = days <= 3 ? 'countdown warning' : 'countdown safe';
+      const diff = expiry - Date.now();
+      if (diff <= 0) { el.textContent = 'Hết hạn'; el.className = 'countdown danger'; }
+      else {
+        const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000);
+        el.textContent = d>0 ? d+' ngày '+h+' giờ' : h+' giờ '+m+' phút';
+        el.className = d<=3 ? 'countdown warning' : 'countdown safe';
       }
     });
   }
   setInterval(updateCountdowns, 60000);
-  document.addEventListener('DOMContentLoaded', updateCountdowns);
+  updateCountdowns();
 
-  // Tooltip
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  var tooltipList = tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el) });
-
-  // Ripple effect: tự động thêm class ripple
-  document.querySelectorAll('.btn, .btn-outline, .nav-link, .toggle-switch, .page-link, .view-devices-btn').forEach(el => {
-    el.classList.add('ripple');
-  });
-
-  // Skeleton loading: tự động ẩn đi khi trang tải xong (nếu có)
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.skeleton-wrapper').forEach(wrapper => {
-      // Giả lập tải dữ liệu, sau 1-2 giây ẩn skeleton và hiện nội dung thật
-      // Bạn có thể tùy chỉnh logic này theo AJAX loading thực tế
-      setTimeout(() => {
-        wrapper.querySelectorAll('.skeleton').forEach(s => s.style.display = 'none');
-        wrapper.querySelectorAll('.real-content').forEach(r => r.style.display = 'block');
-      }, 1000);
-    });
-  });
+  // Ripple
+  document.querySelectorAll('.btn, .nav-link, .toggle-switch, .page-link').forEach(el => el.classList.add('ripple'));
 </script>
 </body>
 </html>
