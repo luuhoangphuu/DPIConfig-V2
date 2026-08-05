@@ -1,10 +1,17 @@
+// Đặt múi giờ Việt Nam ngay từ đầu
+process.env.TZ = 'Asia/Ho_Chi_Minh';
+
 require('dotenv').config();
 const express = require('express');
 const cookieSession = require('cookie-session');
 const path = require('path');
+const cron = require('node-cron');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
+const { Key } = require('./models');
+const { notifyKeyExpiringSoon } = require('./utils/email');
+const { Op } = require('sequelize');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -39,17 +46,36 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('DB connected.');
-
     await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS device_name VARCHAR(255);`);
     await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`);
-    console.log('Columns ensured.');
-
     await sequelize.sync({ alter: true });
     console.log('Models synced.');
+
+    // Cron job kiểm tra key sắp hết hạn – giờ Việt Nam 9h sáng
+    cron.schedule('0 9 * * *', async () => {
+      console.log('Checking expiring keys...');
+      try {
+        const threeDaysFromNow = new Date();
+        threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+        const expiringKeys = await Key.findAll({
+          where: {
+            is_active: true,
+            expires_at: { [Op.lte]: threeDaysFromNow, [Op.gt]: new Date() }
+          }
+        });
+        for (const key of expiringKeys) {
+          const daysLeft = Math.ceil((new Date(key.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+          await notifyKeyExpiringSoon(key.key, daysLeft);
+        }
+      } catch (err) {
+        console.error('Cron error:', err);
+      }
+    }, { timezone: 'Asia/Ho_Chi_Minh' }); // đảm bảo cron chạy theo giờ VN
 
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
     console.error('Startup error:', err);
   }
 }
+
 start();
