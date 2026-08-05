@@ -1,35 +1,35 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Mạng lưới (mesh) tương tác chuột
+  // Mạng lưới sóng (Wave Grid) - tương tác chuột
   (function() {
-    const canvas = document.getElementById('meshCanvas');
+    const canvas = document.getElementById('gridCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
-    const spacing = 60; // khoảng cách giữa các nút
-    let nodes = [];
+    const spacing = 50; // khoảng cách giữa các điểm lưới
+    let cols, rows;
+    let points = [];
     let mouse = { x: -1000, y: -1000 };
-    const repelRadius = 150;
-    const repelStrength = 8;
 
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      createNodes();
+      cols = Math.floor(width / spacing) + 2;
+      rows = Math.floor(height / spacing) + 2;
+      initPoints();
     }
     window.addEventListener('resize', resize);
 
-    function createNodes() {
-      nodes = [];
-      const cols = Math.ceil(width / spacing) + 1;
-      const rows = Math.ceil(height / spacing) + 1;
+    function initPoints() {
+      points = [];
       for (let i = 0; i < cols; i++) {
+        points[i] = [];
         for (let j = 0; j < rows; j++) {
-          nodes.push({
+          points[i][j] = {
+            origX: i * spacing,
+            origY: j * spacing,
             x: i * spacing,
-            y: j * spacing,
-            ox: i * spacing,
-            oy: j * spacing
-          });
+            y: j * spacing
+          };
         }
       }
     }
@@ -43,64 +43,71 @@
       mouse.y = -1000;
     });
 
+    resize();
+
     function animate() {
       ctx.clearRect(0, 0, width, height);
 
-      // Cập nhật vị trí nút (bị đẩy bởi chuột, rồi hồi về)
-      for (let n of nodes) {
-        const dx = n.x - mouse.x;
-        const dy = n.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < repelRadius && dist > 0) {
-          const angle = Math.atan2(dy, dx);
-          const force = (repelRadius - dist) / repelRadius * repelStrength;
-          n.x += Math.cos(angle) * force;
-          n.y += Math.sin(angle) * force;
-        }
-        // Hồi về vị trí gốc
-        n.x += (n.ox - n.x) * 0.08;
-        n.y += (n.oy - n.y) * 0.08;
-      }
+      // Cập nhật vị trí điểm theo sóng
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          const p = points[i][j];
+          const dx = p.origX - mouse.x;
+          const dy = p.origY - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const maxDist = 200;
 
-      // Vẽ đường nối
-      ctx.strokeStyle = 'rgba(108,92,231,0.25)';
-      ctx.lineWidth = 1;
-      const cols = Math.ceil(width / spacing) + 1;
-      const rows = Math.ceil(height / spacing) + 1;
-      for (let i = 0; i < nodes.length; i++) {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        // Nối ngang
-        if (col < cols - 1) {
-          ctx.beginPath();
-          ctx.moveTo(nodes[i].x, nodes[i].y);
-          ctx.lineTo(nodes[i + 1].x, nodes[i + 1].y);
-          ctx.stroke();
-        }
-        // Nối dọc
-        if (row < rows - 1) {
-          const below = i + cols;
-          if (below < nodes.length) {
-            ctx.beginPath();
-            ctx.moveTo(nodes[i].x, nodes[i].y);
-            ctx.lineTo(nodes[below].x, nodes[below].y);
-            ctx.stroke();
+          if (dist < maxDist) {
+            const force = (maxDist - dist) / maxDist;
+            const angle = Math.atan2(dy, dx);
+            // Tạo hiệu ứng sóng: đẩy ra xa và dao động
+            p.x = p.origX + Math.cos(angle) * force * 30 + Math.sin(dist * 0.05 + Date.now() * 0.005) * force * 15;
+            p.y = p.origY + Math.sin(angle) * force * 30 + Math.cos(dist * 0.05 + Date.now() * 0.005) * force * 15;
+          } else {
+            // Trở về vị trí gốc từ từ
+            p.x += (p.origX - p.x) * 0.05;
+            p.y += (p.origY - p.y) * 0.05;
           }
         }
       }
 
-      // Vẽ chấm nút
-      ctx.fillStyle = 'rgba(108,92,231,0.6)';
-      for (let n of nodes) {
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, 2.5, 0, Math.PI * 2);
-        ctx.fill();
+      // Vẽ đường nối giữa các điểm gần nhau
+      ctx.strokeStyle = '#6C5CE7';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.25;
+
+      for (let i = 0; i < cols - 1; i++) {
+        for (let j = 0; j < rows - 1; j++) {
+          const p1 = points[i][j];
+          const p2 = points[i + 1][j];
+          const p3 = points[i][j + 1];
+
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p3.x, p3.y);
+          ctx.stroke();
+        }
+      }
+
+      // Vẽ các điểm
+      ctx.fillStyle = '#6C5CE7';
+      ctx.globalAlpha = 0.5;
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          const p = points[i][j];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       requestAnimationFrame(animate);
     }
-
-    resize();
     animate();
   })();
 
