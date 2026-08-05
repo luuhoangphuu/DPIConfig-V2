@@ -1,6 +1,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Vanta Waves background
+  // Vanta Waves - mềm mại, trong suốt
   let vantaEffect = VANTA.WAVES({
     el: "#vanta-bg",
     mouseControls: true,
@@ -11,10 +11,10 @@
     scale: 1.00,
     scaleMobile: 1.00,
     color: 0x6C5CE7,
-    shininess: 30.00,
-    waveHeight: 15.00,
-    waveSpeed: 0.75,
-    zoom: 0.80
+    shininess: 40.00,
+    waveHeight: 6.00,
+    waveSpeed: 0.5,
+    zoom: 0.90
   });
 
   // Dark mode toggle
@@ -30,9 +30,9 @@
     html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
     localStorage.setItem('darkMode', isDark ? 'false' : 'true');
     updateIcon();
-    // Cập nhật màu Vanta theo theme (có thể tùy chỉnh)
+    // Thay đổi màu Vanta theo theme (nhẹ nhàng)
     if (isDark) {
-      vantaEffect.setOptions({ color: 0x6C5CE7 }); // giữ nguyên tím hoặc đổi sang màu tối
+      vantaEffect.setOptions({ color: 0x6C5CE7 });
     } else {
       vantaEffect.setOptions({ color: 0x6C5CE7 });
     }

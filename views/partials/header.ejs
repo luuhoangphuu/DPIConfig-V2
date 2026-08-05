@@ -43,6 +43,7 @@
     }
     #vanta-bg {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+      opacity: 0.15; /* Làm mờ để nền không quá nổi */
     }
     .sidebar {
       background: rgba(255,255,255,0.8);
@@ -73,7 +74,6 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      backdrop-filter: blur(5px);
     }
     .stat-card:hover { transform: translateY(-4px); box-shadow: var(--hover-shadow); }
     .stat-icon {
@@ -89,7 +89,7 @@
     }
     .table-custom tbody tr {
       background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);
-      transition: all 0.2s; backdrop-filter: blur(5px);
+      transition: all 0.2s;
     }
     .table-custom tbody tr:hover { box-shadow: var(--hover-shadow); }
     .table-custom td { padding: 14px 16px; border: none; vertical-align: middle; }
