@@ -5,7 +5,7 @@
     const canvas = document.getElementById('waveGrid');
     const ctx = canvas.getContext('2d');
     let width, height;
-    const spacing = 50; // Khoảng cách lưới
+    const spacing = 50;
     let cols, rows;
     let points = [];
     let mouse = { x: -1000, y: -1000, radius: 200 };
@@ -50,19 +50,15 @@
       ctx.clearRect(0, 0, width, height);
       time += 0.005;
 
-      // Cập nhật vị trí các điểm
       for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
           let p = points[i][j];
-
-          // ---- Dao động nền tự nhiên (luôn chạy) ----
           let wave1 = Math.sin(time * 1.3 + i * 0.5 + j * 0.4) * 3.5;
           let wave2 = Math.cos(time * 0.9 + i * 0.7 - j * 0.3) * 2.5;
           let wave3 = Math.sin(time * 0.7 + (i + j) * 0.6) * 2.0;
           let targetX = p.originX + wave1 + wave3;
           let targetY = p.originY + wave2 + wave3 * 0.8;
 
-          // ---- Tương tác chuột (đẩy mạnh hơn) ----
           let dx = p.originX - mouse.x;
           let dy = p.originY - mouse.y;
           let dist = Math.sqrt(dx * dx + dy * dy);
@@ -73,18 +69,15 @@
             let pushY = Math.sin(angle) * force * 55;
             targetX += pushX;
             targetY += pushY;
-            // Thêm dao động phụ khi có chuột
             targetX += Math.sin(time * 15 + dist * 0.1) * force * 12;
             targetY += Math.cos(time * 15 + dist * 0.1) * force * 12;
           }
 
-          // Di chuyển mượt về vị trí mục tiêu
           p.x += (targetX - p.x) * 0.06;
           p.y += (targetY - p.y) * 0.06;
         }
       }
 
-      // Vẽ đường nối lưới
       ctx.strokeStyle = '#6C5CE7';
       ctx.lineWidth = 1;
       ctx.globalAlpha = 0.2;
@@ -93,12 +86,10 @@
           let p1 = points[i][j];
           let p2 = points[i + 1][j];
           let p3 = points[i][j + 1];
-
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
           ctx.stroke();
-
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p3.x, p3.y);
@@ -106,7 +97,6 @@
         }
       }
 
-      // Vẽ các điểm
       ctx.fillStyle = '#6C5CE7';
       ctx.globalAlpha = 0.6;
       for (let i = 0; i < cols; i++) {
@@ -123,10 +113,11 @@
     animate();
   })();
 
-  // ==================== SERVER TIME HIỂN THỊ ====================
+  // ==================== SERVER TIME (GIỜ VIỆT NAM) ====================
   function updateServerTime() {
     const now = new Date();
-    document.getElementById('serverTimeValue').textContent = now.toISOString();
+    const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    document.getElementById('serverTimeValue').textContent = now.toLocaleString('vi-VN', options);
   }
   updateServerTime();
   setInterval(updateServerTime, 1000);
