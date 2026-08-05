@@ -29,7 +29,27 @@
                   <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa vĩnh viễn tất cả thiết bị của key này?')"><button class="btn btn-outline btn-sm text-danger" title="Xóa tất cả"><i class="fas fa-trash-alt"></i></button></form>
                   <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa key này và tất cả thiết bị? Hành động này không thể hoàn tác.')"><button class="btn btn-outline btn-sm text-danger" title="Xóa key"><i class="fas fa-times"></i></button></form>
                 </div>
-                <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h6>Gia hạn</h6></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary btn-sm">OK</button></div></form></div></div>
+                <!-- Modal gia hạn có nút Hủy và nút X -->
+                <div class="modal fade" id="extend<%= k.id %>" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h6 class="modal-title">Gia hạn key</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                      </div>
+                      <form method="POST" action="/admin/keys/extend/<%= k.id %>">
+                        <div class="modal-body">
+                          <label class="form-label">Ngày hết hạn mới</label>
+                          <input type="date" name="new_expiry" class="form-control" required>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                          <button type="submit" class="btn btn-primary">Gia hạn</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
               </td>
             </tr>
           <% }) %>
@@ -41,10 +61,23 @@
 </div>
 
 <!-- Modal devices -->
-<div class="modal fade" id="devicesModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Thiết bị của key</h5></div><div class="modal-body" id="devicesModalBody">...</div></div></div></div>
+<div class="modal fade" id="devicesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Thiết bị của key</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body" id="devicesModalBody">...</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Modal tạo key -->
-<div class="modal fade" id="createKeyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>Tạo Key Mới</h5></div><form method="POST" action="/admin/keys/create"><div class="modal-body">
+<div class="modal fade" id="createKeyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>Tạo Key Mới</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><form method="POST" action="/admin/keys/create"><div class="modal-body">
   <div class="mb-3"><label>Tiền tố</label><input name="prefix" class="form-control" value="HoangPhu"></div>
   <div class="mb-3"><label>Hạng</label><select name="tier" class="form-select" id="tierSelect"><option value="VIP">VIP</option><option value="Normal">Normal</option></select></div>
   <div class="mb-3"><label>Số TB tối đa</label><input name="max_devices" type="number" class="form-control" value="1" id="maxDevicesInput"></div>
