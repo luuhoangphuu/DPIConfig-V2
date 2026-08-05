@@ -71,7 +71,12 @@ router.get('/keys', async (req, res) => {
 router.post('/keys/create', async (req, res) => {
   const { tier, duration, prefix, max_devices } = req.body;
   let maxDev = tier === 'VIP' ? 1 : 9;
-  if (max_devices) maxDev = parseInt(max_devices) || maxDev;
+  if (max_devices) {
+    maxDev = parseInt(max_devices) || maxDev;
+    if (maxDev < 1) maxDev = 1;
+    if (maxDev > 999) maxDev = 999;
+  }
+  if (max_devices) { maxDev = parseInt(max_devices) || maxDev; if (maxDev < 1) maxDev = 1; if (maxDev > 999) maxDev = 999; }
   let expires_at;
   if (duration === 'forever') expires_at = new Date('2099-12-31');
   else { const days = parseInt(duration)||30; expires_at = new Date(); expires_at.setDate(expires_at.getDate()+days); }
