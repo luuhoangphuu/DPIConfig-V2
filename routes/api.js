@@ -15,7 +15,7 @@ router.post('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier === 'Normal') ? 'Normal' : 'VIP'; // mặc định VIP
-    let days = parseInt(duration) || 30;
+    let days = parseInt(duration) || 1;
     if (days <= 0) days = 30;
     const expires_at = new Date();
     expires_at.setDate(expires_at.getDate() + days);
