@@ -1,14 +1,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Mạng lưới sóng (Wave Grid) - tương tác chuột
+  // ==================== WAVE GRID (LUÔN ĐỘNG) ====================
   (function() {
-    const canvas = document.getElementById('gridCanvas');
+    const canvas = document.getElementById('waveGrid');
     const ctx = canvas.getContext('2d');
     let width, height;
-    const spacing = 50; // khoảng cách giữa các điểm lưới
+    const spacing = 50; // Khoảng cách lưới
     let cols, rows;
     let points = [];
-    let mouse = { x: -1000, y: -1000 };
+    let mouse = { x: -1000, y: -1000, radius: 200 };
+    let time = 0;
 
     function resize() {
       width = canvas.width = window.innerWidth;
@@ -25,10 +26,10 @@
         points[i] = [];
         for (let j = 0; j < rows; j++) {
           points[i][j] = {
-            origX: i * spacing,
-            origY: j * spacing,
             x: i * spacing,
-            y: j * spacing
+            y: j * spacing,
+            originX: i * spacing,
+            originY: j * spacing
           };
         }
       }
@@ -47,40 +48,51 @@
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
+      time += 0.005;
 
-      // Cập nhật vị trí điểm theo sóng
+      // Cập nhật vị trí các điểm
       for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
-          const p = points[i][j];
-          const dx = p.origX - mouse.x;
-          const dy = p.origY - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const maxDist = 200;
+          let p = points[i][j];
 
-          if (dist < maxDist) {
-            const force = (maxDist - dist) / maxDist;
-            const angle = Math.atan2(dy, dx);
-            // Tạo hiệu ứng sóng: đẩy ra xa và dao động
-            p.x = p.origX + Math.cos(angle) * force * 30 + Math.sin(dist * 0.05 + Date.now() * 0.005) * force * 15;
-            p.y = p.origY + Math.sin(angle) * force * 30 + Math.cos(dist * 0.05 + Date.now() * 0.005) * force * 15;
-          } else {
-            // Trở về vị trí gốc từ từ
-            p.x += (p.origX - p.x) * 0.05;
-            p.y += (p.origY - p.y) * 0.05;
+          // ---- Dao động nền tự nhiên (luôn chạy) ----
+          let wave1 = Math.sin(time * 1.3 + i * 0.5 + j * 0.4) * 3.5;
+          let wave2 = Math.cos(time * 0.9 + i * 0.7 - j * 0.3) * 2.5;
+          let wave3 = Math.sin(time * 0.7 + (i + j) * 0.6) * 2.0;
+          let targetX = p.originX + wave1 + wave3;
+          let targetY = p.originY + wave2 + wave3 * 0.8;
+
+          // ---- Tương tác chuột (đẩy mạnh hơn) ----
+          let dx = p.originX - mouse.x;
+          let dy = p.originY - mouse.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < mouse.radius) {
+            let force = (mouse.radius - dist) / mouse.radius;
+            let angle = Math.atan2(dy, dx);
+            let pushX = Math.cos(angle) * force * 55;
+            let pushY = Math.sin(angle) * force * 55;
+            targetX += pushX;
+            targetY += pushY;
+            // Thêm dao động phụ khi có chuột
+            targetX += Math.sin(time * 15 + dist * 0.1) * force * 12;
+            targetY += Math.cos(time * 15 + dist * 0.1) * force * 12;
           }
+
+          // Di chuyển mượt về vị trí mục tiêu
+          p.x += (targetX - p.x) * 0.06;
+          p.y += (targetY - p.y) * 0.06;
         }
       }
 
-      // Vẽ đường nối giữa các điểm gần nhau
+      // Vẽ đường nối lưới
       ctx.strokeStyle = '#6C5CE7';
       ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.25;
-
+      ctx.globalAlpha = 0.2;
       for (let i = 0; i < cols - 1; i++) {
         for (let j = 0; j < rows - 1; j++) {
-          const p1 = points[i][j];
-          const p2 = points[i + 1][j];
-          const p3 = points[i][j + 1];
+          let p1 = points[i][j];
+          let p2 = points[i + 1][j];
+          let p3 = points[i][j + 1];
 
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
@@ -96,12 +108,12 @@
 
       // Vẽ các điểm
       ctx.fillStyle = '#6C5CE7';
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.6;
       for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
-          const p = points[i][j];
+          let p = points[i][j];
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -111,7 +123,7 @@
     animate();
   })();
 
-  // Dark mode toggle
+  // ==================== DARK MODE ====================
   const html = document.documentElement;
   const toggleBtn = document.getElementById('darkModeToggle');
   const icon = toggleBtn.querySelector('i');
@@ -129,7 +141,7 @@
   if (saved === 'true') html.setAttribute('data-bs-theme', 'dark');
   else if (saved === 'false') html.setAttribute('data-bs-theme', 'light');
 
-  // Countdown
+  // ==================== COUNTDOWN ====================
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
