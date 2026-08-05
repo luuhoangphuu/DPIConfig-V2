@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const axios = require('axios');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
 const { Key, Log, KeyDevice } = require('../models');
@@ -13,6 +14,8 @@ const {
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const LINK4M_API_TOKEN = process.env.LINK4M_API_TOKEN || '';
+const BASE_URL = process.env.BASE_URL || 'https://dpiconfig-api.onrender.com';
 
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
@@ -40,7 +43,11 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
-router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
+router.get('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/admin/login');
+});
+
 router.use(requireAdmin);
 
 // DASHBOARD
@@ -76,12 +83,15 @@ router.post('/keys/create', async (req, res) => {
     if (maxDev < 1) maxDev = 1;
     if (maxDev > 999) maxDev = 999;
   }
-  if (max_devices) { maxDev = parseInt(max_devices) || maxDev; if (maxDev < 1) maxDev = 1; if (maxDev > 999) maxDev = 999; }
   let expires_at;
   if (duration === 'forever') expires_at = new Date('2099-12-31');
-  else { const days = parseInt(duration)||30; expires_at = new Date(); expires_at.setDate(expires_at.getDate()+days); }
+  else {
+    const days = parseInt(duration) || 30;
+    expires_at = new Date();
+    expires_at.setDate(expires_at.getDate() + days);
+  }
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-  const key = `${prefix||'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+  const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.session.admin.email });
   await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} TB`, ip_address: req.ip });
   notifyKeyCreated(key, maxDev);
@@ -95,8 +105,10 @@ router.post('/keys/toggle/:id', async (req, res) => {
     await key.save();
     await Log.create({ action: key.is_active?'key_unlocked':'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyKeyToggled(key.key, key.is_active);
+    res.redirect('/admin/keys?toggled=1');
+  } else {
+    res.redirect('/admin/keys?error=toggle_failed');
   }
-  res.redirect('/admin/keys');
 });
 
 router.post('/keys/kick-all/:id', async (req, res) => {
@@ -105,8 +117,10 @@ router.post('/keys/kick-all/:id', async (req, res) => {
     await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } });
     await Log.create({ action: 'kick_all', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyKickAll(key.key);
+    res.redirect('/admin/keys?kicked=1');
+  } else {
+    res.redirect('/admin/keys?error=kick_failed');
   }
-  res.redirect('/admin/keys');
 });
 
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
@@ -115,8 +129,10 @@ router.post('/keys/delete-all-devices/:id', async (req, res) => {
     await KeyDevice.destroy({ where: { key_id: key.id } });
     await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyDeleteAllDevices(key.key);
+    res.redirect('/admin/keys?deleted_all_devices=1');
+  } else {
+    res.redirect('/admin/keys?error=delete_all_failed');
   }
-  res.redirect('/admin/keys');
 });
 
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
@@ -126,8 +142,10 @@ router.post('/keys/toggle-device/:deviceId', async (req, res) => {
     await device.save();
     await Log.create({ action: device.is_active?'device_unlocked':'device_kicked', details: `TB ${device.hwid} của key ${device.Key.key} ${device.is_active?'mở':'bị khóa'}`, ip_address: req.ip, key_id: device.key_id });
     notifyDeviceToggled(device.Key.key, device.hwid, device.is_active);
+    res.redirect('/admin/keys?device_toggled=1');
+  } else {
+    res.redirect('/admin/keys?error=device_toggle_failed');
   }
-  res.redirect('/admin/keys');
 });
 
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
@@ -137,15 +155,28 @@ router.post('/keys/unbind-device/:deviceId', async (req, res) => {
     await device.destroy();
     await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn TB ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id });
     notifyDeviceDeleted(keyKey, device.hwid);
+    res.redirect('/admin/keys?device_deleted=1');
+  } else {
+    res.redirect('/admin/keys?error=unbind_failed');
   }
-  res.redirect('/admin/keys');
 });
 
 router.post('/keys/extend/:id', async (req, res) => {
   const { new_expiry } = req.body;
   const key = await Key.findByPk(req.params.id);
-  if (key && new_expiry) { key.expires_at = new Date(new_expiry); await key.save(); await Log.create({ action: 'key_extended', details: `Gia hạn key ${key.key} đến ${new_expiry}`, ip_address: req.ip, key_id: key.id }); }
-  res.redirect('/admin/keys');
+  if (!key) return res.redirect('/admin/keys?error=extend_failed');
+  if (!new_expiry) return res.redirect('/admin/keys?error=missing_date');
+  try {
+    const newDate = new Date(new_expiry);
+    if (isNaN(newDate.getTime())) throw new Error('Invalid date');
+    key.expires_at = newDate;
+    await key.save();
+    await Log.create({ action: 'key_extended', details: `Gia hạn key ${key.key} đến ${new_expiry}`, ip_address: req.ip, key_id: key.id });
+    res.redirect('/admin/keys?extended=1');
+  } catch (err) {
+    console.error('Extend error:', err);
+    res.redirect('/admin/keys?error=extend_failed');
+  }
 });
 
 router.post('/keys/delete/:id', async (req, res) => {
@@ -155,8 +186,10 @@ router.post('/keys/delete/:id', async (req, res) => {
     await key.destroy();
     await Log.create({ action: 'key_deleted', details: `Xoá key ${key.key}`, ip_address: req.ip });
     notifyKeyDeleted(key.key);
+    res.redirect('/admin/keys?deleted=1');
+  } else {
+    res.redirect('/admin/keys?error=delete_failed');
   }
-  res.redirect('/admin/keys');
 });
 
 router.get('/keys/devices/:id', async (req, res) => {

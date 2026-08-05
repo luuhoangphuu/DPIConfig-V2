@@ -25,9 +25,9 @@
                 <div class="d-flex gap-1">
                   <button class="btn btn-outline btn-sm view-devices-btn" data-key-id="<%= k.id %>" title="Thiết bị"><i class="fas fa-list"></i></button>
                   <button class="btn btn-outline btn-sm" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn"><i class="fas fa-calendar-plus"></i></button>
-                  <form method="POST" action="/admin/keys/kick-all/<%= k.id %>"><button class="btn btn-outline btn-sm text-warning" title="Khóa tất cả"><i class="fas fa-ban"></i></button></form>
-                  <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>"><button class="btn btn-outline btn-sm text-danger" title="Xóa tất cả"><i class="fas fa-trash-alt"></i></button></form>
-                  <form method="POST" action="/admin/keys/delete/<%= k.id %>"><button class="btn btn-outline btn-sm text-danger" title="Xóa key"><i class="fas fa-times"></i></button></form>
+                  <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Bạn có chắc muốn KHÓA TẤT CẢ thiết bị của key này?')"><button class="btn btn-outline btn-sm text-warning" title="Khóa tất cả"><i class="fas fa-ban"></i></button></form>
+                  <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa vĩnh viễn tất cả thiết bị của key này?')"><button class="btn btn-outline btn-sm text-danger" title="Xóa tất cả"><i class="fas fa-trash-alt"></i></button></form>
+                  <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa key này và tất cả thiết bị? Hành động này không thể hoàn tác.')"><button class="btn btn-outline btn-sm text-danger" title="Xóa key"><i class="fas fa-times"></i></button></form>
                 </div>
                 <div class="modal fade" id="extend<%= k.id %>"><div class="modal-dialog modal-sm"><form method="POST" action="/admin/keys/extend/<%= k.id %>" class="modal-content"><div class="modal-header"><h6>Gia hạn</h6></div><div class="modal-body"><input type="date" name="new_expiry" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary btn-sm">OK</button></div></form></div></div>
               </td>
@@ -66,8 +66,8 @@
           let html = '<table class="table-custom w-100"><thead><tr><th>HWID</th><th>Tên</th><th>Trạng thái</th><th></th></tr></thead><tbody>';
           data.devices.forEach(d => {
             html += `<tr><td><code>${d.hwid}</code></td><td>${d.device_name||''}</td><td><span class="badge ${d.is_active?'bg-success':'bg-danger'}">${d.is_active?'Active':'Bị khóa'}</span></td>
-            <td><form method="POST" action="/admin/keys/toggle-device/${d.id}" class="d-inline"><button class="btn btn-outline btn-sm">${d.is_active?'Khóa':'Mở'}</button></form>
-            <form method="POST" action="/admin/keys/unbind-device/${d.id}" class="d-inline"><button class="btn btn-outline btn-sm text-danger">Xóa</button></form></td></tr>`;
+            <td><form method="POST" action="/admin/keys/toggle-device/${d.id}" class="d-inline" onsubmit="return confirm('Xác nhận thay đổi trạng thái thiết bị?')"><button class="btn btn-outline btn-sm">${d.is_active?'Khóa':'Mở'}</button></form>
+            <form method="POST" action="/admin/keys/unbind-device/${d.id}" class="d-inline" onsubmit="return confirm('Xóa vĩnh viễn thiết bị này?')"><button class="btn btn-outline btn-sm text-danger">Xóa</button></form></td></tr>`;
           });
           body.innerHTML = html + '</tbody></table>';
         } else body.innerHTML = '<p class="text-muted">Chưa có thiết bị.</p>';

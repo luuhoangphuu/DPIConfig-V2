@@ -122,6 +122,52 @@
   updateServerTime();
   setInterval(updateServerTime, 1000);
 
+  // ==================== TOAST THÔNG BÁO ====================
+  const urlParams = new URLSearchParams(window.location.search);
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer)
+      toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+  });
+
+  if (urlParams.get('created') === '1') {
+    Toast.fire({ icon: 'success', title: 'Key mới đã được tạo' });
+  }
+  if (urlParams.get('toggled') === '1') {
+    Toast.fire({ icon: 'success', title: 'Trạng thái key đã thay đổi' });
+  }
+  if (urlParams.get('kicked') === '1') {
+    Toast.fire({ icon: 'warning', title: 'Tất cả thiết bị đã bị khóa' });
+  }
+  if (urlParams.get('deleted_all_devices') === '1') {
+    Toast.fire({ icon: 'error', title: 'Tất cả thiết bị đã bị xóa vĩnh viễn' });
+  }
+  if (urlParams.get('device_toggled') === '1') {
+    Toast.fire({ icon: 'success', title: 'Trạng thái thiết bị đã thay đổi' });
+  }
+  if (urlParams.get('device_deleted') === '1') {
+    Toast.fire({ icon: 'error', title: 'Thiết bị đã bị xóa' });
+  }
+  if (urlParams.get('extended') === '1') {
+    Toast.fire({ icon: 'success', title: 'Key đã được gia hạn' });
+  }
+  if (urlParams.get('deleted') === '1') {
+    Toast.fire({ icon: 'error', title: 'Key đã bị xóa vĩnh viễn' });
+  }
+  // Thông báo lỗi chung
+  if (urlParams.get('error') === 'extend_failed') {
+    Toast.fire({ icon: 'error', title: 'Gia hạn thất bại. Vui lòng kiểm tra lại ngày.' });
+  }
+  if (urlParams.get('error') === 'missing_date') {
+    Toast.fire({ icon: 'warning', title: 'Vui lòng chọn ngày gia hạn.' });
+  }
+
   // ==================== DARK MODE ====================
   const html = document.documentElement;
   const toggleBtn = document.getElementById('darkModeToggle');
