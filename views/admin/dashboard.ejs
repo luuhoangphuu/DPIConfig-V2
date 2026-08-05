@@ -2,90 +2,59 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
-    <div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
-      <div>
-        <h4 class="fw-bold mb-1">Tổng quan hệ thống</h4>
-        <p class="text-muted mb-0"><%= new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></p>
-      </div>
-    </div>
-
+    <h4 class="fw-bold mb-4 animate__animated animate__fadeInDown" style="font-family:'Orbitron'; color: var(--neon-blue);">
+      <i class="fas fa-satellite me-2"></i>SYSTEM STATUS
+    </h4>
     <div class="row g-4 mb-4">
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp">
-        <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="label">Tổng Key</div>
-              <div class="value"><%= totalKeys %></div>
-            </div>
-            <div class="icon"><i class="fas fa-key text-primary"></i></div>
-          </div>
+      <div class="col-md-3 animate__animated animate__fadeInUp">
+        <div class="glass-card stat-card">
+          <div class="label">TOTAL KEYS</div>
+          <div class="value" style="color: var(--neon-blue);"><%= totalKeys %></div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-1s">
-        <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="label">Đang hoạt động</div>
-              <div class="value text-success"><%= activeKeys %></div>
-            </div>
-            <div class="icon"><i class="fas fa-check-circle text-success"></i></div>
-          </div>
+      <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-1s">
+        <div class="glass-card stat-card">
+          <div class="label">ACTIVE</div>
+          <div class="value" style="color: #10b981;"><%= activeKeys %></div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-2s">
-        <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="label">Hết hạn</div>
-              <div class="value text-danger"><%= expiredKeys %></div>
-            </div>
-            <div class="icon"><i class="fas fa-exclamation-triangle text-danger"></i></div>
-          </div>
+      <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-2s">
+        <div class="glass-card stat-card">
+          <div class="label">EXPIRED</div>
+          <div class="value" style="color: #ef4444;"><%= expiredKeys %></div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 animate__animated animate__fadeInUp animate__delay-3s">
-        <div class="stat-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="label">Thiết bị đã kích hoạt</div>
-              <div class="value text-warning"><%= devicesActivated %></div>
-            </div>
-            <div class="icon"><i class="fas fa-mobile-alt text-warning"></i></div>
-          </div>
+      <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-3s">
+        <div class="glass-card stat-card">
+          <div class="label">DEVICES</div>
+          <div class="value" style="color: #fbbf24;"><%= devicesActivated %></div>
         </div>
       </div>
     </div>
 
     <div class="row g-4 mb-4">
       <div class="col-md-6 animate__animated animate__fadeInUp animate__delay-4s">
-        <div class="stat-card p-3">
-          <h6 class="fw-bold mb-3">Phân phối Key theo hạng</h6>
+        <div class="glass-card">
+          <h6 class="fw-bold mb-3" style="font-family:'Orbitron';">KEY TIER DISTRIBUTION</h6>
           <canvas id="tierChart" height="200"></canvas>
         </div>
       </div>
       <div class="col-md-6 animate__animated animate__fadeInUp animate__delay-4s">
-        <div class="stat-card p-3">
-          <h6 class="fw-bold mb-3">Trạng thái Key</h6>
-          <canvas id="statusChart" height="200"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="stat-card p-3 animate__animated animate__fadeInUp animate__delay-5s">
-      <h6 class="fw-bold mb-3">Hoạt động gần đây</h6>
-      <div class="table-responsive">
-        <table class="table-custom w-100">
-          <thead><tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr></thead>
-          <tbody>
+        <div class="glass-card">
+          <h6 class="fw-bold mb-3" style="font-family:'Orbitron';">RECENT ACTIVITY</h6>
+          <div class="timeline">
             <% recentLogs.forEach(log => { %>
-              <tr>
-                <td class="text-muted small"><%= new Date(log.createdAt).toLocaleString('vi-VN') %></td>
-                <td><span class="badge bg-primary"><%= log.action %></span></td>
-                <td><%= log.details %></td>
-              </tr>
+              <div class="d-flex mb-3 align-items-center">
+                <div class="bg-primary rounded-circle p-2 me-3"><i class="fas fa-circle text-white" style="font-size:0.5rem;"></i></div>
+                <div>
+                  <small class="text-muted"><%= new Date(log.createdAt).toLocaleString('vi-VN') %></small><br>
+                  <span class="badge bg-primary me-2"><%= log.action %></span>
+                  <span class="text-muted"><%= log.details %></span>
+                </div>
+              </div>
             <% }) %>
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -93,30 +62,12 @@
 <%- include('../partials/scripts') %>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-  // Biểu đồ hạng
   new Chart(document.getElementById('tierChart'), {
     type: 'doughnut',
     data: {
       labels: ['VIP', 'Normal'],
-      datasets: [{
-        data: [<%= vipKeys %>, <%= totalKeys - vipKeys %>],
-        backgroundColor: ['#F59E0B', '#6B7280'],
-        borderWidth: 0
-      }]
+      datasets: [{ data: [<%= vipKeys %>, <%= totalKeys - vipKeys %>], backgroundColor: ['#fbbf24','#6b7280'], borderWidth: 0 }]
     },
-    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-  });
-  // Biểu đồ trạng thái
-  new Chart(document.getElementById('statusChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Hoạt động', 'Hết hạn', 'Đã khóa'],
-      datasets: [{
-        data: [<%= activeKeys %>, <%= expiredKeys %>, <%= totalKeys - activeKeys - expiredKeys %>],
-        backgroundColor: ['#10B981', '#EF4444', '#F59E0B'],
-        borderWidth: 0
-      }]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: 'white' } } } }
   });
 </script>

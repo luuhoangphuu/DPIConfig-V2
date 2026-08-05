@@ -3,40 +3,46 @@
   particlesJS.load('particles-js', '/css/particles.json', function(){});
   if (typeof window.pJSDom === 'undefined' || window.pJSDom.length === 0) {
     particlesJS('particles-js', {
-      particles: { number: { value: 40 }, color: { value: '#4F46E5' }, opacity: { value: 0.15 }, size: { value: 3 }, line_linked: { enable: false }, move: { enable: true, speed: 0.8 } },
+      particles: { number: { value: 50, density: { enable: true, value_area: 1000 } }, color: { value: '#00f2fe' }, shape: { type: 'circle' }, opacity: { value: 0.4, random: true }, size: { value: 3, random: true }, line_linked: { enable: true, distance: 120, color: '#00f2fe', opacity: 0.2 }, move: { enable: true, speed: 1.5, direction: 'none', random: true } },
       interactivity: { events: { onhover: { enable: true, mode: 'repulse' } } }
     });
   }
 
-  // Dark mode
+  // Dark mode (mặc định dark)
   const html = document.documentElement;
+  html.setAttribute('data-bs-theme', 'dark'); // mặc định tối
   const toggleBtn = document.getElementById('darkModeToggle');
   const icon = toggleBtn.querySelector('i');
-  function setDarkMode(isDark) {
-    if (isDark) { html.setAttribute('data-bs-theme', 'dark'); icon.classList.replace('fa-moon','fa-sun'); localStorage.setItem('darkMode','true'); }
-    else { html.setAttribute('data-bs-theme', 'light'); icon.classList.replace('fa-sun','fa-moon'); localStorage.setItem('darkMode','false'); }
+  function updateIcon() {
+    if (html.getAttribute('data-bs-theme') === 'dark') {
+      icon.classList.replace('fa-sun', 'fa-moon');
+    } else {
+      icon.classList.replace('fa-moon', 'fa-sun');
+    }
   }
-  setDarkMode(localStorage.getItem('darkMode') === 'true');
-  toggleBtn.addEventListener('click', ()=> setDarkMode(html.getAttribute('data-bs-theme') !== 'dark'));
+  updateIcon();
+  toggleBtn.addEventListener('click', () => {
+    const current = html.getAttribute('data-bs-theme');
+    html.setAttribute('data-bs-theme', current === 'dark' ? 'light' : 'dark');
+    localStorage.setItem('darkMode', current === 'dark' ? 'false' : 'true');
+    updateIcon();
+  });
 
   // Countdown
   function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(el => {
       const expiry = new Date(el.getAttribute('data-expiry')).getTime();
       const diff = expiry - Date.now();
-      if (diff <= 0) { el.textContent = 'Hết hạn'; el.className = 'countdown danger'; }
+      if (diff <= 0) { el.textContent = 'EXPIRED'; el.className = 'countdown danger'; }
       else {
         const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000);
-        el.textContent = d>0 ? d+' ngày '+h+' giờ' : h+' giờ '+m+' phút';
+        el.textContent = d>0 ? d+'d '+h+'h' : h+'h '+m+'m';
         el.className = d<=3 ? 'countdown warning' : 'countdown safe';
       }
     });
   }
   setInterval(updateCountdowns, 60000);
   updateCountdowns();
-
-  // Ripple
-  document.querySelectorAll('.btn, .nav-link, .toggle-switch, .page-link').forEach(el => el.classList.add('ripple'));
 </script>
 </body>
 </html>
