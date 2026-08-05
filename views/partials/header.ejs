@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <style>
     :root {
       --sidebar-width: 260px;
@@ -40,22 +39,10 @@
       transition: background 0.3s, color 0.3s;
       overflow-x: hidden;
     }
-    /* Nền động gradient nhẹ */
-    .bg-animated {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
-      background: linear-gradient(135deg, rgba(108,92,231,0.05) 0%, rgba(162,155,254,0.03) 50%, rgba(108,92,231,0.05) 100%);
-      background-size: 200% 200%;
-      animation: gradientShift 10s ease infinite;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    /* Particles nhỏ nhẹ */
-    #particles-js {
+    /* Canvas nền */
+    #bgCanvas {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-      opacity: 0.3;
+      opacity: 0.6;
     }
     .sidebar {
       background: var(--bg-card);
@@ -74,7 +61,6 @@
     .sidebar .nav-link:hover { background: rgba(108,92,231,0.08); color: var(--primary); }
     .sidebar .nav-link.active { background: rgba(108,92,231,0.12); color: var(--primary); font-weight: 600; }
     .main-content { margin-left: var(--sidebar-width); padding: 32px; }
-    /* Card thống kê với icon lớn */
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -135,5 +121,4 @@
   </style>
 </head>
 <body>
-  <div class="bg-animated"></div>
-  <div id="particles-js"></div>
+  <canvas id="bgCanvas"></canvas>
