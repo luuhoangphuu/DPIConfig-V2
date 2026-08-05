@@ -16,7 +16,7 @@
               <td><code style="font-size:0.9rem;"><%= k.key %></code></td>
               <td><span class="badge-tier <%= k.tier==='VIP' ? 'badge-vip' : 'badge-normal' %>"><%= k.tier %></span></td>
               <td><%= active %>/<%= k.max_devices %></td>
-              <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN') %></td>
+              <td><%= new Date(k.expires_at).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %></td>
               <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
               <td>
                 <form method="POST" action="/admin/keys/toggle/<%= k.id %>"><label class="toggle-switch"><input type="checkbox" <%= k.is_active?'checked':'' %> onchange="this.form.submit()"><span class="slider"></span></label></form>
