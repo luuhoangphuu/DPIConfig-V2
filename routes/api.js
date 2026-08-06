@@ -14,12 +14,12 @@ router.get('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let hours = 24; // mặc định 24 giờ (1 ngày)
+    let hours = 24; // mặc định 24h
     if (duration === '0.5') {
       hours = 12;
     } else if (duration) {
-      const days = parseInt(duration);
-      if (!isNaN(days) && days > 0) hours = days * 24;
+      const days = parseInt(duration) || 1;
+      hours = days * 24;
     }
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
@@ -70,12 +70,12 @@ router.post('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let hours = 24; // mặc định 24 giờ (1 ngày)
+    let hours = 24; // mặc định 24h
     if (duration === '0.5') {
       hours = 12;
     } else if (duration) {
-      const days = parseInt(duration);
-      if (!isNaN(days) && days > 0) hours = days * 24;
+      const days = parseInt(duration) || 1;
+      hours = days * 24;
     }
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);

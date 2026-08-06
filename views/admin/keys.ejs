@@ -24,7 +24,6 @@
               <td>
                 <div class="d-flex gap-1">
                   <button class="btn btn-outline btn-sm view-devices-btn" data-key-id="<%= k.id %>" title="Thiết bị"><i class="fas fa-list"></i></button>
-                  <!-- Sửa data-bs-target để trỏ đúng modal extend -->
                   <button class="btn btn-outline btn-sm" data-bs-toggle="modal" data-bs-target="#extendModal<%= k.id %>" title="Gia hạn"><i class="fas fa-calendar-plus"></i></button>
                   <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Bạn có chắc muốn KHÓA TẤT CẢ thiết bị của key này?')"><button class="btn btn-outline btn-sm text-warning" title="Khóa tất cả"><i class="fas fa-ban"></i></button></form>
                   <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa vĩnh viễn tất cả thiết bị của key này?')"><button class="btn btn-outline btn-sm text-danger" title="Xóa tất cả"><i class="fas fa-trash-alt"></i></button></form>
@@ -44,16 +43,9 @@
 <div class="modal fade" id="devicesModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Thiết bị của key</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-      </div>
-      <div class="modal-body" id="devicesModalBody">
-        <p class="text-center text-muted">Đang tải...</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-      </div>
+      <div class="modal-header"><h5 class="modal-title">Thiết bị của key</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+      <div class="modal-body" id="devicesModalBody"><p class="text-center text-muted">Đang tải...</p></div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div>
     </div>
   </div>
 </div>
@@ -62,17 +54,25 @@
 <div class="modal fade" id="createKeyModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tạo Key Mới</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-      </div>
+      <div class="modal-header"><h5 class="modal-title">Tạo Key Mới</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
       <form method="POST" action="/admin/keys/create">
         <div class="modal-body">
           <div class="mb-3"><label class="form-label">Tiền tố</label><input name="prefix" class="form-control" value="HoangPhu"></div>
           <div class="mb-3"><label class="form-label">Hạng</label><select name="tier" class="form-select" id="tierSelect"><option value="VIP">VIP</option><option value="Normal">Normal</option></select></div>
           <div class="mb-3"><label class="form-label">Số TB tối đa</label><input name="max_devices" type="number" class="form-control" value="1" id="maxDevicesInput"></div>
-                  <option value="0.5">12 giờ</option>
-          <div class="mb-3"><label class="form-label">Thời hạn</label><select name="duration" class="form-select"><option value="1">1 ngày</option><option value="7">7 ngày</option><option value="15">15 ngày</option><option value="30">30 ngày</option><option value="90">90 ngày</option><option value="365">1 năm</option><option value="forever">Vĩnh viễn</option></select></div>
+          <div class="mb-3">
+            <label class="form-label">Thời hạn</label>
+            <select name="duration" class="form-select">
+              <option value="0.5">12 giờ</option>
+              <option value="1">1 ngày</option>
+              <option value="7">7 ngày</option>
+              <option value="15">15 ngày</option>
+              <option value="30">30 ngày</option>
+              <option value="90">90 ngày</option>
+              <option value="365">1 năm</option>
+              <option value="forever">Vĩnh viễn</option>
+            </select>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -83,24 +83,15 @@
   </div>
 </div>
 
-<!-- Render modal gia hạn cho từng key (đặt ngoài vòng lặp để tránh lỗi) -->
+<!-- Modals gia hạn cho từng key -->
 <% keys.forEach(k => { %>
 <div class="modal fade" id="extendModal<%= k.id %>" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h6 class="modal-title">Gia hạn key <%= k.key %></h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-      </div>
+      <div class="modal-header"><h6 class="modal-title">Gia hạn key <%= k.key %></h6><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
       <form method="POST" action="/admin/keys/extend/<%= k.id %>">
-        <div class="modal-body">
-          <label class="form-label">Ngày hết hạn mới</label>
-          <input type="date" name="new_expiry" class="form-control" required>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-primary">Gia hạn</button>
-        </div>
+        <div class="modal-body"><label class="form-label">Ngày hết hạn mới</label><input type="date" name="new_expiry" class="form-control" required></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-primary">Gia hạn</button></div>
       </form>
     </div>
   </div>
@@ -110,8 +101,6 @@
 <%- include('../partials/scripts') %>
 <script>
   document.getElementById('tierSelect').addEventListener('change', function(){ document.getElementById('maxDevicesInput').value = this.value==='VIP'?1:9; });
-
-  // Xử lý modal devices
   document.querySelectorAll('.view-devices-btn').forEach(btn => {
     btn.addEventListener('click', async function(){
       const keyId = this.dataset.keyId;

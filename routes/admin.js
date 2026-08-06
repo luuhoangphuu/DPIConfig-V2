@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const axios = require('axios');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
 const { Key, Log, KeyDevice } = require('../models');
@@ -14,8 +13,6 @@ const {
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
-const LINK4M_API_TOKEN = process.env.LINK4M_API_TOKEN || '';
-const BASE_URL = process.env.BASE_URL || 'https://dpiconfig-api.onrender.com';
 
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
@@ -43,11 +40,7 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
-router.get('/logout', (req, res) => {
-  req.session = null;
-  res.redirect('/admin/login');
-});
-
+router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
 // DASHBOARD
@@ -83,21 +76,26 @@ router.post('/keys/create', async (req, res) => {
     if (maxDev < 1) maxDev = 1;
     if (maxDev > 999) maxDev = 999;
   }
+
+  let hours = 0;
+  if (duration === '0.5') {
+    hours = 12;
+  } else if (duration === 'forever') {
+    // vĩnh viễn
+  } else {
+    const days = parseInt(duration) || 30;
+    if (days <= 0) days = 30;
+    hours = days * 24;
+  }
+
   let expires_at;
-  if (duration === 'forever') expires_at = new Date('2099-12-31');
-  else {
-    let hours = 0;
-    if (duration === '0.5') hours = 12;
-    else {
-      const days = parseInt(duration) || 30;
-      if (days <= 0) days = 30;
-      hours = days * 24;
-    }
+  if (duration === 'forever') {
+    expires_at = new Date('2099-12-31');
+  } else {
     expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
-    expires_at = new Date();
-    expires_at.setDate(expires_at.getDate() + days);
   }
+
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.session.admin.email });
