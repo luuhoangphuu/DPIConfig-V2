@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-// Route test pingrouter.get('/ping', (req, res) => res.send('pong'));
 const crypto = require('crypto');
 const { Key, Log, KeyDevice } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
@@ -15,18 +14,15 @@ router.get('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let hours = 0;
-    if (duration === '0.5') hours = 12;
-    else {
-      let days = parseInt(duration) || 1;
-      if (days <= 0) days = 1;
-      hours = days * 24;
+    let hours = 24; // mặc định 24 giờ (1 ngày)
+    if (duration === '0.5') {
+      hours = 12;
+    } else if (duration) {
+      const days = parseInt(duration);
+      if (!isNaN(days) && days > 0) hours = days * 24;
     }
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
-    if (days <= 0) days = 1;
-    const expires_at = new Date();
-    expires_at.setDate(expires_at.getDate() + days);
 
     let maxDev = chosenTier === 'VIP' ? 1 : 9;
     if (max_devices) {
@@ -74,18 +70,15 @@ router.post('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let hours = 0;
-    if (duration === '0.5') hours = 12;
-    else {
-      let days = parseInt(duration) || 1;
-      if (days <= 0) days = 1;
-      hours = days * 24;
+    let hours = 24; // mặc định 24 giờ (1 ngày)
+    if (duration === '0.5') {
+      hours = 12;
+    } else if (duration) {
+      const days = parseInt(duration);
+      if (!isNaN(days) && days > 0) hours = days * 24;
     }
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
-    if (days <= 0) days = 1;
-    const expires_at = new Date();
-    expires_at.setDate(expires_at.getDate() + days);
 
     let maxDev = chosenTier === 'VIP' ? 1 : 9;
     if (max_devices) {
