@@ -36,6 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/ping', (req, res) => res.send('pong from server.js'));
 app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
