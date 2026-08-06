@@ -15,7 +15,15 @@ router.get('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let days = parseInt(duration) || 1;
+    let hours = 0;
+    if (duration === '0.5') hours = 12;
+    else {
+      let days = parseInt(duration) || 1;
+      if (days <= 0) days = 1;
+      hours = days * 24;
+    }
+    const expires_at = new Date();
+    expires_at.setHours(expires_at.getHours() + hours);
     if (days <= 0) days = 1;
     const expires_at = new Date();
     expires_at.setDate(expires_at.getDate() + days);
@@ -40,7 +48,7 @@ router.get('/gen-key', async (req, res) => {
 
     await Log.create({
       action: 'auto_key_created',
-      details: `API GET tạo key ${key} (${chosenTier}, ${days} ngày, max ${maxDev} TB)`,
+      details: `API GET tạo key ${key} (${chosenTier}, ${hours} giờ, max ${maxDev} TB)`,
       ip_address: req.ip
     });
 
@@ -66,7 +74,15 @@ router.post('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let days = parseInt(duration) || 1;
+    let hours = 0;
+    if (duration === '0.5') hours = 12;
+    else {
+      let days = parseInt(duration) || 1;
+      if (days <= 0) days = 1;
+      hours = days * 24;
+    }
+    const expires_at = new Date();
+    expires_at.setHours(expires_at.getHours() + hours);
     if (days <= 0) days = 1;
     const expires_at = new Date();
     expires_at.setDate(expires_at.getDate() + days);
@@ -91,7 +107,7 @@ router.post('/gen-key', async (req, res) => {
 
     await Log.create({
       action: 'auto_key_created',
-      details: `API POST tạo key ${key} (${chosenTier}, ${days} ngày, max ${maxDev} TB)`,
+      details: `API POST tạo key ${key} (${chosenTier}, ${hours} giờ, max ${maxDev} TB)`,
       ip_address: req.ip
     });
 

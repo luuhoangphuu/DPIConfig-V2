@@ -86,7 +86,15 @@ router.post('/keys/create', async (req, res) => {
   let expires_at;
   if (duration === 'forever') expires_at = new Date('2099-12-31');
   else {
-    const days = parseInt(duration) || 30;
+    let hours = 0;
+    if (duration === '0.5') hours = 12;
+    else {
+      const days = parseInt(duration) || 30;
+      if (days <= 0) days = 30;
+      hours = days * 24;
+    }
+    expires_at = new Date();
+    expires_at.setHours(expires_at.getHours() + hours);
     expires_at = new Date();
     expires_at.setDate(expires_at.getDate() + days);
   }
