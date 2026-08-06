@@ -5,7 +5,7 @@ const { Key, Log, KeyDevice } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
 const apiLimiter = require('../middleware/rateLimiter');
 
-// ==================== ROUTE BÍ MẬT TẠO KEY (GET) ====================
+// Route tạo key (GET)
 router.get('/gen-key', async (req, res) => {
   try {
     const { secret, tier, duration, prefix, max_devices } = req.query;
@@ -56,7 +56,7 @@ router.get('/gen-key', async (req, res) => {
   }
 });
 
-// ==================== ROUTE BÍ MẬT TẠO KEY (POST) ====================
+// Route tạo key (POST)
 router.post('/gen-key', async (req, res) => {
   try {
     const { secret, tier, duration, prefix, max_devices } = req.body;
@@ -107,7 +107,7 @@ router.post('/gen-key', async (req, res) => {
   }
 });
 
-// ==================== CÁC ROUTE CHÍNH (cần X-API-Key) ====================
+// Các route chính (cần X-API-Key)
 router.use(apiLimiter);
 router.use(apiAuth);
 
