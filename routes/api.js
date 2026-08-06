@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// Route test pingrouter.get('/ping', (req, res) => res.send('pong'));
 const crypto = require('crypto');
 const { Key, Log, KeyDevice } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
