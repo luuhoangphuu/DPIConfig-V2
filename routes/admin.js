@@ -70,7 +70,7 @@ router.get('/keys', async (req, res) => {
 
 router.post('/keys/create', async (req, res) => {
   const { tier, duration, prefix, max_devices } = req.body;
-  let maxDev = tier === 'VIP' ? 1 : 9;
+  let maxDev = 1;
   if (max_devices) {
     maxDev = parseInt(max_devices) || maxDev;
     if (maxDev < 1) maxDev = 1;

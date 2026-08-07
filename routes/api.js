@@ -23,7 +23,7 @@ router.get('/gen-key', async (req, res) => {
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
 
-    let maxDev = chosenTier === 'VIP' ? 1 : 9;
+    let maxDev = 1;
     if (max_devices) {
       maxDev = parseInt(max_devices) || maxDev;
       if (maxDev < 1) maxDev = 1;
@@ -79,7 +79,7 @@ router.post('/gen-key', async (req, res) => {
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
 
-    let maxDev = chosenTier === 'VIP' ? 1 : 9;
+    let maxDev = 1;
     if (max_devices) {
       maxDev = parseInt(max_devices) || maxDev;
       if (maxDev < 1) maxDev = 1;
