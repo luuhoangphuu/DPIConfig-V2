@@ -83,7 +83,12 @@ router.post('/keys/create', async (req, res) => {
   } else if (duration === 'forever') {
     // vĩnh viễn
   } else {
-    const days = parseInt(duration) || 30;
+    const dur = parseFloat(duration) || 30;
+    let days = dur;
+    if (days <= 0) days = 30;
+    const hours = Math.round(days * 24);
+    expires_at = new Date();
+    expires_at.setHours(expires_at.getHours() + hours);
     if (days <= 0) days = 30;
     hours = days * 24;
   }

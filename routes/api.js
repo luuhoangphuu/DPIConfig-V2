@@ -14,13 +14,12 @@ router.get('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let hours = 24; // mặc định 24h
-    if (duration === '0.5') {
-      hours = 12;
-    } else if (duration) {
-      const days = parseInt(duration) || 1;
-      hours = days * 24;
-    }
+    
+    // Xử lý duration: có thể là số ngày (0.5 = 12h, 1 = 24h, 7 = 7 ngày...) hoặc mặc định 1 ngày
+    let days = parseFloat(duration) || 1;
+    if (days <= 0) days = 1;
+    const hours = Math.round(days * 24);
+    
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
 
@@ -53,6 +52,7 @@ router.get('/gen-key', async (req, res) => {
       key: key,
       tier: chosenTier,
       expires_at: expires_at.toISOString(),
+      duration_hours: hours,
       max_devices: maxDev
     });
   } catch (err) {
@@ -70,13 +70,12 @@ router.post('/gen-key', async (req, res) => {
     }
 
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let hours = 24; // mặc định 24h
-    if (duration === '0.5') {
-      hours = 12;
-    } else if (duration) {
-      const days = parseInt(duration) || 1;
-      hours = days * 24;
-    }
+    
+    // Xử lý duration
+    let days = parseFloat(duration) || 1;
+    if (days <= 0) days = 1;
+    const hours = Math.round(days * 24);
+    
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
 
@@ -109,6 +108,7 @@ router.post('/gen-key', async (req, res) => {
       key: key,
       tier: chosenTier,
       expires_at: expires_at.toISOString(),
+      duration_hours: hours,
       max_devices: maxDev
     });
   } catch (err) {
