@@ -43,16 +43,13 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
 router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// DASHBOARD
+// DASHBOARD (có nút hiển thị tất cả)
 router.get('/dashboard', async (req, res) => {
   try {
     const showAll = req.query.show === 'all';
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
-    // Xây dựng điều kiện where
-    const where = {
-      createdAt: { [Op.gte]: oneDayAgo }
-    };
+    const where = { createdAt: { [Op.gte]: oneDayAgo } };
     if (!showAll) {
       where.action = { [Op.ne]: 'check' };
     }
@@ -64,7 +61,7 @@ router.get('/dashboard', async (req, res) => {
     const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
     const recentLogs = await Log.findAll({
       where,
-      limit: 8,
+      limit: 20,
       order: [['createdAt', 'DESC']],
       include: Key
     });
