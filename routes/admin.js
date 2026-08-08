@@ -43,14 +43,19 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
 router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// DASHBOARD
+// DASHBOARD (lọc bỏ log check)
 router.get('/dashboard', async (req, res) => {
   const totalKeys = await Key.count();
   const activeKeys = await Key.count({ where: { is_active: true } });
   const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
   const vipKeys = await Key.count({ where: { tier: 'VIP' } });
   const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-  const recentLogs = await Log.findAll({ limit: 8, order: [['createdAt', 'DESC']], where: { action: { [Op.ne]: 'check' } }, include: Key }]'createdAt', 'DESC']], include: Key });
+  const recentLogs = await Log.findAll({
+    where: { action: { [Op.ne]: 'check' } },   // loại bỏ log check
+    limit: 8,
+    order: [['createdAt', 'DESC']],
+    include: Key
+  });
   res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
 });
 
@@ -72,34 +77,16 @@ router.post('/keys/create', async (req, res) => {
   const { tier, duration, prefix, max_devices } = req.body;
   let maxDev = 1;
   if (max_devices) {
-    maxDev = parseInt(max_devices) || maxDev;
+    maxDev = parseInt(max_devices) || 1;
     if (maxDev < 1) maxDev = 1;
     if (maxDev > 999) maxDev = 999;
   }
-
-  let hours = 0;
-  if (duration === '0.5') {
-    hours = 12;
-  } else if (duration === 'forever') {
-    // vĩnh viễn
-  } else {
-    const dur = parseFloat(duration) || 30;
-    let days = dur;
-    if (days <= 0) days = 30;
-    const hours = Math.round(days * 24);
-    expires_at = new Date();
-    expires_at.setHours(expires_at.getHours() + hours);
-    if (days <= 0) days = 30;
-    hours = days * 24;
-  }
-
-  let expires_at;
-  if (duration === 'forever') {
-    expires_at = new Date('2099-12-31');
-  } else {
-    expires_at = new Date();
-    expires_at.setHours(expires_at.getHours() + hours);
-  }
+  const dur = parseFloat(duration) || 30;
+  let days = dur;
+  if (days <= 0) days = 30;
+  const hours = Math.round(days * 24);
+  const expires_at = new Date();
+  expires_at.setHours(expires_at.getHours() + hours);
 
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
@@ -117,8 +104,6 @@ router.post('/keys/toggle/:id', async (req, res) => {
     await Log.create({ action: key.is_active?'key_unlocked':'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyKeyToggled(key.key, key.is_active);
     res.redirect('/admin/keys?toggled=1');
-  } else {
-    res.redirect('/admin/keys?error=toggle_failed');
   }
 });
 
@@ -129,8 +114,6 @@ router.post('/keys/kick-all/:id', async (req, res) => {
     await Log.create({ action: 'kick_all', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyKickAll(key.key);
     res.redirect('/admin/keys?kicked=1');
-  } else {
-    res.redirect('/admin/keys?error=kick_failed');
   }
 });
 
@@ -141,8 +124,6 @@ router.post('/keys/delete-all-devices/:id', async (req, res) => {
     await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyDeleteAllDevices(key.key);
     res.redirect('/admin/keys?deleted_all_devices=1');
-  } else {
-    res.redirect('/admin/keys?error=delete_all_failed');
   }
 });
 
@@ -154,8 +135,6 @@ router.post('/keys/toggle-device/:deviceId', async (req, res) => {
     await Log.create({ action: device.is_active?'device_unlocked':'device_kicked', details: `TB ${device.hwid} của key ${device.Key.key} ${device.is_active?'mở':'bị khóa'}`, ip_address: req.ip, key_id: device.key_id });
     notifyDeviceToggled(device.Key.key, device.hwid, device.is_active);
     res.redirect('/admin/keys?device_toggled=1');
-  } else {
-    res.redirect('/admin/keys?error=device_toggle_failed');
   }
 });
 
@@ -167,26 +146,17 @@ router.post('/keys/unbind-device/:deviceId', async (req, res) => {
     await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn TB ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id });
     notifyDeviceDeleted(keyKey, device.hwid);
     res.redirect('/admin/keys?device_deleted=1');
-  } else {
-    res.redirect('/admin/keys?error=unbind_failed');
   }
 });
 
 router.post('/keys/extend/:id', async (req, res) => {
   const { new_expiry } = req.body;
   const key = await Key.findByPk(req.params.id);
-  if (!key) return res.redirect('/admin/keys?error=extend_failed');
-  if (!new_expiry) return res.redirect('/admin/keys?error=missing_date');
-  try {
-    const newDate = new Date(new_expiry);
-    if (isNaN(newDate.getTime())) throw new Error('Invalid date');
-    key.expires_at = newDate;
+  if (key && new_expiry) {
+    key.expires_at = new Date(new_expiry);
     await key.save();
     await Log.create({ action: 'key_extended', details: `Gia hạn key ${key.key} đến ${new_expiry}`, ip_address: req.ip, key_id: key.id });
     res.redirect('/admin/keys?extended=1');
-  } catch (err) {
-    console.error('Extend error:', err);
-    res.redirect('/admin/keys?error=extend_failed');
   }
 });
 
@@ -198,8 +168,6 @@ router.post('/keys/delete/:id', async (req, res) => {
     await Log.create({ action: 'key_deleted', details: `Xoá key ${key.key}`, ip_address: req.ip });
     notifyKeyDeleted(key.key);
     res.redirect('/admin/keys?deleted=1');
-  } else {
-    res.redirect('/admin/keys?error=delete_failed');
   }
 });
 

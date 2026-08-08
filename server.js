@@ -5,14 +5,13 @@ require('dotenv').config();
 const express = require('express');
 const cookieSession = require('cookie-session');
 const path = require('path');
-const cron = require('node-cron');
+const cron = require('cron');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
-const { Key } = require('./models');
+const { Key, Log } = require('./models');
 const { notifyKeyExpiringSoon } = require('./utils/email');
 const { Op } = require('sequelize');
-const { CronJob } = require('cron');const { Log } = require('./models');// Xóa log check cũ hơn 1 ngày, chạy mỗi 30 phútnew CronJob('*/30 * * * *', async () => {  try {    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);    const deleted = await Log.destroy({ where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } } });    if (deleted > 0) console.log();  } catch (err) { console.error('Cleanup error:', err); }}, null, true, 'Asia/Ho_Chi_Minh');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -37,7 +36,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/ping', (req, res) => res.send('pong from server.js'));
 app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
@@ -48,12 +46,26 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('DB connected.');
+
     await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS device_name VARCHAR(255);`);
     await sequelize.query(`ALTER TABLE key_devices ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`);
     await sequelize.sync({ alter: true });
     console.log('Models synced.');
 
-    // Cron job kiểm tra key sắp hết hạn – giờ Việt Nam 9h sáng
+    // Cron job: xóa log check cũ hơn 1 ngày, chạy mỗi 30 phút
+    new cron.CronJob('*/30 * * * *', async () => {
+      try {
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const deleted = await Log.destroy({
+          where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } }
+        });
+        if (deleted > 0) console.log(`Deleted ${deleted} old check logs`);
+      } catch (err) {
+        console.error('Cleanup error:', err);
+      }
+    }, null, true, 'Asia/Ho_Chi_Minh');
+
+    // Cron job: cảnh báo key sắp hết hạn mỗi sáng 9h VN
     cron.schedule('0 9 * * *', async () => {
       console.log('Checking expiring keys...');
       try {
@@ -72,7 +84,7 @@ async function start() {
       } catch (err) {
         console.error('Cron error:', err);
       }
-    }, { timezone: 'Asia/Ho_Chi_Minh' }); // đảm bảo cron chạy theo giờ VN
+    }, { timezone: 'Asia/Ho_Chi_Minh' });
 
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
