@@ -43,12 +43,13 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
 router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// DASHBOARD (hiển thị 20 log gần nhất, không giới hạn thời gian)
+// DASHBOARD
 router.get('/dashboard', async (req, res) => {
   try {
     const showAll = req.query.show === 'all';
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
-    const where = {};
+    const where = { createdAt: { [Op.gte]: oneDayAgo } };
     if (!showAll) {
       where.action = { [Op.ne]: 'check' };
     }
@@ -80,6 +81,18 @@ router.get('/dashboard', async (req, res) => {
     res.status(500).send('Lỗi máy chủ');
   }
 });
+
+// KEY MANAGEMENT
+router.get('/keys', async (req, res) => {
+  const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
+  const search = req.query.search || '';
+  let where = {};
+  if (search) where = { [Op.or]: [{ key: { [Op.iLike]: `%${search}%` } }] };
+  const { count, rows: keys } = await Key.findAndCountAll({
+    where, order: [['createdAt', 'DESC']],
+    include: [{ model: KeyDevice, as: 'devices', required: false }],
+    limit, offset
+  });
   res.render('admin/keys', { user: req.session.admin, keys, currentPage: page, totalPages: Math.ceil(count/limit), search });
 });
 
