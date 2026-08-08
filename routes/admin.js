@@ -50,7 +50,7 @@ router.get('/dashboard', async (req, res) => {
   const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
   const vipKeys = await Key.count({ where: { tier: 'VIP' } });
   const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-  const recentLogs = await Log.findAll({ limit: 8, order: [['createdAt', 'DESC']], include: Key });
+  const recentLogs = await Log.findAll({ limit: 8, order: [['createdAt', 'DESC']], where: { action: { [Op.ne]: 'check' } }, include: Key }]'createdAt', 'DESC']], include: Key });
   res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
 });
 

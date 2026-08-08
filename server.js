@@ -12,6 +12,7 @@ const adminRoutes = require('./routes/admin');
 const { Key } = require('./models');
 const { notifyKeyExpiringSoon } = require('./utils/email');
 const { Op } = require('sequelize');
+const { CronJob } = require('cron');const { Log } = require('./models');// Xóa log check cũ hơn 1 ngày, chạy mỗi 30 phútnew CronJob('*/30 * * * *', async () => {  try {    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);    const deleted = await Log.destroy({ where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } } });    if (deleted > 0) console.log();  } catch (err) { console.error('Cleanup error:', err); }}, null, true, 'Asia/Ho_Chi_Minh');
 
 const app = express();
 app.set('trust proxy', 1);
