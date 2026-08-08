@@ -43,20 +43,46 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
 router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// DASHBOARD (lọc bỏ log check)
+// DASHBOARD
 router.get('/dashboard', async (req, res) => {
-  const totalKeys = await Key.count();
-  const activeKeys = await Key.count({ where: { is_active: true } });
-  const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
-  const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-  const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-  const recentLogs = await Log.findAll({
-    where: { action: { [Op.ne]: 'check' } },   // loại bỏ log check
-    limit: 8,
-    order: [['createdAt', 'DESC']],
-    include: Key
-  });
-  res.render('admin/dashboard', { user: req.session.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs });
+  try {
+    const showAll = req.query.show === 'all';
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    // Xây dựng điều kiện where
+    const where = {
+      createdAt: { [Op.gte]: oneDayAgo }
+    };
+    if (!showAll) {
+      where.action = { [Op.ne]: 'check' };
+    }
+
+    const totalKeys = await Key.count();
+    const activeKeys = await Key.count({ where: { is_active: true } });
+    const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
+    const vipKeys = await Key.count({ where: { tier: 'VIP' } });
+    const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
+    const recentLogs = await Log.findAll({
+      where,
+      limit: 8,
+      order: [['createdAt', 'DESC']],
+      include: Key
+    });
+    
+    res.render('admin/dashboard', {
+      user: req.session.admin,
+      totalKeys,
+      activeKeys,
+      expiredKeys,
+      vipKeys,
+      devicesActivated,
+      recentLogs,
+      showAll
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi máy chủ');
+  }
 });
 
 // KEY MANAGEMENT

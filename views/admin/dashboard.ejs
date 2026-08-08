@@ -2,7 +2,14 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="main-content flex-grow-1">
-    <h4 class="fw-bold mb-4">Tổng quan hệ thống</h4>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold mb-0">Tổng quan hệ thống</h4>
+      <a href="?show=<%= showAll ? '' : 'all' %>" class="btn btn-outline btn-sm">
+        <i class="fas <%= showAll ? 'fa-filter' : 'fa-list' %> me-1"></i>
+        <%= showAll ? 'Ẩn log check' : 'Hiển thị tất cả' %>
+      </a>
+    </div>
+
     <div class="row g-4 mb-5">
       <div class="col-md-3 animate__animated animate__fadeInUp">
         <div class="stat-card">
@@ -50,7 +57,12 @@
       </div>
     </div>
 
-    <h5 class="fw-bold mb-3">Hoạt động gần đây</h5>
+    <h5 class="fw-bold mb-3">
+      Hoạt động gần đây
+      <% if (!showAll) { %>
+        <small class="text-muted">(đã ẩn log check)</small>
+      <% } %>
+    </h5>
     <div class="table-responsive">
       <table class="table-custom w-100">
         <thead><tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr></thead>
