@@ -5,7 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieSession = require('cookie-session');
 const path = require('path');
-const cron = require('cron');
+const cron = require('node-cron');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
@@ -53,17 +53,7 @@ async function start() {
     console.log('Models synced.');
 
     // Cron job: xóa log check cũ hơn 1 ngày, chạy mỗi 30 phút
-    new cron.CronJob('*/30 * * * *', async () => {
-      try {
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const deleted = await Log.destroy({
-          where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } }
-        });
-        if (deleted > 0) console.log(`Deleted ${deleted} old check logs`);
-      } catch (err) {
-        console.error('Cleanup error:', err);
-      }
-    }, null, true, 'Asia/Ho_Chi_Minh');
+cron.schedule('*/30 * * * *', async () => {    try {      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);      const deleted = await Log.destroy({ where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } } });      if (deleted > 0) console.log();    } catch (err) { console.error('Cleanup error:', err); }  }, { timezone: 'Asia/Ho_Chi_Minh' });
 
     // Cron job: cảnh báo key sắp hết hạn mỗi sáng 9h VN
     cron.schedule('0 9 * * *', async () => {
