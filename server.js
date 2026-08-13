@@ -5,11 +5,11 @@ require('dotenv').config();
 const express = require('express');
 const cookieSession = require('cookie-session');
 const path = require('path');
-const cron = require('node-cron');
+const nodeCron = require('node-cron');
 const sequelize = require('./config/database');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
-const { Key, Log } = require('./models');
+const { Key, Log, KeyDevice } = require('./models');
 const { notifyKeyExpiringSoon } = require('./utils/email');
 const { Op } = require('sequelize');
 
@@ -52,11 +52,21 @@ async function start() {
     await sequelize.sync({ alter: true });
     console.log('Models synced.');
 
-    // Cron job: xóa log check cũ hơn 1 ngày, chạy mỗi 30 phút
-cron.schedule('*/30 * * * *', async () => {    try {      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);      const deleted = await Log.destroy({ where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } } });      if (deleted > 0) console.log();    } catch (err) { console.error('Cleanup error:', err); }  }, { timezone: 'Asia/Ho_Chi_Minh' });
+    // ==================== CRON JOB: XÓA LOG CHECK CŨ (MỖI 30 PHÚT) ====================
+    nodeCron.schedule('*/30 * * * *', async () => {
+      try {
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const deleted = await Log.destroy({
+          where: { action: 'check', createdAt: { [Op.lt]: oneDayAgo } }
+        });
+        if (deleted > 0) console.log(`Deleted ${deleted} old check logs`);
+      } catch (err) {
+        console.error('Cleanup check logs error:', err);
+      }
+    }, { timezone: 'Asia/Ho_Chi_Minh' });
 
-    // Cron job: cảnh báo key sắp hết hạn mỗi sáng 9h VN
-    cron.schedule('0 9 * * *', async () => {
+    // ==================== CRON JOB: CẢNH BÁO KEY SẮP HẾT HẠN (9H SÁNG HÀNG NGÀY) ====================
+    nodeCron.schedule('0 9 * * *', async () => {
       console.log('Checking expiring keys...');
       try {
         const threeDaysFromNow = new Date();
@@ -72,7 +82,36 @@ cron.schedule('*/30 * * * *', async () => {    try {      const oneDayAgo = new 
           await notifyKeyExpiringSoon(key.key, daysLeft);
         }
       } catch (err) {
-        console.error('Cron error:', err);
+        console.error('Cron warning expiring keys error:', err);
+      }
+    }, { timezone: 'Asia/Ho_Chi_Minh' });
+
+    // ==================== CRON JOB: TỰ ĐỘNG XÓA KEY HẾT HẠN (MỖI 3 PHÚT) ====================
+    nodeCron.schedule('*/3 * * * *', async () => {
+      try {
+        const now = new Date();
+        // Lấy tất cả key có expires_at < now (chắc chắn đã hết hạn)
+        const expiredKeys = await Key.findAll({
+          where: {
+            expires_at: { [Op.lt]: now }
+          }
+        });
+
+        for (const key of expiredKeys) {
+          // Xóa tất cả thiết bị liên quan
+          const deletedDevices = await KeyDevice.destroy({ where: { key_id: key.id } });
+          // Xóa key
+          await key.destroy();
+          // Ghi log
+          await Log.create({
+            action: 'key_expired_deleted',
+            details: `Hệ thống tự động xóa key ${key.key} (đã hết hạn, ${deletedDevices} thiết bị bị xóa)`,
+            ip_address: 'system'
+          });
+          console.log(`Deleted expired key ${key.key}`);
+        }
+      } catch (err) {
+        console.error('Cron delete expired keys error:', err);
       }
     }, { timezone: 'Asia/Ho_Chi_Minh' });
 
