@@ -1,11 +1,11 @@
 const { Sequelize } = require('sequelize');
-const pg = require('pg'); // Bắt buộc load pg để Sequelize nhận diện
+const { neon } = require('@neondatabase/serverless');
 require('dotenv').config();
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   logging: false,
-  dialectModule: pg, // Chỉ định rõ module pg
+  dialectModule: neon, // Dùng driver Neon thay vì pg
   dialectOptions: {
     ssl: {
       require: true,
