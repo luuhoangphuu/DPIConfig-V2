@@ -16,14 +16,14 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
-// Chống brute-force
+// Brute force protection (MemoryStore)
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
   freeRetries: 5, minWait: 15*60*1000, maxWait: 15*60*1000,
   failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai.')
 });
 
-// Middleware kiểm tra JWT
+// Middleware xác thực JWT
 function requireAdmin(req, res, next) {
   const token = req.cookies.admin_token;
   if (!token) return res.redirect('/admin/login');
@@ -36,7 +36,7 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// Login
+// ==================== AUTH ====================
 router.get('/login', (req, res) => {
   res.render('admin/login', { error: null });
 });
@@ -61,9 +61,9 @@ router.get('/logout', (req, res) => {
   res.redirect('/admin/login');
 });
 
+// ==================== ADMIN ROUTES ====================
 router.use(requireAdmin);
 
-// Dashboard
 router.get('/dashboard', async (req, res) => {
   const totalKeys = await Key.count();
   const activeKeys = await Key.count({ where: { is_active: true } });
@@ -83,7 +83,6 @@ router.get('/dashboard', async (req, res) => {
   });
 });
 
-// Danh sách key
 router.get('/keys', async (req, res) => {
   const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
   const search = req.query.search || '';
@@ -97,7 +96,6 @@ router.get('/keys', async (req, res) => {
   res.render('admin/keys', { user: req.admin, keys, currentPage: page, totalPages: Math.ceil(count/limit), search });
 });
 
-// Tạo key
 router.post('/keys/create', async (req, res) => {
   const { tier, duration, prefix, max_devices } = req.body;
   let maxDev = 1;
@@ -121,7 +119,6 @@ router.post('/keys/create', async (req, res) => {
   res.redirect('/admin/keys?created=1');
 });
 
-// Toggle key
 router.post('/keys/toggle/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -133,7 +130,6 @@ router.post('/keys/toggle/:id', async (req, res) => {
   }
 });
 
-// Kick all devices
 router.post('/keys/kick-all/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -144,7 +140,6 @@ router.post('/keys/kick-all/:id', async (req, res) => {
   }
 });
 
-// Delete all devices
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -155,7 +150,6 @@ router.post('/keys/delete-all-devices/:id', async (req, res) => {
   }
 });
 
-// Toggle từng thiết bị
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
   if (device) {
@@ -167,7 +161,6 @@ router.post('/keys/toggle-device/:deviceId', async (req, res) => {
   }
 });
 
-// Xóa từng thiết bị
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
   if (device) {
@@ -179,7 +172,6 @@ router.post('/keys/unbind-device/:deviceId', async (req, res) => {
   }
 });
 
-// Gia hạn key
 router.post('/keys/extend/:id', async (req, res) => {
   const { new_expiry } = req.body;
   const key = await Key.findByPk(req.params.id);
@@ -191,7 +183,6 @@ router.post('/keys/extend/:id', async (req, res) => {
   }
 });
 
-// Xóa key
 router.post('/keys/delete/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -203,7 +194,6 @@ router.post('/keys/delete/:id', async (req, res) => {
   }
 });
 
-// Lấy danh sách thiết bị của key (cho modal)
 router.get('/keys/devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
   if (!key) return res.json({ success: false });
