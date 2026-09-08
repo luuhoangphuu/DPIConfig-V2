@@ -85,6 +85,7 @@ router.get('/dashboard', async (req, res) => {
     
     res.render('admin/dashboard', {
       user: req.admin,
+      showAll: showAll || false,
       totalKeys,
       activeKeys,
       expiredKeys,
