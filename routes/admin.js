@@ -16,14 +16,12 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
-// Brute force protection (MemoryStore)
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
   freeRetries: 5, minWait: 15*60*1000, maxWait: 15*60*1000,
   failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai.')
 });
 
-// Middleware xác thực JWT
 function requireAdmin(req, res, next) {
   const token = req.cookies.admin_token;
   if (!token) return res.redirect('/admin/login');
@@ -36,7 +34,6 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// ==================== AUTH ====================
 router.get('/login', (req, res) => {
   res.render('admin/login', { error: null });
 });
@@ -61,28 +58,48 @@ router.get('/logout', (req, res) => {
   res.redirect('/admin/login');
 });
 
-// ==================== ADMIN ROUTES ====================
 router.use(requireAdmin);
 
+// DASHBOARD (đã thêm showAll)
 router.get('/dashboard', async (req, res) => {
-  const totalKeys = await Key.count();
-  const activeKeys = await Key.count({ where: { is_active: true } });
-  const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
-  const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-  const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const recentLogs = await Log.findAll({
-    where: { createdAt: { [Op.gte]: oneDayAgo } },
-    limit: 20,
-    order: [['createdAt', 'DESC']],
-    include: Key
-  });
-  res.render('admin/dashboard', {
-    user: req.admin,
-    totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs
-  });
+  try {
+    const showAll = req.query.show === 'all';
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const where = { createdAt: { [Op.gte]: oneDayAgo } };
+    if (!showAll) {
+      where.action = { [Op.ne]: 'check' };
+    }
+
+    const totalKeys = await Key.count();
+    const activeKeys = await Key.count({ where: { is_active: true } });
+    const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
+    const vipKeys = await Key.count({ where: { tier: 'VIP' } });
+    const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
+    const recentLogs = await Log.findAll({
+      where,
+      limit: 20,
+      order: [['createdAt', 'DESC']],
+      include: Key
+    });
+    
+    res.render('admin/dashboard', {
+      user: req.admin,
+      totalKeys,
+      activeKeys,
+      expiredKeys,
+      vipKeys,
+      devicesActivated,
+      recentLogs,
+      showAll  // <-- thêm dòng này
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi máy chủ');
+  }
 });
 
+// KEY MANAGEMENT
 router.get('/keys', async (req, res) => {
   const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
   const search = req.query.search || '';
