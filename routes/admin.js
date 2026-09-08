@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
 const { Key, Log, KeyDevice } = require('../models');
@@ -13,76 +14,76 @@ const {
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
+// Chống brute-force
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
   freeRetries: 5, minWait: 15*60*1000, maxWait: 15*60*1000,
   failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai.')
 });
 
+// Middleware kiểm tra JWT
 function requireAdmin(req, res, next) {
-  if (req.session && req.session.admin) return next();
-  res.redirect('/admin/login');
+  const token = req.cookies.admin_token;
+  if (!token) return res.redirect('/admin/login');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.admin = decoded;
+    next();
+  } catch (err) {
+    res.redirect('/admin/login');
+  }
 }
 
-// AUTH
+// Login
 router.get('/login', (req, res) => {
-  if (req.session && req.session.admin) return res.redirect('/admin/dashboard');
   res.render('admin/login', { error: null });
 });
 
 router.post('/login', bruteforce.prevent, async (req, res) => {
   const { email, password } = req.body;
   if (email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
-    req.session.admin = { email };
+    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
     return res.redirect('/admin/dashboard');
   }
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
-router.get('/logout', (req, res) => { req.session = null; res.redirect('/admin/login'); });
-router.use(requireAdmin);
-
-// DASHBOARD
-router.get('/dashboard', async (req, res) => {
-  try {
-    const showAll = req.query.show === 'all';
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
-    const where = { createdAt: { [Op.gte]: oneDayAgo } };
-    if (!showAll) {
-      where.action = { [Op.ne]: 'check' };
-    }
-
-    const totalKeys = await Key.count();
-    const activeKeys = await Key.count({ where: { is_active: true } });
-    const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
-    const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-    const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-    const recentLogs = await Log.findAll({
-      where,
-      limit: 20,
-      order: [['createdAt', 'DESC']],
-      include: Key
-    });
-    
-    res.render('admin/dashboard', {
-      user: req.session.admin,
-      totalKeys,
-      activeKeys,
-      expiredKeys,
-      vipKeys,
-      devicesActivated,
-      recentLogs,
-      showAll
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Lỗi máy chủ');
-  }
+router.get('/logout', (req, res) => {
+  res.clearCookie('admin_token');
+  res.redirect('/admin/login');
 });
 
-// KEY MANAGEMENT
+router.use(requireAdmin);
+
+// Dashboard
+router.get('/dashboard', async (req, res) => {
+  const totalKeys = await Key.count();
+  const activeKeys = await Key.count({ where: { is_active: true } });
+  const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
+  const vipKeys = await Key.count({ where: { tier: 'VIP' } });
+  const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const recentLogs = await Log.findAll({
+    where: { createdAt: { [Op.gte]: oneDayAgo } },
+    limit: 20,
+    order: [['createdAt', 'DESC']],
+    include: Key
+  });
+  res.render('admin/dashboard', {
+    user: req.admin,
+    totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs
+  });
+});
+
+// Danh sách key
 router.get('/keys', async (req, res) => {
   const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
   const search = req.query.search || '';
@@ -93,9 +94,10 @@ router.get('/keys', async (req, res) => {
     include: [{ model: KeyDevice, as: 'devices', required: false }],
     limit, offset
   });
-  res.render('admin/keys', { user: req.session.admin, keys, currentPage: page, totalPages: Math.ceil(count/limit), search });
+  res.render('admin/keys', { user: req.admin, keys, currentPage: page, totalPages: Math.ceil(count/limit), search });
 });
 
+// Tạo key
 router.post('/keys/create', async (req, res) => {
   const { tier, duration, prefix, max_devices } = req.body;
   let maxDev = 1;
@@ -113,12 +115,13 @@ router.post('/keys/create', async (req, res) => {
 
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-  await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.session.admin.email });
+  await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.admin.email });
   await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} TB`, ip_address: req.ip });
   notifyKeyCreated(key, maxDev);
   res.redirect('/admin/keys?created=1');
 });
 
+// Toggle key
 router.post('/keys/toggle/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -130,6 +133,7 @@ router.post('/keys/toggle/:id', async (req, res) => {
   }
 });
 
+// Kick all devices
 router.post('/keys/kick-all/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -140,6 +144,7 @@ router.post('/keys/kick-all/:id', async (req, res) => {
   }
 });
 
+// Delete all devices
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -150,6 +155,7 @@ router.post('/keys/delete-all-devices/:id', async (req, res) => {
   }
 });
 
+// Toggle từng thiết bị
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
   if (device) {
@@ -161,6 +167,7 @@ router.post('/keys/toggle-device/:deviceId', async (req, res) => {
   }
 });
 
+// Xóa từng thiết bị
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
   const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
   if (device) {
@@ -172,6 +179,7 @@ router.post('/keys/unbind-device/:deviceId', async (req, res) => {
   }
 });
 
+// Gia hạn key
 router.post('/keys/extend/:id', async (req, res) => {
   const { new_expiry } = req.body;
   const key = await Key.findByPk(req.params.id);
@@ -183,6 +191,7 @@ router.post('/keys/extend/:id', async (req, res) => {
   }
 });
 
+// Xóa key
 router.post('/keys/delete/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
@@ -194,6 +203,7 @@ router.post('/keys/delete/:id', async (req, res) => {
   }
 });
 
+// Lấy danh sách thiết bị của key (cho modal)
 router.get('/keys/devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
   if (!key) return res.json({ success: false });
