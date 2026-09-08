@@ -122,12 +122,17 @@ router.post('/keys/create', async (req, res) => {
     if (maxDev < 1) maxDev = 1;
     if (maxDev > 999) maxDev = 999;
   }
-  const dur = parseFloat(duration) || 30;
-  let days = dur;
-  if (days <= 0) days = 30;
-  const hours = Math.round(days * 24);
-  const expires_at = new Date();
-  expires_at.setHours(expires_at.getHours() + hours);
+  let expires_at;
+  if (duration === 'forever') {
+    expires_at = new Date('2099-12-31T23:59:59');
+  } else {
+    const dur = parseFloat(duration) || 30;
+    let days = dur;
+    if (days <= 0) days = 30;
+    const hours = Math.round(days * 24);
+    expires_at = new Date();
+    expires_at.setHours(expires_at.getHours() + hours);
+  }
 
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
