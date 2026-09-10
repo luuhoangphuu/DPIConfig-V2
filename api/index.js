@@ -11,22 +11,16 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-// View engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Routes
 app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
 
-// Khởi tạo database
 sequelize.authenticate()
-  .then(() => {
-    console.log('Database connected.');
-    return sequelize.sync({ alter: true });
-  })
+  .then(() => { console.log('DB connected.'); return sequelize.sync({ alter: true }); })
   .then(() => console.log('Models synced.'))
   .catch(err => console.error('DB error:', err));
 

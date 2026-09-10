@@ -1,205 +1,143 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const { Op } = require('sequelize');
 const { Key, Log, KeyDevice } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
 const apiLimiter = require('../middleware/rateLimiter');
 
-// ==================== ROUTE TẠO KEY (GET) ====================
+// Hàm xóa key hết hạn (chạy mỗi lần có request)
+async function cleanupExpiredKeys() {
+  try {
+    const now = new Date();
+    const expiredKeys = await Key.findAll({ where: { expires_at: { [Op.lt]: now } } });
+    for (const key of expiredKeys) {
+      await KeyDevice.destroy({ where: { key_id: key.id } });
+      await key.destroy();
+      await Log.create({
+        action: 'key_expired_deleted',
+        details: `Hệ thống tự động xóa key ${key.key} (hết hạn)`,
+        ip_address: 'system'
+      });
+    }
+  } catch (err) { console.error('Cleanup error:', err); }
+}
+
+// ==================== ROUTE TẠO KEY (GET & POST) ====================
 router.get('/gen-key', async (req, res) => {
   try {
     const { secret, tier, duration, prefix, max_devices } = req.query;
     if (secret !== process.env.AUTO_KEY_SECRET) {
       return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
     }
-
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    
-    // Xử lý duration: có thể là số ngày (0.5 = 12h, 1 = 24h, 7 = 7 ngày...) hoặc mặc định 1 ngày
     let days = parseFloat(duration) || 1;
     if (days <= 0) days = 1;
     const hours = Math.round(days * 24);
-    
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
-
     let maxDev = 1;
     if (max_devices) {
-      maxDev = parseInt(max_devices) || maxDev;
+      maxDev = parseInt(max_devices) || 1;
       if (maxDev < 1) maxDev = 1;
       if (maxDev > 999) maxDev = 999;
     }
-
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
     const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-
-    const newKey = await Key.create({
-      key,
-      tier: chosenTier,
-      expires_at,
-      max_devices: maxDev,
-      created_by: 'auto-api-get'
-    });
-
-    await Log.create({
-      action: 'auto_key_created',
-      details: `API GET tạo key ${key} (${chosenTier}, ${hours} giờ, max ${maxDev} TB)`,
-      ip_address: req.ip
-    });
-
-    return res.json({
-      success: true,
-      key: key,
-      tier: chosenTier,
-      expires_at: expires_at.toISOString(),
-      duration_hours: hours,
-      max_devices: maxDev
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
-  }
+    await Key.create({ key, tier: chosenTier, expires_at, max_devices: maxDev, created_by: 'auto-api-get' });
+    await Log.create({ action: 'auto_key_created', details: `API GET tạo key ${key}`, ip_address: req.ip });
+    return res.json({ success: true, key, tier: chosenTier, expires_at: expires_at.toISOString(), max_devices: maxDev });
+  } catch (err) { console.error(err); return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
 });
 
-// ==================== ROUTE TẠO KEY (POST) ====================
 router.post('/gen-key', async (req, res) => {
   try {
     const { secret, tier, duration, prefix, max_devices } = req.body;
     if (secret !== process.env.AUTO_KEY_SECRET) {
       return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
     }
-
     const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    
-    // Xử lý duration
     let days = parseFloat(duration) || 1;
     if (days <= 0) days = 1;
     const hours = Math.round(days * 24);
-    
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
-
     let maxDev = 1;
     if (max_devices) {
-      maxDev = parseInt(max_devices) || maxDev;
+      maxDev = parseInt(max_devices) || 1;
       if (maxDev < 1) maxDev = 1;
       if (maxDev > 999) maxDev = 999;
     }
-
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
     const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-
-    const newKey = await Key.create({
-      key,
-      tier: chosenTier,
-      expires_at,
-      max_devices: maxDev,
-      created_by: 'auto-api-post'
-    });
-
-    await Log.create({
-      action: 'auto_key_created',
-      details: `API POST tạo key ${key} (${chosenTier}, ${hours} giờ, max ${maxDev} TB)`,
-      ip_address: req.ip
-    });
-
-    return res.json({
-      success: true,
-      key: key,
-      tier: chosenTier,
-      expires_at: expires_at.toISOString(),
-      duration_hours: hours,
-      max_devices: maxDev
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
-  }
+    await Key.create({ key, tier: chosenTier, expires_at, max_devices: maxDev, created_by: 'auto-api-post' });
+    await Log.create({ action: 'auto_key_created', details: `API POST tạo key ${key}`, ip_address: req.ip });
+    return res.json({ success: true, key, tier: chosenTier, expires_at: expires_at.toISOString(), max_devices: maxDev });
+  } catch (err) { console.error(err); return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
 });
 
-// ==================== CÁC ROUTE CHÍNH (cần X-API-Key) ====================
+// ==================== CÁC ROUTE CẦN X-API-KEY ====================
 router.use(apiLimiter);
 router.use(apiAuth);
 
-function ok(res, data) {
-  return res.json({ success: true, data: { ...data, server_time: new Date().toISOString() } });
-}
+function ok(res, data) { return res.json({ success: true, data: { ...data, server_time: new Date().toISOString() } }); }
 function fail(res, status, code, message, extra) {
-  return res.status(status).json({
-    success: false,
-    error: { code, message, ...extra },
-    server_time: new Date().toISOString()
-  });
+  return res.status(status).json({ success: false, error: { code, message, ...extra }, server_time: new Date().toISOString() });
 }
-function calculateRemainingHours(expiry) {
-  const diff = new Date(expiry) - new Date();
-  return diff <= 0 ? 0 : Math.floor(diff / 3600000);
-}
-function calculateRemainingDays(expiry) {
-  return Math.floor(calculateRemainingHours(expiry) / 24);
-}
+function calcHours(exp) { const d = new Date(exp) - new Date(); return d <= 0 ? 0 : Math.floor(d / 3600000); }
+function calcDays(exp) { return Math.floor(calcHours(exp) / 24); }
 
-router.post('/activate', async (req, res) => {
-  try {
-    const { key, hwid, device_name } = req.body;
-    if (!key || !hwid) return fail(res, 400, 'MISSING_PARAMETER', 'Thiếu key hoặc hwid.');
-    const keyRecord = await Key.findOne({ where: { key } });
-    if (!keyRecord) return fail(res, 404, 'KEY_NOT_FOUND', 'Key không tồn tại.');
-    if (!keyRecord.is_active) return fail(res, 403, 'KEY_DISABLED', 'Key đã bị admin khóa.');
-    if (new Date(keyRecord.expires_at) < new Date()) {
-      return fail(res, 410, 'LICENSE_EXPIRED', 'License đã hết hạn.', { expired_at: keyRecord.expires_at.toISOString() });
-    }
-    const totalDevices = await KeyDevice.count({ where: { key_id: keyRecord.id } });
-    const existing = await KeyDevice.findOne({ where: { key_id: keyRecord.id, hwid } });
-    if (existing) {
-      if (!existing.is_active) return fail(res, 403, 'DEVICE_KICKED', 'Thiết bị này đã bị khóa khỏi key.');
-      return ok(res, {
-        tier: keyRecord.tier,
-        expires_at: keyRecord.expires_at.toISOString(),
-        remaining_days: calculateRemainingDays(keyRecord.expires_at),
-        remaining_hours: calculateRemainingHours(keyRecord.expires_at),
-        devices: totalDevices,
-        max_devices: keyRecord.max_devices
-      });
-    }
-    if (totalDevices >= keyRecord.max_devices) {
-      await Log.create({ action: 'activate_blocked_limit', details: `Key ${key} đầy (${totalDevices}/${keyRecord.max_devices}), HWID ${hwid} bị từ chối`, ip_address: req.ip, key_id: keyRecord.id });
-      return fail(res, 429, 'DEVICE_LIMIT_REACHED', `Key đã đạt giới hạn ${keyRecord.max_devices} thiết bị.`, { max_devices: keyRecord.max_devices, current_devices: totalDevices });
-    }
-    await KeyDevice.create({ key_id: keyRecord.id, hwid, device_name: device_name || null });
-    const newCount = totalDevices + 1;
-    await Log.create({ action: 'activate_success', details: `Key ${key} thêm thiết bị ${hwid} (${newCount}/${keyRecord.max_devices})`, ip_address: req.ip, key_id: keyRecord.id });
-    return ok(res, {
-      tier: keyRecord.tier,
-      expires_at: keyRecord.expires_at.toISOString(),
-      remaining_days: calculateRemainingDays(keyRecord.expires_at),
-      remaining_hours: calculateRemainingHours(keyRecord.expires_at),
-      devices: newCount,
-      max_devices: keyRecord.max_devices
-    });
-  } catch (e) { console.error(e); return fail(res, 500, 'INTERNAL_ERROR', 'Lỗi máy chủ nội bộ.'); }
-});
-
+// Check
 router.post('/check', async (req, res) => {
+  await cleanupExpiredKeys();
   try {
     const { hwid } = req.body;
     if (!hwid) return fail(res, 400, 'MISSING_PARAMETER', 'Thiếu hwid.');
-    const device = await KeyDevice.findOne({ where: { hwid, is_active: true }, include: { model: Key, attributes: ['id', 'key', 'tier', 'expires_at', 'is_active'] } });
+    const device = await KeyDevice.findOne({ where: { hwid, is_active: true }, include: { model: Key } });
     if (!device || !device.Key) return fail(res, 404, 'LICENSE_NOT_FOUND', 'Không tìm thấy license.');
-    const keyRecord = device.Key;
-    if (!keyRecord.is_active) return fail(res, 403, 'LICENSE_DISABLED', 'License đã bị admin khóa.');
-    if (new Date(keyRecord.expires_at) < new Date()) {
-      return fail(res, 410, 'LICENSE_EXPIRED', 'License đã hết hạn.', { expired_at: keyRecord.expires_at.toISOString() });
-    }
-    await Log.create({ action: 'check', details: `HWID ${hwid} kiểm tra key ${keyRecord.key}`, ip_address: req.ip, key_id: keyRecord.id });
+    const k = device.Key;
+    if (!k.is_active) return fail(res, 403, 'LICENSE_DISABLED', 'License đã bị admin khóa.');
+    if (new Date(k.expires_at) < new Date()) return fail(res, 410, 'LICENSE_EXPIRED', 'License đã hết hạn.', { expired_at: k.expires_at.toISOString() });
+    await Log.create({ action: 'check', details: `HWID ${hwid} check key ${k.key}`, ip_address: req.ip, key_id: k.id });
     return ok(res, {
-      key: keyRecord.key,
-      tier: keyRecord.tier,
-      expires_at: keyRecord.expires_at.toISOString(),
-      remaining_days: calculateRemainingDays(keyRecord.expires_at),
-      remaining_hours: calculateRemainingHours(keyRecord.expires_at)
+      key: k.key, tier: k.tier, expires_at: k.expires_at.toISOString(),
+      remaining_days: calcDays(k.expires_at), remaining_hours: calcHours(k.expires_at)
     });
-  } catch (e) { console.error(e); return fail(res, 500, 'INTERNAL_ERROR', 'Lỗi máy chủ nội bộ.'); }
+  } catch (e) { console.error(e); return fail(res, 500, 'INTERNAL_ERROR', 'Lỗi máy chủ.'); }
+});
+
+// Activate
+router.post('/activate', async (req, res) => {
+  await cleanupExpiredKeys();
+  try {
+    const { key, hwid, device_name } = req.body;
+    if (!key || !hwid) return fail(res, 400, 'MISSING_PARAMETER', 'Thiếu key hoặc hwid.');
+    const k = await Key.findOne({ where: { key } });
+    if (!k) return fail(res, 404, 'KEY_NOT_FOUND', 'Key không tồn tại.');
+    if (!k.is_active) return fail(res, 403, 'KEY_DISABLED', 'Key đã bị admin khóa.');
+    if (new Date(k.expires_at) < new Date()) return fail(res, 410, 'LICENSE_EXPIRED', 'Key đã hết hạn.');
+    const total = await KeyDevice.count({ where: { key_id: k.id } });
+    const existing = await KeyDevice.findOne({ where: { key_id: k.id, hwid } });
+    if (existing) {
+      if (!existing.is_active) return fail(res, 403, 'DEVICE_KICKED', 'Thiết bị này đã bị khóa.');
+      return ok(res, {
+        tier: k.tier, expires_at: k.expires_at.toISOString(),
+        remaining_days: calcDays(k.expires_at), remaining_hours: calcHours(k.expires_at),
+        devices: total, max_devices: k.max_devices
+      });
+    }
+    if (total >= k.max_devices) {
+      await Log.create({ action: 'activate_blocked_limit', details: `Key ${key} đầy`, ip_address: req.ip, key_id: k.id });
+      return fail(res, 429, 'DEVICE_LIMIT_REACHED', `Key đã đạt giới hạn ${k.max_devices} TB.`, { max_devices: k.max_devices, current_devices: total });
+    }
+    await KeyDevice.create({ key_id: k.id, hwid, device_name: device_name || null });
+    await Log.create({ action: 'activate_success', details: `Key ${key} gắn ${hwid}`, ip_address: req.ip, key_id: k.id });
+    return ok(res, {
+      tier: k.tier, expires_at: k.expires_at.toISOString(),
+      remaining_days: calcDays(k.expires_at), remaining_hours: calcHours(k.expires_at),
+      devices: total + 1, max_devices: k.max_devices
+    });
+  } catch (e) { console.error(e); return fail(res, 500, 'INTERNAL_ERROR', 'Lỗi máy chủ.'); }
 });
 
 module.exports = router;

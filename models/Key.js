@@ -7,7 +7,7 @@ const Key = sequelize.define('Key', {
   tier: { type: DataTypes.ENUM('VIP', 'Normal'), allowNull: false },
   expires_at: { type: DataTypes.DATE, allowNull: false },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
-  max_devices: { type: DataTypes.INTEGER, defaultValue: 1, allowNull: false }, // số thiết bị tối đa
+  max_devices: { type: DataTypes.INTEGER, defaultValue: 1 },
   created_by: { type: DataTypes.STRING, allowNull: true }
 }, { timestamps: true, tableName: 'keys' });
 

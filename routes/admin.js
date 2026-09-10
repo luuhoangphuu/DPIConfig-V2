@@ -18,91 +18,56 @@ const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
 const store = new ExpressBrute.MemoryStore();
 const bruteforce = new ExpressBrute(store, {
-  freeRetries: 5, minWait: 15*60*1000, maxWait: 15*60*1000,
-  failCallback: (req, res, next, nextValidRequestDate) => res.status(429).send('Quá nhiều lần đăng nhập sai.')
+  freeRetries: 5, minWait: 15 * 60 * 1000, maxWait: 15 * 60 * 1000,
+  failCallback: (req, res) => res.status(429).send('Quá nhiều lần thử. Đợi 15 phút.')
 });
 
 function requireAdmin(req, res, next) {
   const token = req.cookies.admin_token;
   if (!token) return res.redirect('/admin/login');
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.admin = decoded;
+    req.admin = jwt.verify(token, JWT_SECRET);
     next();
-  } catch (err) {
-    res.redirect('/admin/login');
-  }
+  } catch { res.redirect('/admin/login'); }
 }
 
-router.get('/login', (req, res) => {
-  res.render('admin/login', { error: null });
-});
+router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
 router.post('/login', bruteforce.prevent, async (req, res) => {
   const { email, password } = req.body;
   if (email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
     const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '7d' });
     res.cookie('admin_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      httpOnly: true, secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000
     });
     return res.redirect('/admin/dashboard');
   }
   res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
 });
 
-router.get('/logout', (req, res) => {
-  res.clearCookie('admin_token');
-  res.redirect('/admin/login');
-});
-
+router.get('/logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// DASHBOARD (đã thêm showAll)
+// Dashboard
 router.get('/dashboard', async (req, res) => {
-  try {
-    const showAll = req.query.show === 'all';
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
-    const where = { createdAt: { [Op.gte]: oneDayAgo } };
-    if (!showAll) {
-      where.action = { [Op.ne]: 'check' };
-    }
+  const showAll = req.query.show === 'all';
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const where = { createdAt: { [Op.gte]: oneDayAgo } };
+  if (!showAll) where.action = { [Op.ne]: 'check' };
 
-    const totalKeys = await Key.count();
-    const activeKeys = await Key.count({ where: { is_active: true } });
-    const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
-    const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-    const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-    const recentLogs = await Log.findAll({
-      where,
-      limit: 20,
-      order: [['createdAt', 'DESC']],
-      include: Key
-    });
-    
-    res.render('admin/dashboard', {
-      user: req.admin,
-      showAll: showAll || false,
-      totalKeys,
-      activeKeys,
-      expiredKeys,
-      vipKeys,
-      devicesActivated,
-      recentLogs,
-      showAll  // <-- thêm dòng này
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Lỗi máy chủ');
-  }
+  const totalKeys = await Key.count();
+  const activeKeys = await Key.count({ where: { is_active: true } });
+  const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
+  const vipKeys = await Key.count({ where: { tier: 'VIP' } });
+  const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
+  const recentLogs = await Log.findAll({ where, limit: 20, order: [['createdAt', 'DESC']], include: Key });
+  res.render('admin/dashboard', { user: req.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs, showAll });
 });
 
-// KEY MANAGEMENT
+// Keys
 router.get('/keys', async (req, res) => {
-  const page = parseInt(req.query.page) || 1, limit = 15, offset = (page-1)*limit;
+  const page = parseInt(req.query.page) || 1, limit = 15, offset = (page - 1) * limit;
   const search = req.query.search || '';
   let where = {};
   if (search) where = { [Op.or]: [{ key: { [Op.iLike]: `%${search}%` } }] };
@@ -111,7 +76,7 @@ router.get('/keys', async (req, res) => {
     include: [{ model: KeyDevice, as: 'devices', required: false }],
     limit, offset
   });
-  res.render('admin/keys', { user: req.admin, keys, currentPage: page, totalPages: Math.ceil(count/limit), search });
+  res.render('admin/keys', { user: req.admin, keys, currentPage: page, totalPages: Math.ceil(count / limit), search });
 });
 
 router.post('/keys/create', async (req, res) => {
@@ -127,17 +92,15 @@ router.post('/keys/create', async (req, res) => {
     expires_at = new Date('2099-12-31T23:59:59');
   } else {
     const dur = parseFloat(duration) || 30;
-    let days = dur;
-    if (days <= 0) days = 30;
+    let days = dur <= 0 ? 30 : dur;
     const hours = Math.round(days * 24);
     expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + hours);
   }
-
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
   await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.admin.email });
-  await Log.create({ action: 'key_created', details: `Admin tạo key ${key} max ${maxDev} TB`, ip_address: req.ip });
+  await Log.create({ action: 'key_created', details: `Admin tạo key ${key}`, ip_address: req.ip });
   notifyKeyCreated(key, maxDev);
   res.redirect('/admin/keys?created=1');
 });
@@ -147,52 +110,52 @@ router.post('/keys/toggle/:id', async (req, res) => {
   if (key) {
     key.is_active = !key.is_active;
     await key.save();
-    await Log.create({ action: key.is_active?'key_unlocked':'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id });
+    await Log.create({ action: key.is_active ? 'key_unlocked' : 'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyKeyToggled(key.key, key.is_active);
-    res.redirect('/admin/keys?toggled=1');
   }
+  res.redirect('/admin/keys?toggled=1');
 });
 
 router.post('/keys/kick-all/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
     await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } });
-    await Log.create({ action: 'kick_all', details: `Khóa tất cả thiết bị của key ${key.key}`, ip_address: req.ip, key_id: key.id });
+    await Log.create({ action: 'kick_all', details: `Khóa tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyKickAll(key.key);
-    res.redirect('/admin/keys?kicked=1');
   }
+  res.redirect('/admin/keys?kicked=1');
 });
 
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   const key = await Key.findByPk(req.params.id);
   if (key) {
     await KeyDevice.destroy({ where: { key_id: key.id } });
-    await Log.create({ action: 'delete_all_devices', details: `Xóa vĩnh viễn tất cả TB của key ${key.key}`, ip_address: req.ip, key_id: key.id });
+    await Log.create({ action: 'delete_all_devices', details: `Xóa all TB của key ${key.key}`, ip_address: req.ip, key_id: key.id });
     notifyDeleteAllDevices(key.key);
-    res.redirect('/admin/keys?deleted_all_devices=1');
   }
+  res.redirect('/admin/keys?deleted_all_devices=1');
 });
 
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
-  const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
+  const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key } });
   if (device) {
     device.is_active = !device.is_active;
     await device.save();
-    await Log.create({ action: device.is_active?'device_unlocked':'device_kicked', details: `TB ${device.hwid} của key ${device.Key.key} ${device.is_active?'mở':'bị khóa'}`, ip_address: req.ip, key_id: device.key_id });
+    await Log.create({ action: device.is_active ? 'device_unlocked' : 'device_kicked', details: `TB ${device.hwid}`, ip_address: req.ip, key_id: device.key_id });
     notifyDeviceToggled(device.Key.key, device.hwid, device.is_active);
-    res.redirect('/admin/keys?device_toggled=1');
   }
+  res.redirect('/admin/keys?device_toggled=1');
 });
 
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
-  const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key, attributes: ['key'] } });
+  const device = await KeyDevice.findByPk(req.params.deviceId, { include: { model: Key } });
   if (device) {
     const keyKey = device.Key.key;
     await device.destroy();
-    await Log.create({ action: 'device_deleted', details: `Xóa vĩnh viễn TB ${device.hwid} khỏi key ${keyKey}`, ip_address: req.ip, key_id: device.key_id });
+    await Log.create({ action: 'device_deleted', details: `Xóa TB ${device.hwid}`, ip_address: req.ip, key_id: device.key_id });
     notifyDeviceDeleted(keyKey, device.hwid);
-    res.redirect('/admin/keys?device_deleted=1');
   }
+  res.redirect('/admin/keys?device_deleted=1');
 });
 
 router.post('/keys/extend/:id', async (req, res) => {
@@ -202,8 +165,8 @@ router.post('/keys/extend/:id', async (req, res) => {
     key.expires_at = new Date(new_expiry);
     await key.save();
     await Log.create({ action: 'key_extended', details: `Gia hạn key ${key.key} đến ${new_expiry}`, ip_address: req.ip, key_id: key.id });
-    res.redirect('/admin/keys?extended=1');
   }
+  res.redirect('/admin/keys?extended=1');
 });
 
 router.post('/keys/delete/:id', async (req, res) => {
@@ -213,8 +176,8 @@ router.post('/keys/delete/:id', async (req, res) => {
     await key.destroy();
     await Log.create({ action: 'key_deleted', details: `Xoá key ${key.key}`, ip_address: req.ip });
     notifyKeyDeleted(key.key);
-    res.redirect('/admin/keys?deleted=1');
   }
+  res.redirect('/admin/keys?deleted=1');
 });
 
 router.get('/keys/devices/:id', async (req, res) => {

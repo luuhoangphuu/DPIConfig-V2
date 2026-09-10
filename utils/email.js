@@ -1,74 +1,31 @@
 const nodemailer = require('nodemailer');
-
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
-const transporter = nodemailer.createTransport({
+const transporter = EMAIL_USER && EMAIL_PASS ? nodemailer.createTransport({
   service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS
-  }
-});
+  auth: { user: EMAIL_USER, pass: EMAIL_PASS }
+}) : null;
 
-async function sendEmail(subject, htmlContent) {
-  if (!EMAIL_USER || !EMAIL_PASS) {
-    console.warn('Email not configured, skipping notification.');
-    return;
-  }
+async function sendEmail(subject, html) {
+  if (!transporter) return;
   try {
     await transporter.sendMail({
       from: `"DPIConfig Bot" <${EMAIL_USER}>`,
-      to: EMAIL_USER, // gửi cho chính admin
-      subject: subject,
-      html: htmlContent
+      to: EMAIL_USER,
+      subject,
+      html
     });
-    console.log('Email sent:', subject);
-  } catch (err) {
-    console.error('Failed to send email:', err.message);
-  }
-}
-
-// Các hàm thông báo
-function notifyKeyCreated(key, maxDevices) {
-  sendEmail('🔑 Key mới được tạo', `<p>Key: <code>${key}</code></p><p>Giới hạn: ${maxDevices} thiết bị</p>`);
-}
-
-function notifyKeyToggled(key, active) {
-  sendEmail(`${active ? '🔓 Key được mở khóa' : '🔒 Key bị khóa'}`, `<p>Key: <code>${key}</code></p>`);
-}
-
-function notifyKeyDeleted(key) {
-  sendEmail('🗑 Key bị xóa', `<p>Key: <code>${key}</code></p>`);
-}
-
-function notifyKickAll(key) {
-  sendEmail('⛔ Tất cả thiết bị của key bị khóa', `<p>Key: <code>${key}</code></p>`);
-}
-
-function notifyDeleteAllDevices(key) {
-  sendEmail('💣 Tất cả thiết bị của key bị xóa vĩnh viễn', `<p>Key: <code>${key}</code></p>`);
-}
-
-function notifyDeviceToggled(key, hwid, active) {
-  sendEmail(`${active ? '🔓 Thiết bị được mở khóa' : '🔒 Thiết bị bị khóa'}`, `<p>Key: <code>${key}</code></p><p>HWID: <code>${hwid}</code></p>`);
-}
-
-function notifyDeviceDeleted(key, hwid) {
-  sendEmail('❌ Thiết bị bị xóa', `<p>Key: <code>${key}</code></p><p>HWID: <code>${hwid}</code></p>`);
-}
-
-function notifyKeyExpiringSoon(key, daysLeft) {
-  sendEmail('⏳ Key sắp hết hạn', `<p>Key: <code>${key}</code></p><p>Còn <b>${daysLeft} ngày</b></p>`);
+  } catch (e) { console.error('Email error:', e.message); }
 }
 
 module.exports = {
-  notifyKeyCreated,
-  notifyKeyToggled,
-  notifyKeyDeleted,
-  notifyKickAll,
-  notifyDeleteAllDevices,
-  notifyDeviceToggled,
-  notifyDeviceDeleted,
-  notifyKeyExpiringSoon
+  notifyKeyCreated: (key, max) => sendEmail('🔑 Key mới', `<p>Key: <code>${key}</code></p><p>Giới hạn: ${max} TB</p>`),
+  notifyKeyToggled: (key, active) => sendEmail(active ? '🔓 Key mở' : '🔒 Key khóa', `<p>Key: <code>${key}</code></p>`),
+  notifyKeyDeleted: (key) => sendEmail('🗑 Key xóa', `<p>Key: <code>${key}</code></p>`),
+  notifyKickAll: (key) => sendEmail('⛔ Kick all', `<p>Key: <code>${key}</code></p>`),
+  notifyDeleteAllDevices: (key) => sendEmail('💣 Xóa all TB', `<p>Key: <code>${key}</code></p>`),
+  notifyDeviceToggled: (key, hwid, active) => sendEmail(active ? '🔓 TB mở' : '🔒 TB khóa', `<p>Key: <code>${key}</code></p><p>HWID: <code>${hwid}</code></p>`),
+  notifyDeviceDeleted: (key, hwid) => sendEmail('❌ TB xóa', `<p>Key: <code>${key}</code></p><p>HWID: <code>${hwid}</code></p>`),
+  notifyKeyExpiringSoon: (key, days) => sendEmail('⏳ Key sắp hết hạn', `<p>Key: <code>${key}</code></p><p>Còn ${days} ngày</p>`)
 };
