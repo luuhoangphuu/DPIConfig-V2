@@ -1,42 +1,54 @@
 <%- include('../partials/header', { title: 'Đăng nhập' }) %>
-<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; padding: 20px;">
-  <div class="cloud-card anim-in" style="max-width: 440px; width: 100%; padding: 44px 40px;">
-    <div class="text-center mb-4">
-      <div class="logo-icon mx-auto mb-3" style="width: 72px; height: 72px; border-radius: 22px; background: linear-gradient(135deg, #38bdf8, #2563eb); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.9rem; box-shadow: 0 12px 32px rgba(59,130,246,0.4);">
-        <i class="fas fa-cloud"></i>
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+  <div class="vg-card anim" style="max-width: 420px; width: 100%; padding: 40px 36px;">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <div style="width: 90px; height: 90px; margin: 0 auto 18px; position: relative;">
+        <svg viewBox="0 0 100 100" fill="none" style="width:100%; height:100%; filter: drop-shadow(0 0 30px rgba(255,215,0,0.6));">
+          <circle cx="50" cy="50" r="10" fill="#ffd700"/>
+          <g stroke="#4fc3f7" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9">
+            <path d="M 50 20 Q 68 38 50 55 Q 32 72 50 88"/>
+            <path d="M 85 50 Q 68 32 50 50 Q 32 68 15 50"/>
+            <path d="M 78 25 Q 60 45 50 50 Q 40 55 22 75"/>
+            <path d="M 78 75 Q 60 55 50 50 Q 40 45 22 25"/>
+          </g>
+          <g stroke="#ffd700" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7">
+            <circle cx="50" cy="50" r="30"/>
+            <circle cx="50" cy="50" r="40" stroke-dasharray="3 6"/>
+          </g>
+        </svg>
       </div>
-      <h1 style="font-weight: 800; font-size: 1.8rem; color: var(--text); margin: 0; letter-spacing: -0.5px;">
-        DPIConfig HoangPhu
+      <h1 style="font-family: 'Caveat', cursive; font-weight: 700; font-size: 2.5rem; color: var(--chrome-1); margin: 0; text-shadow: 0 0 30px rgba(255,215,0,0.5);">
+        Starry Night
       </h1>
-      <p style="color: var(--text-muted); margin-top: 8px; font-size: 0.9rem;">
-        Hệ thống quản lý bản quyền
+      <p style="font-family: 'Caveat', cursive; font-size: 1.15rem; color: var(--cyan-3); margin: 4px 0 0;">
+        DPIConfig HoangPhu
       </p>
     </div>
 
     <% if (error) { %>
-      <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #dc2626; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.88rem; font-weight: 500;">
-        <i class="fas fa-exclamation-circle me-2"></i><%= error %>
+      <div style="background: rgba(239,83,80,0.12); border: 1px solid rgba(239,83,80,0.35); color: #ff8a80; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.88rem; font-weight: 500;">
+        <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i><%= error %>
       </div>
     <% } %>
 
     <form method="POST" action="/admin/login">
-      <div class="mb-3">
-        <label class="form-label" style="font-weight: 700; font-size: 0.78rem; color: var(--sky-7); letter-spacing: 0.5px; text-transform: uppercase;">Email</label>
-        <input type="email" name="email" class="form-control" placeholder="admin@dpiconfig.com" required autofocus
-               style="background: rgba(240,249,255,0.6); border: 1.5px solid var(--sky-2); color: var(--text); border-radius: 10px; padding: 12px 16px; font-weight: 500;">
+      <div style="margin-bottom: 18px;">
+        <label class="form-label" style="font-size: 0.78rem; font-weight: 700; color: var(--cyan-1); letter-spacing: 1.2px; text-transform: uppercase; display: block; margin-bottom: 8px;">Email</label>
+        <input type="email" name="email" required autofocus placeholder="admin@dpiconfig.com"
+               style="width: 100%; padding: 13px 16px; background: rgba(10, 30, 63, 0.7); border: 1.5px solid rgba(79, 195, 247, 0.25); border-radius: 10px; color: var(--text); font-size: 0.92rem; font-weight: 500; transition: all 0.3s;">
       </div>
-      <div class="mb-4">
-        <label class="form-label" style="font-weight: 700; font-size: 0.78rem; color: var(--sky-7); letter-spacing: 0.5px; text-transform: uppercase;">Mật khẩu</label>
-        <input type="password" name="password" class="form-control" placeholder="••••••••" required
-               style="background: rgba(240,249,255,0.6); border: 1.5px solid var(--sky-2); color: var(--text); border-radius: 10px; padding: 12px 16px; font-weight: 500;">
+      <div style="margin-bottom: 24px;">
+        <label class="form-label" style="font-size: 0.78rem; font-weight: 700; color: var(--cyan-1); letter-spacing: 1.2px; text-transform: uppercase; display: block; margin-bottom: 8px;">Mật khẩu</label>
+        <input type="password" name="password" required placeholder="••••••••"
+               style="width: 100%; padding: 13px 16px; background: rgba(10, 30, 63, 0.7); border: 1.5px solid rgba(79, 195, 247, 0.25); border-radius: 10px; color: var(--text); font-size: 0.92rem; font-weight: 500; transition: all 0.3s;">
       </div>
-      <button type="submit" class="btn-cloud w-100" style="justify-content: center; padding: 14px;">
-        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+      <button type="submit" class="vg-btn" style="width: 100%; justify-content: center; padding: 14px;">
+        <i class="fas fa-sign-in-alt"></i> Bước vào bầu trời
       </button>
     </form>
 
-    <p class="text-center mt-4" style="color: var(--text-muted); font-size: 0.82rem;">
-      © 2025 HoangPhu · Duy
+    <p style="text-align: center; margin-top: 24px; font-family: 'Caveat', cursive; font-size: 1rem; color: var(--text-muted); font-style: italic;">
+      "Tôi mơ về những bức tranh, rồi tôi vẽ giấc mơ"
     </p>
   </div>
 </div>

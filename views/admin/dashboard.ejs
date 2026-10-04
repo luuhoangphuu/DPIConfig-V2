@@ -1,107 +1,93 @@
 <%- include('../partials/header', { title: 'Dashboard' }) %>
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
-  <div class="cloud-main flex-grow-1">
+  <div class="vg-main flex-grow-1">
 
-    <div class="page-head anim-in">
+    <div class="vg-page-head anim">
       <div>
-        <h1 class="page-title">
-          <div class="title-icon"><i class="fas fa-cloud-sun"></i></div>
-          Bảng điều khiển
-        </h1>
-        <p class="page-subtitle">Tổng quan hệ thống quản lý bản quyền DPIConfig HoangPhu</p>
+        <h1 class="vg-page-title">Đêm đầy sao</h1>
+        <p class="vg-page-sub">"Nhìn những ngôi sao luôn khiến tôi mơ mộng" — Vincent van Gogh</p>
       </div>
-      <span class="btn-ghost anim-in anim-2" style="pointer-events:none;">
+      <span class="vg-btn-ghost anim d2" style="pointer-events:none;">
         <i class="far fa-calendar"></i>
-        <span id="todayDate"></span>
+        <span id="todayDate">--</span>
       </span>
     </div>
 
-    <!-- STATS -->
-    <div class="row g-4 mt-3 mb-4">
-      <div class="col-xl-3 col-md-6 anim-in anim-1">
-        <div class="cloud-card stat-card">
-          <div class="stat-head">
-            <div class="stat-icon bg-total"><i class="fas fa-key"></i></div>
-          </div>
-          <div class="stat-label">Tổng Key</div>
-          <div class="stat-value"><%= totalKeys %></div>
+    <!-- Stats -->
+    <div class="row g-4 mb-5">
+      <div class="col-xl-3 col-md-6 anim d1">
+        <div class="vg-card vg-stat stat-total">
+          <div class="vg-stat-icon icon-total"><i class="fas fa-key"></i></div>
+          <div class="vg-stat-label">Tổng Key</div>
+          <div class="vg-stat-value"><%= totalKeys %></div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 anim-in anim-2">
-        <div class="cloud-card stat-card">
-          <div class="stat-head">
-            <div class="stat-icon bg-active"><i class="fas fa-check-circle"></i></div>
-          </div>
-          <div class="stat-label">Đang hoạt động</div>
-          <div class="stat-value" style="color:#059669;"><%= activeKeys %></div>
+      <div class="col-xl-3 col-md-6 anim d2">
+        <div class="vg-card vg-stat stat-active">
+          <div class="vg-stat-icon icon-active"><i class="fas fa-check-circle"></i></div>
+          <div class="vg-stat-label">Đang hoạt động</div>
+          <div class="vg-stat-value"><%= activeKeys %></div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 anim-in anim-3">
-        <div class="cloud-card stat-card">
-          <div class="stat-head">
-            <div class="stat-icon bg-expired"><i class="fas fa-clock"></i></div>
-          </div>
-          <div class="stat-label">Đã hết hạn</div>
-          <div class="stat-value" style="color:#dc2626;"><%= expiredKeys %></div>
+      <div class="col-xl-3 col-md-6 anim d3">
+        <div class="vg-card vg-stat stat-expired">
+          <div class="vg-stat-icon icon-expired"><i class="fas fa-clock"></i></div>
+          <div class="vg-stat-label">Đã hết hạn</div>
+          <div class="vg-stat-value"><%= expiredKeys %></div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6 anim-in anim-4">
-        <div class="cloud-card stat-card">
-          <div class="stat-head">
-            <div class="stat-icon bg-devices"><i class="fas fa-mobile-alt"></i></div>
-          </div>
-          <div class="stat-label">Thiết bị kích hoạt</div>
-          <div class="stat-value" style="color:#d97706;"><%= devicesActivated %></div>
+      <div class="col-xl-3 col-md-6 anim d4">
+        <div class="vg-card vg-stat stat-devices">
+          <div class="vg-stat-icon icon-devices"><i class="fas fa-mobile-alt"></i></div>
+          <div class="vg-stat-label">Thiết bị kích hoạt</div>
+          <div class="vg-stat-value"><%= devicesActivated %></div>
         </div>
       </div>
     </div>
 
-    <!-- RECENT LOGS -->
-    <div class="d-flex justify-content-between align-items-center mt-5 mb-3 anim-in">
-      <h3 class="page-title" style="font-size: 1.3rem;">
-        <div class="title-icon" style="width:36px; height:36px; font-size: 1rem;">
-          <i class="fas fa-history"></i>
-        </div>
-        Hoạt động gần đây
-      </h3>
-      <a href="?show=<%= showAll ? '' : 'all' %>" class="btn-ghost">
+    <!-- Logs -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="vg-section-title">
+        <i class="fas fa-history"></i> Hoạt động gần đây
+      </h2>
+      <a href="?show=<%= showAll ? '' : 'all' %>" class="vg-btn-ghost">
         <i class="fas <%= showAll ? 'fa-eye-slash' : 'fa-eye' %>"></i>
         <%= showAll ? 'Ẩn log check' : 'Hiển thị tất cả' %>
       </a>
     </div>
 
-    <div class="cloud-card anim-in" style="overflow: hidden;">
-      <div class="table-responsive">
-        <table class="cloud-table">
-          <thead>
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Hành động</th>
+            <th>Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentLogs.forEach(log => { %>
             <tr>
-              <th>Thời gian</th>
-              <th>Hành động</th>
-              <th>Chi tiết</th>
+              <td style="color: var(--cyan-1); font-size: 0.82rem; font-weight: 600; font-family: 'Courier New', monospace;">
+                <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
+              </td>
+              <td><span class="vg-badge-action"><%= log.action %></span></td>
+              <td style="color: var(--text-muted);"><%= log.details %></td>
             </tr>
-          </thead>
-          <tbody>
-            <% recentLogs.forEach(log => { %>
-              <tr>
-                <td style="color: var(--sky-7); font-size: 0.82rem; font-weight: 600;">
-                  <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
-                </td>
-                <td><span class="badge-action"><%= log.action %></span></td>
-                <td style="color: var(--text-muted); font-size: 0.88rem;"><%= log.details %></td>
-              </tr>
-            <% }) %>
-            <% if (recentLogs.length === 0) { %>
-              <tr>
-                <td colspan="3" class="text-center py-5" style="color: var(--text-muted);">
-                  <i class="fas fa-cloud fa-3x mb-3" style="color: var(--sky-3);"></i>
-                  <p style="margin: 0; font-weight: 500;">Chưa có hoạt động nào trong 24 giờ qua</p>
-                </td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
+          <% }) %>
+          <% if (recentLogs.length === 0) { %>
+            <tr>
+              <td colspan="3">
+                <div class="vg-empty">
+                  <i class="fas fa-moon"></i>
+                  <p>Chưa có hoạt động nào trong 24 giờ qua</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
     </div>
 
   </div>

@@ -1,36 +1,48 @@
-<nav class="cloud-sidebar">
-  <div class="cloud-logo">
-    <div class="logo-icon">
-      <i class="fas fa-cloud"></i>
+<nav class="vg-sidebar">
+  <div class="vg-logo">
+    <div class="vg-star-logo">
+      <svg viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="8" fill="#ffd700" opacity="0.9"/>
+        <g stroke="#4fc3f7" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.8">
+          <path d="M 50 30 Q 60 40 50 50 Q 40 60 50 70"/>
+          <path d="M 70 50 Q 60 60 50 50 Q 40 40 30 50"/>
+          <path d="M 50 20 Q 65 35 50 50 Q 35 65 50 80"/>
+          <path d="M 80 50 Q 65 35 50 50 Q 35 65 20 50"/>
+        </g>
+        <g stroke="#ffd700" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.6">
+          <path d="M 50 35 Q 62 44 50 55"/>
+          <path d="M 65 50 Q 56 62 45 50"/>
+          <path d="M 35 50 Q 44 38 55 50"/>
+        </g>
+      </svg>
+      <div class="star-core"></div>
     </div>
     <h5>DPIConfig</h5>
     <small>HoangPhu</small>
   </div>
 
-  <ul class="nav flex-column cloud-nav">
-    <li class="nav-item">
+  <ul class="vg-nav">
+    <li>
       <a href="/admin/dashboard" class="nav-link <%= currentPage == 'dashboard' ? 'active' : '' %>">
-        <i class="fas fa-cloud-sun"></i> <span>Bảng điều khiển</span>
+        <i class="fas fa-star"></i> <span>Bảng điều khiển</span>
       </a>
     </li>
-    <li class="nav-item">
+    <li>
       <a href="/admin/keys" class="nav-link <%= currentPage == 'keys' ? 'active' : '' %>">
         <i class="fas fa-key"></i> <span>Quản lý Key</span>
       </a>
     </li>
   </ul>
 
-  <div class="cloud-footer">
-    <div class="cloud-time" id="cloudTime">--:--:--</div>
-    <div class="cloud-user">
+  <div class="vg-footer">
+    <div class="vg-time-badge" id="vgTime">--:--:--</div>
+    <div class="vg-user">
       <i class="fas fa-user-circle"></i>
       <span><%= user.email.charAt(0) %>***@gmail.com</span>
     </div>
-    <a href="/admin/logout" class="btn-ghost" style="width:100%; justify-content:center;">
-      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    <a href="/admin/logout" class="vg-btn-logout">
+      <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
     </a>
-    <div style="color: var(--text-muted); font-size: 0.65rem; margin-top: 12px; letter-spacing: 0.5px;">
-      © 2025 HoangPhu · Duy
-    </div>
+    <div class="vg-copyright">© 2025 HoangPhu · Duy</div>
   </div>
 </nav>
