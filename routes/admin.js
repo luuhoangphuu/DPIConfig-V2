@@ -49,23 +49,33 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
 router.get('/logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/admin/login'); });
 router.use(requireAdmin);
 
-// Dashboard
+// DASHBOARD
 router.get('/dashboard', async (req, res) => {
-  const showAll = req.query.show === 'all';
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const where = { createdAt: { [Op.gte]: oneDayAgo } };
-  if (!showAll) where.action = { [Op.ne]: 'check' };
+  try {
+    const showAll = req.query.show === 'all';
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const where = { createdAt: { [Op.gte]: oneDayAgo } };
+    if (!showAll) where.action = { [Op.ne]: 'check' };
 
-  const totalKeys = await Key.count();
-  const activeKeys = await Key.count({ where: { is_active: true } });
-  const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
-  const vipKeys = await Key.count({ where: { tier: 'VIP' } });
-  const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-  const recentLogs = await Log.findAll({ where, limit: 20, order: [['createdAt', 'DESC']], include: Key });
-  res.render('admin/dashboard', { user: req.admin, totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs, showAll });
+    const totalKeys = await Key.count();
+    const activeKeys = await Key.count({ where: { is_active: true } });
+    const expiredKeys = await Key.count({ where: { expires_at: { [Op.lt]: new Date() } } });
+    const vipKeys = await Key.count({ where: { tier: 'VIP' } });
+    const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
+    const recentLogs = await Log.findAll({ where, limit: 20, order: [['createdAt', 'DESC']], include: Key });
+
+    res.render('admin/dashboard', {
+      user: req.admin,
+      totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs,
+      showAll
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi máy chủ');
+  }
 });
 
-// Keys
+// KEYS
 router.get('/keys', async (req, res) => {
   const page = parseInt(req.query.page) || 1, limit = 15, offset = (page - 1) * limit;
   const search = req.query.search || '';
@@ -164,7 +174,7 @@ router.post('/keys/extend/:id', async (req, res) => {
   if (key && new_expiry) {
     key.expires_at = new Date(new_expiry);
     await key.save();
-    await Log.create({ action: 'key_extended', details: `Gia hạn key ${key.key} đến ${new_expiry}`, ip_address: req.ip, key_id: key.id });
+    await Log.create({ action: 'key_extended', details: `Gia hạn key ${key.key}`, ip_address: req.ip, key_id: key.id });
   }
   res.redirect('/admin/keys?extended=1');
 });
