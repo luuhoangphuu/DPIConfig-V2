@@ -1,85 +1,101 @@
 <%- include('../partials/header', { title: 'Dashboard' }) %>
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
-  <div class="main-content flex-grow-1">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold mb-0">Tổng quan hệ thống</h4>
+  <div class="vg-main flex-grow-1">
+    <div class="d-flex justify-content-between align-items-start flex-wrap">
       <div>
-        <span class="badge bg-<%= showAll ? 'success' : 'secondary' %> me-2">
-          <%= showAll ? 'Đang hiển thị tất cả' : 'Đã ẩn log check' %>
+        <h1 class="vg-page-title vg-anim">Đêm đầy sao</h1>
+        <p class="vg-subtitle vg-anim vg-anim-1">"Tôi mơ về những bức tranh, và tôi vẽ giấc mơ của mình" — Vincent van Gogh</p>
+      </div>
+      <div class="vg-anim vg-anim-2">
+        <span class="badge" style="background: rgba(251,191,36,0.15); color: var(--vg-sun); padding: 8px 16px; font-weight: 500; border: 1px solid var(--vg-border);">
+          <i class="far fa-calendar-alt me-2"></i>
+          <span id="vnDate"></span>
         </span>
-        <a href="?show=<%= showAll ? '' : 'all' %>" class="btn btn-outline btn-sm">
-          <i class="fas <%= showAll ? 'fa-filter' : 'fa-list' %> me-1"></i>
-          <%= showAll ? 'Ẩn log check' : 'Hiển thị tất cả' %>
-        </a>
       </div>
     </div>
 
-    <div class="row g-4 mb-5">
-      <div class="col-md-3 animate__animated animate__fadeInUp">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(108,92,231,0.15); color: #6C5CE7;">
-            <i class="fas fa-key"></i>
-          </div>
-          <div>
-            <div class="stat-label">Tổng Key</div>
-            <div class="stat-value"><%= totalKeys %></div>
-          </div>
+    <!-- Stat cards -->
+    <div class="row g-4 mt-3 mb-5">
+      <div class="col-xl-3 col-md-6 vg-anim vg-anim-1">
+        <div class="vg-card vg-stat stat-total">
+          <div class="stat-icon"><i class="fas fa-key"></i></div>
+          <div class="stat-label">Tổng Key</div>
+          <div class="stat-value"><%= totalKeys %></div>
         </div>
       </div>
-      <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-1s">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(5,150,105,0.15); color: #059669;">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div>
-            <div class="stat-label">Đang hoạt động</div>
-            <div class="stat-value" style="color:#059669;"><%= activeKeys %></div>
-          </div>
+      <div class="col-xl-3 col-md-6 vg-anim vg-anim-2">
+        <div class="vg-card vg-stat stat-active">
+          <div class="stat-icon"><i class="fas fa-sparkles"></i></div>
+          <div class="stat-label">Hoạt động</div>
+          <div class="stat-value"><%= activeKeys %></div>
         </div>
       </div>
-      <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-2s">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(220,38,38,0.15); color: #DC2626;">
-            <i class="fas fa-exclamation-triangle"></i>
-          </div>
-          <div>
-            <div class="stat-label">Hết hạn</div>
-            <div class="stat-value" style="color:#DC2626;"><%= expiredKeys %></div>
-          </div>
+      <div class="col-xl-3 col-md-6 vg-anim vg-anim-3">
+        <div class="vg-card vg-stat stat-expired">
+          <div class="stat-icon"><i class="fas fa-hourglass-end"></i></div>
+          <div class="stat-label">Hết hạn</div>
+          <div class="stat-value"><%= expiredKeys %></div>
         </div>
       </div>
-      <div class="col-md-3 animate__animated animate__fadeInUp animate__delay-3s">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(217,119,6,0.15); color: #D97706;">
-            <i class="fas fa-mobile-alt"></i>
-          </div>
-          <div>
-            <div class="stat-label">Thiết bị đã kích hoạt</div>
-            <div class="stat-value" style="color:#D97706;"><%= devicesActivated %></div>
-          </div>
+      <div class="col-xl-3 col-md-6 vg-anim vg-anim-4">
+        <div class="vg-card vg-stat stat-devices">
+          <div class="stat-icon"><i class="fas fa-mobile-alt"></i></div>
+          <div class="stat-label">Thiết bị</div>
+          <div class="stat-value"><%= devicesActivated %></div>
         </div>
       </div>
     </div>
 
-    <h5 class="fw-bold mb-3">Hoạt động gần đây (20 log mới nhất)</h5>
-    <div class="table-responsive">
-      <table class="table-custom w-100">
-        <thead><tr><th>Thời gian</th><th>Hành động</th><th>Chi tiết</th></tr></thead>
-        <tbody>
-          <% recentLogs.forEach(log => { %>
+    <!-- Recent activity -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="vg-page-title" style="font-size: 2rem;">
+        <i class="fas fa-history" style="font-size: 1.6rem;"></i> Hoạt động
+      </h3>
+      <a href="?show=<%= showAll ? '' : 'all' %>" class="vg-btn-outline">
+        <i class="fas <%= showAll ? 'fa-eye-slash' : 'fa-eye' %> me-1"></i>
+        <%= showAll ? 'Ẩn log check' : 'Hiển thị tất cả' %>
+      </a>
+    </div>
+
+    <div class="vg-card vg-anim">
+      <div class="table-responsive">
+        <table class="vg-table">
+          <thead>
             <tr>
-              <td class="text-muted" style="font-size:0.85rem;"><%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %></td>
-              <td><span class="badge bg-primary bg-opacity-10 text-primary"><%= log.action %></span></td>
-              <td class="text-muted"><%= log.details %></td>
+              <th>Thời gian</th>
+              <th>Hành động</th>
+              <th>Chi tiết</th>
             </tr>
-          <% }) %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% recentLogs.forEach(log => { %>
+              <tr>
+                <td style="color: var(--vg-cyan); font-size: 0.85rem; font-family: 'Cormorant Garamond', serif;">
+                  <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
+                </td>
+                <td>
+                  <span style="background: rgba(124,58,237,0.15); color: #c4b5fd; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
+                    <%= log.action %>
+                  </span>
+                </td>
+                <td style="color: var(--vg-muted); font-size: 0.9rem;"><%= log.details %></td>
+              </tr>
+            <% }) %>
+            <% if (recentLogs.length === 0) { %>
+              <tr><td colspan="3" class="text-center py-5" style="color: var(--vg-muted); font-style: italic;">
+                <i class="fas fa-wind fa-2x mb-2" style="opacity: 0.4;"></i><br>
+                Không có hoạt động nào trong 24 giờ qua
+              </td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <% if (recentLogs.length === 0) { %>
-      <p class="text-muted text-center mt-3">Không có hoạt động nào trong 24 giờ qua.</p>
-    <% } %>
+
+    <p class="text-center mt-5" style="font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--vg-muted); font-size: 0.9rem;">
+      "Theo tôi, không gì nghệ thuật hơn là yêu thương con người" — Vincent van Gogh
+    </p>
   </div>
 </div>
 <%- include('../partials/scripts') %>

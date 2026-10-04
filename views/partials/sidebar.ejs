@@ -1,19 +1,16 @@
-<nav class="sidebar animate__animated animate__slideInLeft">
-  <div class="sidebar-header">
-    <div class="d-flex align-items-center">
-      <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3" style="width:42px;height:42px;display:flex;align-items:center;justify-content:center;">
-        <i class="fas fa-shield-alt text-primary fa-lg"></i>
-      </div>
-      <div>
-        <h5 class="fw-bold mb-0 text-primary">DPIConfig</h5>
-        <small class="text-muted">HoangPhu</small>
-      </div>
+<nav class="vg-sidebar">
+  <div class="vg-logo">
+    <div class="brush-circle">
+      <i class="fas fa-star"></i>
     </div>
+    <h5>DPIConfig</h5>
+    <small>HoangPhu</small>
   </div>
-  <ul class="nav flex-column mt-3">
+
+  <ul class="nav flex-column vg-nav">
     <li class="nav-item">
       <a href="/admin/dashboard" class="nav-link <%= currentPage == 'dashboard' ? 'active' : '' %>">
-        <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+        <i class="fas fa-moon"></i> <span>Bảng điều khiển</span>
       </a>
     </li>
     <li class="nav-item">
@@ -22,18 +19,20 @@
       </a>
     </li>
   </ul>
-  <div class="mt-auto p-3">
-    <div class="text-muted small mb-2 text-center" id="serverTime">
-      <i class="far fa-clock me-1"></i> <span id="serverTimeValue">Đang tải...</span>
+
+  <div class="vg-footer">
+    <div class="vg-time" id="vgTime">--:--:--</div>
+    <div class="user-info">
+      <i class="fas fa-feather-alt me-1"></i>
+      <%= user.email.charAt(0) %>***@gmail.com
     </div>
-    <div class="d-flex align-items-center mb-3">
-      <i class="fas fa-user-circle text-muted me-2"></i>
-      <span class="text-muted small"><%= user.email.charAt(0) %>***@gmail.com</span>
+    <div class="d-flex gap-2 justify-content-center mb-2">
+      <a href="/admin/logout" class="vg-btn-outline">
+        <i class="fas fa-sign-out-alt me-1"></i> Thoát
+      </a>
     </div>
-    <div class="d-flex gap-2 mb-3">
-      <button class="dark-mode-toggle" id="darkModeToggle" title="Đổi giao diện"><i class="fas fa-moon"></i></button>
-      <a href="/admin/logout" class="btn btn-outline btn-sm text-danger"><i class="fas fa-sign-out-alt me-1"></i> Thoát</a>
-    </div>
-    <div class="text-muted" style="font-size:0.7rem;">© 2025 HoangPhu - Duy</div>
+    <small style="color: var(--vg-muted); font-size: 0.65rem; letter-spacing: 1px;">
+      © 2025 HoangPhu · Duy
+    </small>
   </div>
 </nav>

@@ -1,65 +1,146 @@
 <%- include('../partials/header', { title: 'Quản lý Key' }) %>
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'keys' }) %>
-  <div class="main-content flex-grow-1">
-    <div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
-      <h4 class="fw-bold mb-0">Danh sách Key</h4>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createKeyModal"><i class="fas fa-plus me-1"></i> Tạo Key Mới</button>
+  <div class="vg-main flex-grow-1">
+    <div class="d-flex justify-content-between align-items-start flex-wrap mb-4">
+      <div>
+        <h1 class="vg-page-title vg-anim">Vườn hoa Key</h1>
+        <p class="vg-subtitle vg-anim vg-anim-1">Mỗi key là một bông hoa, được chăm sóc cẩn thận</p>
+      </div>
+      <button class="vg-btn vg-anim vg-anim-2" data-bs-toggle="modal" data-bs-target="#createKeyModal">
+        <i class="fas fa-paint-brush me-2"></i> Vẽ Key mới
+      </button>
     </div>
-    <div class="mb-3 animate__animated animate__fadeInUp"><input type="text" name="search" class="search-input" placeholder="Tìm key..." value="<%= search %>"></div>
-    <div class="table-responsive animate__animated animate__fadeInUp">
-      <table class="table-custom w-100">
-        <thead><tr><th>Key</th><th>Hạng</th><th>TB</th><th>Hết hạn</th><th>Còn</th><th></th><th></th></tr></thead>
-        <tbody>
-          <% keys.forEach(k => { const devs = k.devices || []; const active = devs.filter(d => d.is_active).length; %>
+
+    <div class="mb-4 vg-anim vg-anim-3">
+      <form method="GET">
+        <input type="text" name="search" class="vg-search" placeholder="🔍 Tìm bông hoa Key của bạn..." value="<%= search %>">
+      </form>
+    </div>
+
+    <div class="vg-card vg-anim">
+      <div class="table-responsive">
+        <table class="vg-table">
+          <thead>
             <tr>
-              <td><code style="font-size:0.9rem;"><%= k.key %></code></td>
-              <td><span class="badge-tier <%= k.tier==='VIP' ? 'badge-vip' : 'badge-normal' %>"><%= k.tier %></span></td>
-              <td><%= active %>/<%= k.max_devices %></td>
-              <td><%= new Date(k.expires_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %></td>
-              <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
-              <td>
-                <form method="POST" action="/admin/keys/toggle/<%= k.id %>"><label class="toggle-switch"><input type="checkbox" <%= k.is_active?'checked':'' %> onchange="this.form.submit()"><span class="slider"></span></label></form>
-              </td>
-              <td>
-                <div class="d-flex gap-1">
-                  <button class="btn btn-outline btn-sm view-devices-btn" data-key-id="<%= k.id %>" title="Thiết bị"><i class="fas fa-list"></i></button>
-                  <button class="btn btn-outline btn-sm" data-bs-toggle="modal" data-bs-target="#extendModal<%= k.id %>" title="Gia hạn"><i class="fas fa-calendar-plus"></i></button>
-                  <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Bạn có chắc muốn KHÓA TẤT CẢ thiết bị của key này?')"><button class="btn btn-outline btn-sm text-warning" title="Khóa tất cả"><i class="fas fa-ban"></i></button></form>
-                  <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa vĩnh viễn tất cả thiết bị của key này?')"><button class="btn btn-outline btn-sm text-danger" title="Xóa tất cả"><i class="fas fa-trash-alt"></i></button></form>
-                  <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('XÁC NHẬN: Xóa key này và tất cả thiết bị? Hành động này không thể hoàn tác.')"><button class="btn btn-outline btn-sm text-danger" title="Xóa key"><i class="fas fa-times"></i></button></form>
-                </div>
-              </td>
+              <th>Key</th>
+              <th>Hạng</th>
+              <th>Số TB</th>
+              <th>Hết hạn</th>
+              <th>Còn lại</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
-          <% }) %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% keys.forEach(k => {
+                 const devs = k.devices || [];
+                 const active = devs.filter(d => d.is_active).length;
+            %>
+              <tr>
+                <td><code><%= k.key %></code></td>
+                <td>
+                  <span class="<%= k.tier==='VIP' ? 'badge-vip' : 'badge-normal' %>">
+                    <%= k.tier === 'VIP' ? '★ VIP' : 'Normal' %>
+                  </span>
+                </td>
+                <td style="color: var(--vg-cyan); font-weight: 600;"><%= active %>/<%= k.max_devices %></td>
+                <td style="font-family: 'Cormorant Garamond', serif; color: var(--vg-muted);">
+                  <%= new Date(k.expires_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
+                </td>
+                <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
+                <td>
+                  <form method="POST" action="/admin/keys/toggle/<%= k.id %>">
+                    <label class="vg-toggle">
+                      <input type="checkbox" <%= k.is_active?'checked':'' %> onchange="this.form.submit()">
+                      <span class="vg-slider"></span>
+                    </label>
+                  </form>
+                </td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị">
+                      <i class="fas fa-mobile-alt"></i>
+                    </button>
+                    <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn">
+                      <i class="fas fa-clock"></i>
+                    </button>
+                    <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Khóa tất cả thiết bị của key này?')" style="display:inline;">
+                      <button class="vg-btn-icon" title="Khóa tất cả"><i class="fas fa-ban"></i></button>
+                    </form>
+                    <form method="POST" action="/admin/keys/delete-all-devices/<%= k.id %>" onsubmit="return confirm('Xóa vĩnh viễn tất cả thiết bị?')" style="display:inline;">
+                      <button class="vg-btn-icon danger" title="Xóa thiết bị"><i class="fas fa-broom"></i></button>
+                    </form>
+                    <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('Xóa key này vĩnh viễn?')" style="display:inline;">
+                      <button class="vg-btn-icon danger" title="Xóa key"><i class="fas fa-trash-alt"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (keys.length === 0) { %>
+              <tr><td colspan="7" class="text-center py-5" style="color: var(--vg-muted); font-style: italic;">
+                <i class="fas fa-seedling fa-3x mb-3" style="opacity: 0.4;"></i><br>
+                Chưa có Key nào. Hãy bắt đầu vẽ bông hoa đầu tiên!
+              </td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <nav class="mt-3"><ul class="pagination"><% for(let i=1; i<=totalPages; i++) { %><li class="page-item <%= i===currentPage?'active':'' %>"><a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a></li><% } %></ul></nav>
+
+    <nav class="mt-4 vg-anim">
+      <ul class="pagination justify-content-center vg-pagination">
+        <% for(let i=1; i<=totalPages; i++) { %>
+          <li class="page-item <%= i===currentPage?'active':'' %>">
+            <a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
   </div>
 </div>
 
-<!-- Modal devices -->
-<div class="modal fade" id="devicesModal" tabindex="-1" aria-hidden="true">
+<!-- Modal xem thiết bị -->
+<div class="modal fade" id="devicesModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Thiết bị của key</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
-      <div class="modal-body" id="devicesModalBody"><p class="text-center text-muted">Đang tải...</p></div>
-      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div>
+    <div class="modal-content vg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-mobile-alt me-2"></i>Thiết bị của Key</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="devicesModalBody">
+        <p class="text-center" style="color: var(--vg-muted); font-style: italic;">Đang tải...</p>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Modal tạo key -->
-<div class="modal fade" id="createKeyModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="createKeyModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Tạo Key Mới</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+    <div class="modal-content vg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-palette me-2"></i>Vẽ Key mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
       <form method="POST" action="/admin/keys/create">
         <div class="modal-body">
-          <div class="mb-3"><label class="form-label">Tiền tố</label><input name="prefix" class="form-control" value="HoangPhu"></div>
-          <div class="mb-3"><label class="form-label">Hạng</label><select name="tier" class="form-select" id="tierSelect"><option value="VIP">VIP</option><option value="Normal">Normal</option></select></div>
-          <div class="mb-3"><label class="form-label">Số TB tối đa</label><input name="max_devices" type="number" class="form-control" value="1" id="maxDevicesInput"></div>
+          <div class="mb-3">
+            <label class="form-label">Tiền tố</label>
+            <input name="prefix" class="form-control" value="HoangPhu">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hạng</label>
+            <select name="tier" class="form-select" id="tierSelect">
+              <option value="VIP">★ VIP</option>
+              <option value="Normal">Normal</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số thiết bị tối đa</label>
+            <input name="max_devices" type="number" class="form-control" value="1" id="maxDevicesInput" min="1" max="999">
+          </div>
           <div class="mb-3">
             <label class="form-label">Thời hạn</label>
             <select name="duration" class="form-select">
@@ -70,59 +151,83 @@
               <option value="30">30 ngày</option>
               <option value="90">90 ngày</option>
               <option value="365">1 năm</option>
-              <option value="forever">Vĩnh viễn</option>
+              <option value="forever">♾️ Vĩnh viễn</option>
             </select>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-primary">Tạo Key</button>
+        <div class="modal-footer" style="border-top: 1px solid var(--vg-border);">
+          <button type="submit" class="vg-btn">
+            <i class="fas fa-magic me-2"></i> Tạo Key
+          </button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Modals gia hạn cho từng key -->
+<!-- Modals gia hạn -->
 <% keys.forEach(k => { %>
-<div class="modal fade" id="extendModal<%= k.id %>" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header"><h6 class="modal-title">Gia hạn key <%= k.key %></h6><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
-      <form method="POST" action="/admin/keys/extend/<%= k.id %>">
-        <div class="modal-body"><label class="form-label">Ngày hết hạn mới</label><input type="date" name="new_expiry" class="form-control" required></div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-primary">Gia hạn</button></div>
-      </form>
+  <div class="modal fade" id="extend<%= k.id %>" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content vg-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" style="font-size: 1.4rem;"><i class="fas fa-clock me-2"></i>Gia hạn</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="/admin/keys/extend/<%= k.id %>">
+          <div class="modal-body">
+            <label class="form-label">Ngày hết hạn mới</label>
+            <input type="datetime-local" name="new_expiry" class="form-control" required>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid var(--vg-border);">
+            <button type="submit" class="vg-btn">Cập nhật</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 <% }) %>
 
 <%- include('../partials/scripts') %>
 <script>
-  document.getElementById('tierSelect').addEventListener('change', function(){ document.getElementById('maxDevicesInput').value = this.value==='VIP'?1:9; });
+  document.getElementById('tierSelect').addEventListener('change', function() {
+    document.getElementById('maxDevicesInput').value = this.value === 'VIP' ? 1 : 5;
+  });
+
   document.querySelectorAll('.view-devices-btn').forEach(btn => {
-    btn.addEventListener('click', async function(){
+    btn.addEventListener('click', async function() {
       const keyId = this.dataset.keyId;
       const body = document.getElementById('devicesModalBody');
-      body.innerHTML = '<p class="text-center text-muted">Đang tải...</p>';
-      const modal = new bootstrap.Modal(document.getElementById('devicesModal'));
-      modal.show();
+      body.innerHTML = '<p class="text-center" style="color: var(--vg-muted);">Đang tải...</p>';
+      new bootstrap.Modal(document.getElementById('devicesModal')).show();
       try {
         const res = await fetch(`/admin/keys/devices/${keyId}`);
         const data = await res.json();
-        if(data.success && data.devices.length){
-          let html = '<table class="table-custom w-100"><thead><tr><th>HWID</th><th>Tên</th><th>Trạng thái</th><th></th></tr></thead><tbody>';
+        if (data.success && data.devices.length) {
+          let html = '<table class="vg-table"><thead><tr><th>HWID</th><th>Tên</th><th>Trạng thái</th><th>Ngày thêm</th><th></th></tr></thead><tbody>';
           data.devices.forEach(d => {
-            html += `<tr><td><code>${d.hwid}</code></td><td>${d.device_name||''}</td><td><span class="badge ${d.is_active?'bg-success':'bg-danger'}">${d.is_active?'Active':'Bị khóa'}</span></td>
-            <td>
-              <form method="POST" action="/admin/keys/toggle-device/${d.id}" class="d-inline" onsubmit="return confirm('Xác nhận thay đổi trạng thái thiết bị?')"><button class="btn btn-outline btn-sm">${d.is_active?'Khóa':'Mở'}</button></form>
-              <form method="POST" action="/admin/keys/unbind-device/${d.id}" class="d-inline" onsubmit="return confirm('Xóa vĩnh viễn thiết bị này?')"><button class="btn btn-outline btn-sm text-danger">Xóa</button></form>
-            </td></tr>`;
+            html += `<tr>
+              <td><code>${d.hwid}</code></td>
+              <td style="color: var(--vg-cyan);">${d.device_name || '<em style="color: var(--vg-muted);">Chưa đặt</em>'}</td>
+              <td>${d.is_active ? '<span style="color: #84cc16;">● Active</span>' : '<span style="color: #ef4444;">● Bị khóa</span>'}</td>
+              <td style="font-family: \'Cormorant Garamond\', serif; color: var(--vg-muted); font-size: 0.85rem;">${new Date(d.createdAt).toLocaleString('vi-VN')}</td>
+              <td>
+                <form method="POST" action="/admin/keys/toggle-device/${d.id}" style="display:inline;">
+                  <button class="vg-btn-icon" title="${d.is_active?'Khóa':'Mở'}"><i class="fas fa-power-off"></i></button>
+                </form>
+                <form method="POST" action="/admin/keys/unbind-device/${d.id}" style="display:inline;" onsubmit="return confirm('Xóa thiết bị này?')">
+                  <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>`;
           });
           body.innerHTML = html + '</tbody></table>';
-        } else body.innerHTML = '<p class="text-muted">Chưa có thiết bị.</p>';
-      } catch(e){ body.innerHTML = '<p class="text-danger">Lỗi tải.</p>'; }
+        } else {
+          body.innerHTML = '<p class="text-center" style="color: var(--vg-muted); font-style: italic;">Chưa có thiết bị nào.</p>';
+        }
+      } catch(e) {
+        body.innerHTML = '<p class="text-center" style="color: #ef4444;">Lỗi tải dữ liệu.</p>';
+      }
     });
   });
 </script>

@@ -1,29 +1,43 @@
 <%- include('../partials/header', { title: 'Đăng nhập' }) %>
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-  <div class="col-md-4 animate__animated animate__fadeInDown">
-    <div class="card shadow-lg border-0 rounded-4" style="background: rgba(255,255,255,0.95);">
-      <div class="card-body p-5">
-        <h3 class="text-center mb-4 fw-bold" style="color: var(--primary);">🔐 DPIConfig Admin</h3>
-        <% if (error) { %><div class="alert alert-danger animate__animated animate__shakeX"><%= error %></div><% } %>
-        <form method="POST" action="/admin/login">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Email</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-              <input type="email" name="email" class="form-control" required autofocus>
-            </div>
-          </div>
-          <div class="mb-4">
-            <label class="form-label fw-semibold">Mật khẩu</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-lock"></i></span>
-              <input type="password" name="password" class="form-control" required>
-            </div>
-          </div>
-          <button type="submit" class="btn btn-lg w-100 rounded-3 text-white" style="background: var(--primary);">Đăng nhập</button>
-        </form>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; padding: 20px;">
+  <div class="vg-card" style="max-width: 440px; width: 100%; padding: 40px; animation: fadeInUp 0.8s cubic-bezier(0.4,0,0.2,1);">
+    <div class="text-center mb-4">
+      <div class="brush-circle mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, var(--vg-sun), var(--vg-orange), var(--vg-purple)); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; box-shadow: 0 0 60px rgba(251,191,36,0.6);">
+        <i class="fas fa-feather-alt"></i>
       </div>
+      <h1 style="font-family: 'Dancing Script', cursive; font-size: 2.6rem; color: var(--vg-sun); margin: 0; text-shadow: 0 4px 20px rgba(251,191,36,0.4);">
+        DPIConfig
+      </h1>
+      <p style="font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--vg-muted); margin-top: 4px;">
+        — HoangPhu Art Studio —
+      </p>
     </div>
+
+    <% if (error) { %>
+      <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem;">
+        <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+      </div>
+    <% } %>
+
+    <form method="POST" action="/admin/login">
+      <div class="mb-3">
+        <label class="form-label" style="color: var(--vg-sun); font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;">Email</label>
+        <input type="email" name="email" class="form-control" placeholder="artist@dpiconfig.com" required autofocus
+               style="background: rgba(15,23,42,0.7); border: 1px solid var(--vg-border); color: var(--vg-text); border-radius: 10px; padding: 12px 16px;">
+      </div>
+      <div class="mb-4">
+        <label class="form-label" style="color: var(--vg-sun); font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;">Mật khẩu</label>
+        <input type="password" name="password" class="form-control" placeholder="••••••••" required
+               style="background: rgba(15,23,42,0.7); border: 1px solid var(--vg-border); color: var(--vg-text); border-radius: 10px; padding: 12px 16px;">
+      </div>
+      <button type="submit" class="vg-btn w-100" style="padding: 14px;">
+        <i class="fas fa-paint-brush me-2"></i> Bước vào Studio
+      </button>
+    </form>
+
+    <p class="text-center mt-4" style="font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--vg-muted); font-size: 0.85rem;">
+      "Tôi không thể vẽ mà không có cảm hứng"
+    </p>
   </div>
 </div>
 <%- include('../partials/scripts') %>
