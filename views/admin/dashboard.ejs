@@ -14,7 +14,6 @@
       </span>
     </div>
 
-    <!-- Stats -->
     <div class="row g-4 mb-5">
       <div class="col-xl-3 col-md-6 anim d1">
         <div class="vg-card vg-stat stat-total">
@@ -46,7 +45,6 @@
       </div>
     </div>
 
-    <!-- Logs -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2 class="vg-section-title">
         <i class="fas fa-history"></i> Hoạt động gần đây
@@ -69,7 +67,7 @@
         <tbody>
           <% recentLogs.forEach(log => { %>
             <tr>
-              <td style="color: var(--cyan-1); font-size: 0.82rem; font-weight: 600; font-family: 'Courier New', monospace;">
+              <td style="color: var(--cyan-1); font-family: 'Courier New', monospace; font-weight: 700;">
                 <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
               </td>
               <td><span class="vg-badge-action"><%= log.action %></span></td>

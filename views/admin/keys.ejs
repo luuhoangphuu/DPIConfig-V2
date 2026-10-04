@@ -46,10 +46,10 @@
                 </span>
               </td>
               <td>
-                <span style="font-weight: 800; color: var(--cyan-1);"><%= active %></span>
+                <span style="font-weight: 800; color: var(--cyan-1); font-family:'Caveat'; font-size:1.2rem;"><%= active %></span>
                 <span style="color: var(--text-muted);">/ <%= k.max_devices %></span>
               </td>
-              <td style="color: var(--text-muted); font-size: 0.82rem;">
+              <td style="color: var(--text-muted); font-size: 0.85rem;">
                 <%= new Date(k.expires_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
               </td>
               <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
@@ -107,7 +107,6 @@
   </div>
 </div>
 
-<!-- Devices Modal -->
 <div class="modal fade" id="devicesModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content vg-modal">
@@ -122,7 +121,6 @@
   </div>
 </div>
 
-<!-- Create Modal -->
 <div class="modal fade" id="createKeyModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content vg-modal">
@@ -170,7 +168,6 @@
   </div>
 </div>
 
-<!-- Extend Modals -->
 <% keys.forEach(k => { %>
   <div class="modal fade" id="extend<%= k.id %>" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -218,7 +215,7 @@
               <td>${d.is_active
                 ? '<span style="color:#81c784; font-weight:700;">● Hoạt động</span>'
                 : '<span style="color:#ef5350; font-weight:700;">● Bị khóa</span>'}</td>
-              <td style="color: var(--text-muted); font-size: 0.82rem;">${new Date(d.createdAt).toLocaleString('vi-VN')}</td>
+              <td style="color: var(--text-muted); font-size: 0.85rem;">${new Date(d.createdAt).toLocaleString('vi-VN')}</td>
               <td style="text-align:right;">
                 <form method="POST" action="/admin/keys/toggle-device/${d.id}" style="display:inline;margin:0;">
                   <button class="vg-btn-icon ${d.is_active ? 'warn' : ''}" title="${d.is_active ? 'Khóa' : 'Mở khóa'}">

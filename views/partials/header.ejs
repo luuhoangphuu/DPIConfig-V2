@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title || 'DPIConfig HoangPhu' %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     :root {
-      --sidebar-width: 260px;
-      /* Starry Night palette */
+      --sidebar-width: 270px;
       --prussian: #0a1e3f;
       --navy-1: #0f2847;
       --navy-2: #14305c;
@@ -21,214 +20,278 @@
       --cyan-3: #81d4fa;
       --chrome-1: #ffd700;
       --chrome-2: #fbc02d;
-      --chrome-3: #f5d020;
       --amber: #ffb300;
       --orange: #ff8f00;
       --cream: #fff8e1;
       --text: #e8f0ff;
-      --text-muted: #8ba3c7;
-      --border-paint: rgba(255, 215, 0, 0.35);
+      --text-muted: #a8bfd9;
+      --ink: #050d1f;
     }
     * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: #0a1e3f;
+      font-family: 'Kalam', cursive;
+      background: #050d1f;
       color: var(--text);
       overflow-x: hidden;
-      margin: 0;
       min-height: 100vh;
+      position: relative;
     }
-    /* Canvas Starry Night */
-    #starryCanvas {
-      position: fixed; top: 0; left: 0;
+
+    /* ============================================
+       CANVAS PAINTING - NỀN SƠN DẦU THẬT
+       ============================================ */
+    #oilCanvas {
+      position: fixed; inset: 0;
       width: 100%; height: 100%;
       z-index: -2;
       display: block;
     }
-    /* SVG filters (wobbly painterly edges) */
-    .svg-filters { position: absolute; width: 0; height: 0; }
-    .paint-edge { filter: url(#paint-edge); }
-    .paint-rough { filter: url(#paint-rough); }
 
-    /* ============ SIDEBAR ============ */
+    /* ============================================
+       CANVAS TEXTURE - VẢI THÔ (đè lên toàn bộ)
+       ============================================ */
+    .canvas-texture {
+      position: fixed; inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.35;
+      mix-blend-mode: overlay;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px);
+    }
+
+    /* ============================================
+       SVG FILTERS - RUN RẨY NHƯ VẼ TAY
+       ============================================ */
+    .svg-filters { position: absolute; width: 0; height: 0; }
+
+    /* Áp filter cho TẤT CẢ element chính */
+    .paintable {
+      filter: url(#oilPaint);
+    }
+    .paintable-soft {
+      filter: url(#oilPaintSoft);
+    }
+
+    /* ============================================
+       SIDEBAR - NHƯ MỘT BỨC TRANH DỌC
+       ============================================ */
     .vg-sidebar {
       position: fixed;
       left: 0; top: 0;
       width: var(--sidebar-width);
       min-height: 100vh;
       background: linear-gradient(180deg,
-        rgba(10, 30, 63, 0.92) 0%,
-        rgba(15, 40, 71, 0.88) 50%,
-        rgba(26, 66, 117, 0.85) 100%);
-      backdrop-filter: blur(20px);
-      border-right: 2px solid var(--border-paint);
+        rgba(10, 30, 63, 0.94) 0%,
+        rgba(15, 40, 71, 0.92) 40%,
+        rgba(26, 66, 117, 0.9) 100%);
+      backdrop-filter: blur(16px);
       z-index: 100;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
+      /* Viền đen contour - đặc trưng Van Gogh */
+      border-right: 3px solid var(--ink);
       box-shadow:
-        4px 0 30px rgba(0, 0, 0, 0.4),
-        inset -1px 0 0 rgba(255, 215, 0, 0.1);
+        6px 0 0 rgba(255, 215, 0, 0.15),
+        8px 0 40px rgba(0, 0, 0, 0.6);
+      filter: url(#oilPaintSoft);
     }
     .vg-sidebar::before {
       content: '';
-      position: absolute; top: 0; right: -2px;
-      width: 2px; height: 100%;
+      position: absolute;
+      top: 0; right: -3px;
+      width: 3px; height: 100%;
       background: linear-gradient(180deg,
         transparent 0%,
-        var(--chrome-1) 20%,
+        var(--chrome-1) 25%,
         var(--cyan-1) 50%,
-        var(--chrome-1) 80%,
+        var(--chrome-1) 75%,
         transparent 100%);
-      opacity: 0.4;
-      animation: paintGlow 4s ease-in-out infinite;
+      opacity: 0.5;
+      animation: brushFlow 5s ease-in-out infinite;
+      z-index: 1;
     }
-    @keyframes paintGlow {
+    @keyframes brushFlow {
       0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.7; }
+      50% { opacity: 0.85; }
     }
+
+    /* ============================================
+       LOGO - SAO XOÁY
+       ============================================ */
     .vg-logo {
-      padding: 30px 22px 22px;
+      padding: 32px 20px 24px;
       text-align: center;
-      border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+      border-bottom: 2px solid var(--ink);
       position: relative;
     }
     .vg-logo::after {
       content: '';
       position: absolute;
-      bottom: -1px; left: 15%; right: 15%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--chrome-1), transparent);
+      bottom: -2px; left: 15%; right: 15%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--chrome-1), var(--cyan-1), var(--chrome-1), transparent);
     }
     .vg-star-logo {
-      width: 68px; height: 68px;
+      width: 78px; height: 78px;
       margin: 0 auto 14px;
       position: relative;
+      animation: logoFloat 6s ease-in-out infinite;
+    }
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(5deg); }
     }
     .vg-star-logo svg {
       width: 100%; height: 100%;
-      filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+      filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.7));
     }
     .vg-star-logo .star-core {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 12px; height: 12px;
+      width: 14px; height: 14px;
       background: radial-gradient(circle, #fff 0%, #ffd700 60%, transparent 100%);
       border-radius: 50%;
       animation: starPulse 2.5s ease-in-out infinite;
     }
     @keyframes starPulse {
       0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-      50% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.7; }
+      50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.7; }
     }
     .vg-logo h5 {
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 1.75rem;
+      font-size: 2rem;
       color: var(--chrome-1);
       margin: 0;
       letter-spacing: 0.5px;
       text-shadow:
-        0 0 20px rgba(255, 215, 0, 0.5),
-        2px 2px 0 rgba(10, 30, 63, 0.8);
+        0 0 25px rgba(255, 215, 0, 0.6),
+        3px 3px 0 var(--ink),
+        -1px -1px 0 var(--ink);
+      transform: rotate(-2deg);
     }
     .vg-logo small {
       display: block;
       margin-top: 4px;
       color: var(--text-muted);
-      font-size: 0.68rem;
-      letter-spacing: 3px;
+      font-size: 0.7rem;
+      letter-spacing: 4px;
       text-transform: uppercase;
-      font-weight: 600;
+      font-family: 'Kalam', cursive;
+      font-weight: 700;
     }
 
-    /* ============ NAV ============ */
+    /* ============================================
+       NAV - NÉT CỌ VÀNG
+       ============================================ */
     .vg-nav {
-      padding: 18px 0;
+      padding: 20px 0;
       flex: 1;
       list-style: none;
       margin: 0;
     }
-    .vg-nav li { margin: 4px 0; }
+    .vg-nav li { margin: 6px 0; }
     .vg-nav .nav-link {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 22px;
+      padding: 13px 22px;
       margin: 0 12px;
       color: var(--text-muted);
       text-decoration: none;
-      border-radius: 12px;
+      border-radius: 14px 4px 14px 4px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.25rem;
       font-weight: 600;
-      font-size: 0.92rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
-      overflow: hidden;
+      border: 1.5px solid transparent;
+      letter-spacing: 0.5px;
     }
     .vg-nav .nav-link i {
-      width: 22px;
-      font-size: 1rem;
-      transition: transform 0.3s;
+      width: 24px;
+      font-size: 1.05rem;
+      transition: transform 0.4s;
       text-align: center;
     }
     .vg-nav .nav-link:hover {
       background: rgba(79, 195, 247, 0.1);
       color: var(--cyan-1);
-      transform: translateX(4px);
+      border-color: rgba(79, 195, 247, 0.4);
+      transform: translateX(5px) rotate(-1deg);
     }
     .vg-nav .nav-link:hover i {
-      transform: rotate(-8deg) scale(1.15);
+      transform: rotate(-12deg) scale(1.2);
     }
     .vg-nav .nav-link.active {
       background: linear-gradient(135deg,
-        rgba(255, 215, 0, 0.15) 0%,
+        rgba(255, 215, 0, 0.18) 0%,
         rgba(79, 195, 247, 0.15) 100%);
       color: var(--chrome-1);
+      border-color: var(--chrome-1);
       box-shadow:
-        0 0 24px rgba(255, 215, 0, 0.2),
-        inset 0 0 0 1px rgba(255, 215, 0, 0.3);
+        0 0 0 2px var(--ink),
+        0 0 30px rgba(255, 215, 0, 0.35),
+        inset 0 0 20px rgba(255, 215, 0, 0.08);
+      transform: rotate(-1deg);
     }
     .vg-nav .nav-link.active::before {
       content: '';
       position: absolute;
-      left: 0; top: 20%; bottom: 20%;
-      width: 3px;
+      left: -3px; top: 15%; bottom: 15%;
+      width: 5px;
       background: linear-gradient(180deg, var(--chrome-1), var(--cyan-1));
-      border-radius: 3px;
-      box-shadow: 0 0 12px var(--chrome-1);
+      border-radius: 5px;
+      box-shadow: 0 0 15px var(--chrome-1);
+      border: 1px solid var(--ink);
     }
     .vg-nav .nav-link.active i {
       color: var(--chrome-1);
-      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
+      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
     }
 
-    /* ============ FOOTER ============ */
+    /* ============================================
+       FOOTER
+       ============================================ */
     .vg-footer {
       padding: 18px;
-      border-top: 1px solid rgba(255, 215, 0, 0.12);
+      border-top: 2px solid var(--ink);
       text-align: center;
+      position: relative;
+    }
+    .vg-footer::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: 20%; right: 20%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--chrome-2), transparent);
     }
     .vg-time-badge {
       display: inline-block;
-      padding: 6px 14px;
-      background: rgba(15, 40, 71, 0.6);
-      border: 1px solid rgba(79, 195, 247, 0.3);
-      border-radius: 20px;
-      color: var(--cyan-2);
-      font-size: 0.75rem;
+      padding: 7px 16px;
+      background: rgba(5, 13, 31, 0.6);
+      border: 2px solid var(--cyan-1);
+      border-radius: 20px 4px 20px 4px;
+      color: var(--cyan-1);
+      font-size: 0.8rem;
       font-weight: 700;
-      letter-spacing: 1.5px;
+      letter-spacing: 2px;
       margin-bottom: 12px;
       font-family: 'Courier New', monospace;
+      box-shadow: 0 0 15px rgba(79, 195, 247, 0.4);
     }
     .vg-user {
-      font-size: 0.78rem;
+      font-family: 'Caveat', cursive;
+      font-size: 1.05rem;
       color: var(--text-muted);
       margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
     }
     .vg-user i { color: var(--chrome-2); }
     .vg-btn-logout {
@@ -237,35 +300,42 @@
       justify-content: center;
       gap: 8px;
       width: 100%;
-      padding: 10px 16px;
+      padding: 11px 16px;
       background: rgba(255, 215, 0, 0.08);
-      border: 1px solid rgba(255, 215, 0, 0.35);
+      border: 2px solid var(--chrome-1);
       color: var(--chrome-1);
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.85rem;
+      border-radius: 14px 4px 14px 4px;
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 1.15rem;
       text-decoration: none;
-      transition: all 0.3s;
+      transition: all 0.35s;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 0 1px var(--ink);
     }
     .vg-btn-logout:hover {
-      background: rgba(255, 215, 0, 0.18);
-      border-color: var(--chrome-1);
-      color: var(--chrome-1);
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
-      transform: translateY(-1px);
+      background: var(--chrome-1);
+      color: var(--ink);
+      transform: translateY(-2px) rotate(-1deg);
+      box-shadow:
+        0 0 0 1px var(--ink),
+        0 0 30px rgba(255, 215, 0, 0.6);
     }
     .vg-copyright {
       color: var(--text-muted);
-      font-size: 0.65rem;
-      letter-spacing: 0.5px;
-      margin-top: 12px;
-      opacity: 0.6;
+      font-family: 'Caveat', cursive;
+      font-size: 0.95rem;
+      margin-top: 14px;
+      opacity: 0.7;
+      transform: rotate(-1deg);
     }
 
-    /* ============ MAIN ============ */
+    /* ============================================
+       MAIN
+       ============================================ */
     .vg-main {
       margin-left: var(--sidebar-width);
-      padding: 34px 38px;
+      padding: 40px 44px 60px;
       min-height: 100vh;
       position: relative;
     }
@@ -275,146 +345,162 @@
       align-items: flex-start;
       flex-wrap: wrap;
       gap: 20px;
-      margin-bottom: 30px;
+      margin-bottom: 36px;
     }
     .vg-page-title {
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 3rem;
-      line-height: 1.1;
+      font-size: 3.8rem;
+      line-height: 1;
       color: var(--chrome-1);
-      margin: 0 0 6px;
+      margin: 0 0 8px;
       text-shadow:
-        0 0 30px rgba(255, 215, 0, 0.4),
-        3px 3px 0 rgba(10, 30, 63, 0.9),
-        -1px -1px 0 rgba(79, 195, 247, 0.3);
-      letter-spacing: 1px;
-      position: relative;
+        0 0 40px rgba(255, 215, 0, 0.5),
+        4px 4px 0 var(--ink),
+        -1px -1px 0 var(--cyan-1),
+        6px 6px 20px rgba(0, 0, 0, 0.6);
+      letter-spacing: 2px;
+      transform: rotate(-2deg);
+      display: inline-block;
     }
     .vg-page-sub {
       font-family: 'Caveat', cursive;
-      font-size: 1.25rem;
+      font-size: 1.4rem;
       color: var(--cyan-3);
       margin: 0;
-      opacity: 0.85;
+      opacity: 0.9;
       font-weight: 500;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
+      text-shadow: 2px 2px 0 var(--ink);
+      transform: rotate(-0.5deg);
     }
 
-    /* ============ CARDS ============ */
+    /* ============================================
+       CARD - NHƯ MỘT MẢNG SƠN DẦU
+       ============================================ */
     .vg-card {
       position: relative;
       background:
         linear-gradient(135deg,
-          rgba(15, 40, 71, 0.85) 0%,
-          rgba(26, 66, 117, 0.75) 100%);
-      border: 1.5px solid var(--border-paint);
-      border-radius: 16px;
-      padding: 22px;
-      backdrop-filter: blur(14px);
+          rgba(15, 40, 71, 0.88) 0%,
+          rgba(26, 66, 117, 0.82) 100%);
+      /* Viền đen + vàng = contour của Van Gogh */
+      border: 2.5px solid var(--ink);
+      border-radius: 24px 6px 24px 6px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
       box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255, 215, 0, 0.1);
+        0 0 0 1.5px var(--chrome-1),
+        8px 8px 0 rgba(5, 13, 31, 0.4),
+        12px 12px 40px rgba(0, 0, 0, 0.5);
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
+      filter: url(#oilPaintSoft);
     }
     .vg-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 2px;
+      height: 3px;
       background: linear-gradient(90deg,
-        transparent, var(--chrome-1), var(--cyan-1), transparent);
-      opacity: 0.6;
+        transparent 0%, var(--chrome-1) 25%, var(--cyan-1) 50%, var(--chrome-1) 75%, transparent 100%);
+      opacity: 0.8;
     }
-    .vg-card:hover {
-      transform: translateY(-4px);
-      box-shadow:
-        0 16px 48px rgba(0, 0, 0, 0.5),
-        0 0 40px rgba(255, 215, 0, 0.15),
-        inset 0 1px 0 rgba(255, 215, 0, 0.2);
-      border-color: rgba(255, 215, 0, 0.5);
-    }
-
-    /* Stat cards */
-    .vg-stat { padding: 24px; position: relative; overflow: hidden; }
-    .vg-stat::after {
+    .vg-card::after {
       content: '';
       position: absolute;
-      top: -40%; right: -20%;
-      width: 180px; height: 180px;
-      border-radius: 50%;
-      background: radial-gradient(circle, currentColor 0%, transparent 70%);
-      opacity: 0.08;
+      inset: 6px;
+      border-radius: 18px 3px 18px 3px;
+      border: 1px dashed rgba(255, 215, 0, 0.15);
       pointer-events: none;
     }
+    .vg-card:hover {
+      transform: translateY(-6px) rotate(-1deg);
+      box-shadow:
+        0 0 0 2px var(--chrome-1),
+        10px 10px 0 rgba(5, 13, 31, 0.5),
+        0 0 60px rgba(255, 215, 0, 0.3);
+      border-color: var(--ink);
+    }
+
+    /* Stat card */
+    .vg-stat { padding: 26px; position: relative; overflow: hidden; }
     .vg-stat-icon {
-      width: 54px; height: 54px;
-      border-radius: 14px;
+      width: 62px; height: 62px;
+      border-radius: 20px 6px 20px 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 16px;
+      font-size: 1.55rem;
+      margin-bottom: 18px;
       position: relative;
       box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 6px 0 rgba(5, 13, 31, 0.6),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3);
+      border: 2px solid var(--ink);
+      transform: rotate(-3deg);
     }
-    .vg-stat-icon::after {
-      content: '';
-      position: absolute;
-      inset: -3px;
-      border-radius: 17px;
-      background: inherit;
-      opacity: 0.4;
-      filter: blur(10px);
-      z-index: -1;
-    }
-    .vg-stat-icon.icon-total { background: linear-gradient(135deg, var(--cyan-1), var(--cyan-2)); color: #0a1e3f; }
-    .vg-stat-icon.icon-active { background: linear-gradient(135deg, #66bb6a, #43a047); color: #0a1e3f; }
+    .vg-stat-icon.icon-total { background: linear-gradient(135deg, var(--cyan-1), var(--cyan-2)); color: var(--ink); }
+    .vg-stat-icon.icon-active { background: linear-gradient(135deg, #66bb6a, #43a047); color: var(--ink); }
     .vg-stat-icon.icon-expired { background: linear-gradient(135deg, #ef5350, #c62828); color: #fff; }
-    .vg-stat-icon.icon-devices { background: linear-gradient(135deg, var(--chrome-1), var(--orange)); color: #0a1e3f; }
+    .vg-stat-icon.icon-devices { background: linear-gradient(135deg, var(--chrome-1), var(--amber)); color: var(--ink); }
     .vg-stat-label {
       color: var(--text-muted);
-      font-size: 0.72rem;
+      font-family: 'Kalam', cursive;
+      font-size: 0.82rem;
       text-transform: uppercase;
-      letter-spacing: 1.8px;
+      letter-spacing: 2.5px;
       font-weight: 700;
       margin-bottom: 8px;
     }
     .vg-stat-value {
       font-family: 'Caveat', cursive;
-      font-size: 3rem;
+      font-size: 3.6rem;
       font-weight: 700;
       line-height: 1;
       letter-spacing: -1px;
+      text-shadow:
+        3px 3px 0 var(--ink),
+        -1px -1px 0 rgba(255, 255, 255, 0.1);
+      transform: rotate(-2deg);
+      display: inline-block;
     }
     .vg-stat.stat-total .vg-stat-value { color: var(--cyan-1); }
     .vg-stat.stat-active .vg-stat-value { color: #81c784; }
     .vg-stat.stat-expired .vg-stat-value { color: #ef5350; }
     .vg-stat.stat-devices .vg-stat-value { color: var(--chrome-1); }
 
-    /* ============ SECTION TITLE ============ */
+    /* ============================================
+       SECTION TITLE
+       ============================================ */
     .vg-section-title {
       font-family: 'Caveat', cursive;
-      font-size: 1.9rem;
+      font-size: 2.4rem;
       font-weight: 700;
       color: var(--chrome-1);
       margin: 0;
       display: flex;
       align-items: center;
-      gap: 12px;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+      gap: 14px;
+      text-shadow:
+        0 0 30px rgba(255, 215, 0, 0.4),
+        3px 3px 0 var(--ink);
+      transform: rotate(-1.5deg);
+      letter-spacing: 1px;
     }
     .vg-section-title i {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       color: var(--cyan-1);
-      filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.6));
+      filter: drop-shadow(0 0 10px rgba(79, 195, 247, 0.8));
     }
 
-    /* ============ TABLE ============ */
-    .vg-table-wrap { overflow: hidden; border-radius: 16px; }
+    /* ============================================
+       TABLE - NHƯ SỔ TAY VẼ TAY
+       ============================================ */
+    .vg-table-wrap {
+      overflow: hidden;
+      border-radius: 20px 5px 20px 5px;
+    }
     .vg-table {
       width: 100%;
       border-collapse: separate;
@@ -423,89 +509,105 @@
     }
     .vg-table thead th {
       text-align: left;
-      padding: 14px 18px;
-      font-size: 0.7rem;
+      padding: 16px 20px;
+      font-family: 'Kalam', cursive;
+      font-size: 0.78rem;
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 2.5px;
       color: var(--chrome-1);
       font-weight: 700;
-      background: linear-gradient(180deg, rgba(255, 215, 0, 0.08), transparent);
-      border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+      background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), transparent);
+      border-bottom: 2px solid var(--ink);
+      text-shadow: 1px 1px 0 var(--ink);
     }
     .vg-table tbody tr {
       transition: all 0.3s;
-      border-bottom: 1px solid rgba(79, 195, 247, 0.08);
+      border-bottom: 1.5px solid rgba(5, 13, 31, 0.5);
     }
     .vg-table tbody tr:hover {
-      background: rgba(79, 195, 247, 0.06);
-      box-shadow: inset 3px 0 0 var(--chrome-1);
+      background: rgba(79, 195, 247, 0.08);
+      box-shadow: inset 4px 0 0 var(--chrome-1);
     }
     .vg-table tbody td {
-      padding: 15px 18px;
+      padding: 16px 20px;
       color: var(--text);
-      font-size: 0.88rem;
+      font-size: 0.92rem;
       vertical-align: middle;
+      font-family: 'Kalam', cursive;
     }
     .vg-table code {
-      background: rgba(10, 30, 63, 0.7);
+      background: rgba(5, 13, 31, 0.85);
       color: var(--cyan-1);
-      padding: 4px 10px;
-      border-radius: 6px;
+      padding: 5px 12px;
+      border-radius: 8px 3px 8px 3px;
       font-family: 'Courier New', monospace;
       font-size: 0.82rem;
       font-weight: 700;
-      border: 1px solid rgba(79, 195, 247, 0.2);
+      border: 1.5px solid var(--cyan-1);
+      box-shadow: 2px 2px 0 rgba(5, 13, 31, 0.6);
     }
 
-    /* ============ BADGES ============ */
+    /* ============================================
+       BADGES
+       ============================================ */
     .vg-badge-vip {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 12px;
+      gap: 5px;
+      padding: 5px 14px;
       background: linear-gradient(135deg, var(--chrome-1), var(--orange));
-      color: #0a1e3f;
-      border-radius: 20px;
-      font-weight: 800;
-      font-size: 0.72rem;
+      color: var(--ink);
+      border-radius: 16px 4px 16px 4px;
+      font-family: 'Kalam', cursive;
+      font-weight: 700;
+      font-size: 0.82rem;
       letter-spacing: 0.5px;
-      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+      border: 2px solid var(--ink);
+      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
+      transform: rotate(-2deg);
     }
     .vg-badge-normal {
       display: inline-flex;
       align-items: center;
-      padding: 4px 12px;
-      background: rgba(139, 163, 199, 0.15);
+      padding: 5px 14px;
+      background: rgba(139, 163, 199, 0.2);
       color: var(--text-muted);
-      border-radius: 20px;
+      border-radius: 16px 4px 16px 4px;
+      font-family: 'Kalam', cursive;
       font-weight: 700;
-      font-size: 0.72rem;
+      font-size: 0.82rem;
       letter-spacing: 0.5px;
-      border: 1px solid rgba(139, 163, 199, 0.3);
+      border: 2px solid var(--ink);
+      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.5);
     }
     .vg-badge-action {
       display: inline-block;
-      padding: 4px 12px;
-      background: rgba(79, 195, 247, 0.12);
+      padding: 5px 14px;
+      background: rgba(79, 195, 247, 0.15);
       color: var(--cyan-1);
-      border-radius: 6px;
-      font-size: 0.7rem;
+      border-radius: 8px 3px 8px 3px;
+      font-family: 'Kalam', cursive;
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.5px;
-      border: 1px solid rgba(79, 195, 247, 0.25);
+      border: 1.5px solid var(--cyan-1);
+      box-shadow: 2px 2px 0 rgba(5, 13, 31, 0.5);
     }
 
-    /* ============ TOGGLE ============ */
-    .vg-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+    /* ============================================
+       TOGGLE
+       ============================================ */
+    .vg-toggle { position: relative; display: inline-block; width: 50px; height: 26px; }
     .vg-toggle input { opacity: 0; width: 0; height: 0; }
     .vg-slider {
       position: absolute;
       cursor: pointer;
       inset: 0;
-      background: rgba(139, 163, 199, 0.3);
+      background: rgba(5, 13, 31, 0.7);
       transition: 0.4s;
-      border-radius: 24px;
-      border: 1px solid rgba(139, 163, 199, 0.2);
+      border-radius: 26px 6px 26px 6px;
+      border: 2px solid var(--ink);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
     }
     .vg-slider::before {
       content: "";
@@ -514,210 +616,257 @@
       left: 3px; bottom: 2px;
       background: #fff;
       transition: 0.4s;
-      border-radius: 50%;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      border-radius: 50% 30% 50% 30%;
+      border: 1.5px solid var(--ink);
+      box-shadow: 2px 2px 0 rgba(5, 13, 31, 0.6);
     }
     .vg-toggle input:checked + .vg-slider {
-      background: linear-gradient(135deg, var(--chrome-1), var(--orange));
-      border-color: transparent;
-      box-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+      background: linear-gradient(135deg, var(--chrome-1), var(--amber));
+      border-color: var(--ink);
+      box-shadow:
+        inset 0 2px 6px rgba(0, 0, 0, 0.3),
+        0 0 25px rgba(255, 215, 0, 0.6);
     }
     .vg-toggle input:checked + .vg-slider::before {
-      transform: translateX(20px);
+      transform: translateX(24px);
     }
 
-    /* ============ BUTTONS ============ */
+    /* ============================================
+       BUTTONS
+       ============================================ */
     .vg-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 11px 24px;
+      padding: 12px 26px;
       background: linear-gradient(135deg, var(--chrome-1) 0%, var(--amber) 100%);
-      color: #0a1e3f;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Inter', sans-serif;
+      color: var(--ink);
+      border: 2.5px solid var(--ink);
+      border-radius: 18px 5px 18px 5px;
+      font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 0.88rem;
-      letter-spacing: 0.3px;
+      font-size: 1.2rem;
+      letter-spacing: 0.8px;
       cursor: pointer;
       text-decoration: none;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow:
-        0 8px 24px rgba(255, 215, 0, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        5px 5px 0 var(--ink),
+        0 0 30px rgba(255, 215, 0, 0.4);
       position: relative;
       overflow: hidden;
+      transform: rotate(-1deg);
     }
     .vg-btn::before {
       content: '';
       position: absolute;
       top: 0; left: -100%;
       width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
       transition: left 0.6s;
     }
     .vg-btn:hover::before { left: 100%; }
     .vg-btn:hover {
-      transform: translateY(-2px);
+      transform: translate(3px, 3px) rotate(0deg);
       box-shadow:
-        0 14px 32px rgba(255, 215, 0, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
-      color: #0a1e3f;
+        2px 2px 0 var(--ink),
+        0 0 50px rgba(255, 215, 0, 0.7);
+      color: var(--ink);
     }
     .vg-btn-ghost {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 9px 18px;
-      background: rgba(79, 195, 247, 0.08);
+      padding: 10px 20px;
+      background: rgba(5, 13, 31, 0.6);
       color: var(--cyan-1);
-      border: 1.5px solid rgba(79, 195, 247, 0.35);
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.85rem;
+      border: 2.5px solid var(--cyan-1);
+      border-radius: 16px 4px 16px 4px;
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 1.15rem;
       cursor: pointer;
       text-decoration: none;
       transition: all 0.3s;
+      box-shadow: 4px 4px 0 var(--ink);
+      transform: rotate(-0.5deg);
     }
     .vg-btn-ghost:hover {
-      background: rgba(79, 195, 247, 0.18);
-      border-color: var(--cyan-1);
-      color: var(--cyan-1);
-      box-shadow: 0 0 20px rgba(79, 195, 247, 0.3);
-      transform: translateY(-1px);
+      background: var(--cyan-1);
+      color: var(--ink);
+      transform: translate(2px, 2px) rotate(0);
+      box-shadow: 2px 2px 0 var(--ink), 0 0 30px rgba(79, 195, 247, 0.6);
     }
     .vg-btn-icon {
-      width: 38px; height: 38px;
+      width: 42px; height: 42px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 40, 71, 0.7);
-      border: 1px solid rgba(79, 195, 247, 0.25);
+      background: rgba(5, 13, 31, 0.7);
+      border: 2px solid var(--ink);
       color: var(--cyan-1);
-      border-radius: 10px;
+      border-radius: 12px 4px 12px 4px;
       cursor: pointer;
       transition: all 0.3s;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       padding: 0;
+      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.8);
     }
     .vg-btn-icon:hover {
       background: linear-gradient(135deg, var(--cyan-1), var(--cyan-2));
-      color: #0a1e3f;
-      border-color: transparent;
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 8px 20px rgba(79, 195, 247, 0.5);
+      color: var(--ink);
+      transform: translate(1px, 1px) rotate(-3deg);
+      box-shadow: 2px 2px 0 var(--ink), 0 0 25px rgba(79, 195, 247, 0.6);
     }
-    .vg-btn-icon.warn { color: var(--chrome-2); border-color: rgba(255, 215, 0, 0.3); }
+    .vg-btn-icon.warn { color: var(--chrome-2); }
     .vg-btn-icon.warn:hover {
-      background: linear-gradient(135deg, var(--chrome-1), var(--orange));
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+      background: linear-gradient(135deg, var(--chrome-1), var(--amber));
+      box-shadow: 2px 2px 0 var(--ink), 0 0 25px rgba(255, 215, 0, 0.6);
     }
-    .vg-btn-icon.danger { color: #ef5350; border-color: rgba(239, 83, 80, 0.3); }
+    .vg-btn-icon.danger { color: #ef5350; }
     .vg-btn-icon.danger:hover {
       background: linear-gradient(135deg, #ef5350, #c62828);
       color: #fff;
-      box-shadow: 0 8px 20px rgba(239, 83, 80, 0.5);
+      box-shadow: 2px 2px 0 var(--ink), 0 0 25px rgba(239, 83, 80, 0.6);
     }
 
-    /* ============ SEARCH ============ */
+    /* ============================================
+       SEARCH
+       ============================================ */
     .vg-search-wrap { position: relative; }
-    .vg-search-wrap i {
+    .vg-search-wrap > i {
       position: absolute;
-      left: 18px; top: 50%;
+      left: 20px; top: 50%;
       transform: translateY(-50%);
-      color: var(--cyan-2);
+      color: var(--chrome-1);
       pointer-events: none;
-      font-size: 0.95rem;
+      font-size: 1rem;
+      z-index: 2;
+      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
     }
     .vg-search {
       width: 100%;
-      padding: 14px 20px 14px 46px;
-      background: rgba(15, 40, 71, 0.7);
-      border: 1.5px solid rgba(79, 195, 247, 0.25);
-      border-radius: 12px;
+      padding: 15px 22px 15px 50px;
+      background: rgba(5, 13, 31, 0.75);
+      border: 2.5px solid var(--ink);
+      border-radius: 18px 5px 18px 5px;
       color: var(--text);
-      font-size: 0.92rem;
+      font-family: 'Kalam', cursive;
+      font-size: 1rem;
       font-weight: 500;
       transition: all 0.3s;
       backdrop-filter: blur(10px);
+      box-shadow:
+        inset 0 2px 8px rgba(0, 0, 0, 0.4),
+        0 0 0 1.5px var(--cyan-1);
     }
-    .vg-search::placeholder { color: var(--text-muted); opacity: 0.7; }
+    .vg-search::placeholder { color: var(--text-muted); opacity: 0.8; font-style: italic; }
     .vg-search:focus {
       outline: none;
       border-color: var(--chrome-1);
-      background: rgba(15, 40, 71, 0.9);
+      background: rgba(5, 13, 31, 0.9);
       box-shadow:
-        0 0 0 4px rgba(255, 215, 0, 0.1),
-        0 0 24px rgba(255, 215, 0, 0.2);
+        inset 0 2px 8px rgba(0, 0, 0, 0.4),
+        0 0 0 2px var(--chrome-1),
+        0 0 30px rgba(255, 215, 0, 0.3);
     }
 
-    /* ============ MODAL ============ */
+    /* ============================================
+       MODAL
+       ============================================ */
     .vg-modal {
       background:
         linear-gradient(180deg,
           rgba(15, 40, 71, 0.98) 0%,
-          rgba(10, 30, 63, 0.98) 100%);
-      border: 1.5px solid var(--border-paint);
-      border-radius: 20px;
+          rgba(5, 13, 31, 0.98) 100%);
+      border: 3px solid var(--ink);
+      border-radius: 26px 6px 26px 6px;
       color: var(--text);
       box-shadow:
-        0 24px 80px rgba(0, 0, 0, 0.6),
-        inset 0 1px 0 rgba(255, 215, 0, 0.15);
+        0 0 0 2px var(--chrome-1),
+        0 25px 80px rgba(0, 0, 0, 0.7),
+        0 0 60px rgba(255, 215, 0, 0.2);
+      filter: url(#oilPaintSoft);
     }
     .vg-modal .modal-header {
-      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-      padding: 20px 24px;
+      border-bottom: 2.5px solid var(--ink);
+      padding: 22px 26px;
+      position: relative;
+    }
+    .vg-modal .modal-header::after {
+      content: '';
+      position: absolute;
+      bottom: -2.5px; left: 15%; right: 15%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--chrome-1), var(--cyan-1), var(--chrome-1), transparent);
     }
     .vg-modal .modal-title {
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 1.6rem;
+      font-size: 2rem;
       color: var(--chrome-1);
       display: flex;
       align-items: center;
       gap: 10px;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+      text-shadow:
+        0 0 25px rgba(255, 215, 0, 0.5),
+        2px 2px 0 var(--ink);
+      transform: rotate(-1deg);
     }
     .vg-modal .modal-title i { color: var(--cyan-1); }
     .vg-modal .btn-close {
       filter: invert(1) brightness(2);
-      opacity: 0.6;
+      opacity: 0.7;
     }
     .vg-modal .btn-close:hover { opacity: 1; }
-    .vg-modal .modal-body { padding: 24px; }
+    .vg-modal .modal-body { padding: 26px; }
     .vg-modal .modal-footer {
-      border-top: 1px solid rgba(255, 215, 0, 0.15);
-      padding: 18px 24px;
-      gap: 10px;
+      border-top: 2.5px solid var(--ink);
+      padding: 20px 26px;
+      gap: 12px;
+      position: relative;
+    }
+    .vg-modal .modal-footer::before {
+      content: '';
+      position: absolute;
+      top: -2.5px; left: 15%; right: 15%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan-1), transparent);
     }
     .vg-modal .form-label {
-      font-size: 0.78rem;
+      font-family: 'Kalam', cursive;
+      font-size: 0.85rem;
       font-weight: 700;
-      color: var(--cyan-1);
-      letter-spacing: 1.2px;
+      color: var(--chrome-1);
+      letter-spacing: 1.5px;
       text-transform: uppercase;
       margin-bottom: 8px;
       display: block;
+      text-shadow: 1px 1px 0 var(--ink);
     }
     .vg-modal .form-control,
     .vg-modal .form-select {
       width: 100%;
-      padding: 12px 16px;
-      background: rgba(10, 30, 63, 0.7);
-      border: 1.5px solid rgba(79, 195, 247, 0.25);
-      border-radius: 10px;
+      padding: 13px 18px;
+      background: rgba(5, 13, 31, 0.8);
+      border: 2.5px solid var(--ink);
+      border-radius: 14px 4px 14px 4px;
       color: var(--text);
-      font-size: 0.92rem;
+      font-family: 'Kalam', cursive;
+      font-size: 1rem;
       font-weight: 500;
       transition: all 0.3s;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1.5px rgba(79, 195, 247, 0.4);
     }
     .vg-modal .form-control:focus,
     .vg-modal .form-select:focus {
       outline: none;
-      border-color: var(--chrome-1);
-      background: rgba(10, 30, 63, 0.95);
-      box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1);
+      border-color: var(--ink);
+      background: rgba(5, 13, 31, 0.95);
+      box-shadow:
+        inset 0 2px 8px rgba(0, 0, 0, 0.5),
+        0 0 0 2px var(--chrome-1),
+        0 0 30px rgba(255, 215, 0, 0.3);
       color: var(--text);
     }
     .vg-modal .form-select option {
@@ -725,119 +874,145 @@
       color: var(--text);
     }
 
-    /* ============ PAGINATION ============ */
+    /* ============================================
+       PAGINATION
+       ============================================ */
     .vg-pagination {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       list-style: none;
       padding: 0;
       justify-content: center;
-      margin: 24px 0 0;
+      margin: 30px 0 0;
     }
     .vg-pagination a {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 40px;
-      height: 40px;
-      padding: 0 12px;
-      background: rgba(15, 40, 71, 0.7);
-      border: 1.5px solid rgba(79, 195, 247, 0.25);
-      border-radius: 10px;
+      min-width: 44px;
+      height: 44px;
+      padding: 0 14px;
+      background: rgba(5, 13, 31, 0.75);
+      border: 2.5px solid var(--ink);
+      border-radius: 14px 4px 14px 4px;
       color: var(--cyan-1);
+      font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 1.2rem;
       text-decoration: none;
       transition: all 0.25s;
+      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.8), 0 0 0 1.5px rgba(79, 195, 247, 0.4);
     }
     .vg-pagination a:hover {
       background: rgba(79, 195, 247, 0.15);
-      border-color: var(--cyan-1);
-      transform: translateY(-2px);
+      transform: translate(1px, 1px) rotate(-3deg);
+      box-shadow: 2px 2px 0 var(--ink), 0 0 0 2px var(--cyan-1);
     }
     .vg-pagination .active a {
       background: linear-gradient(135deg, var(--chrome-1), var(--amber));
-      color: #0a1e3f;
-      border-color: transparent;
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+      color: var(--ink);
+      box-shadow: 3px 3px 0 var(--ink), 0 0 30px rgba(255, 215, 0, 0.5);
     }
 
-    /* ============ COUNTDOWN ============ */
-    .countdown { font-weight: 700; font-size: 0.86rem; font-family: 'Inter', sans-serif; }
+    /* ============================================
+       COUNTDOWN
+       ============================================ */
+    .countdown {
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 1.2rem;
+      text-shadow: 1px 1px 0 var(--ink);
+      letter-spacing: 0.5px;
+    }
     .countdown.safe { color: #81c784; }
     .countdown.warning { color: var(--chrome-1); }
     .countdown.danger { color: #ef5350; }
 
-    /* ============ EMPTY STATE ============ */
+    /* ============================================
+       EMPTY STATE
+       ============================================ */
     .vg-empty {
       text-align: center;
-      padding: 60px 20px;
+      padding: 70px 20px;
       color: var(--text-muted);
     }
     .vg-empty i {
-      font-size: 3rem;
+      font-size: 3.5rem;
       color: var(--cyan-2);
-      opacity: 0.4;
-      margin-bottom: 16px;
+      opacity: 0.5;
+      margin-bottom: 18px;
       display: block;
-      filter: drop-shadow(0 0 12px rgba(79, 195, 247, 0.5));
+      filter: drop-shadow(0 0 15px rgba(79, 195, 247, 0.6));
+      animation: logoFloat 4s ease-in-out infinite;
     }
     .vg-empty p {
       font-family: 'Caveat', cursive;
-      font-size: 1.3rem;
+      font-size: 1.6rem;
       margin: 0;
-      opacity: 0.8;
+      opacity: 0.9;
+      text-shadow: 1px 1px 0 var(--ink);
     }
 
-    /* ============ SCROLLBAR ============ */
-    ::-webkit-scrollbar { width: 10px; }
-    ::-webkit-scrollbar-track { background: rgba(10, 30, 63, 0.5); }
+    /* ============================================
+       SCROLLBAR
+       ============================================ */
+    ::-webkit-scrollbar { width: 12px; }
+    ::-webkit-scrollbar-track {
+      background: rgba(5, 13, 31, 0.8);
+      border-left: 2px solid var(--ink);
+    }
     ::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, var(--cyan-1), var(--chrome-1));
-      border-radius: 10px;
-      border: 2px solid rgba(10, 30, 63, 0.5);
+      background: linear-gradient(180deg, var(--chrome-1), var(--cyan-1), var(--chrome-1));
+      border-radius: 6px;
+      border: 2px solid var(--ink);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, var(--chrome-1), var(--cyan-1));
+      background: linear-gradient(180deg, var(--cyan-1), var(--chrome-1), var(--cyan-1));
     }
 
-    /* ============ ANIMATIONS ============ */
+    /* ============================================
+       ANIMATIONS
+       ============================================ */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(24px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .anim { animation: fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .anim { animation: fadeUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both; }
     .d1 { animation-delay: 0.06s; }
     .d2 { animation-delay: 0.12s; }
     .d3 { animation-delay: 0.18s; }
     .d4 { animation-delay: 0.24s; }
 
-    /* ============ RESPONSIVE ============ */
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
     @media (max-width: 768px) {
-      .vg-sidebar { width: 70px; }
+      .vg-sidebar { width: 76px; }
       .vg-sidebar span,
       .vg-logo h5,
       .vg-logo small,
       .vg-user span,
       .vg-copyright { display: none; }
-      .vg-main { margin-left: 70px; padding: 20px; }
-      .vg-page-title { font-size: 2rem; }
-      .vg-stat-value { font-size: 2.2rem; }
+      .vg-main { margin-left: 76px; padding: 22px; }
+      .vg-page-title { font-size: 2.4rem; }
+      .vg-stat-value { font-size: 2.4rem; }
     }
   </style>
 </head>
 <body>
-  <!-- SVG Filters for painterly effect -->
-  <svg class="svg-filters">
+  <!-- SVG Filters: turbulence + displacement = wobble vẽ tay -->
+  <svg class="svg-filters" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="paint-edge">
-        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="2"/>
-        <feDisplacementMap in="SourceGraphic" scale="3"/>
+      <filter id="oilPaint" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="3" seed="2" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
-      <filter id="paint-rough">
-        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" seed="5"/>
-        <feDisplacementMap in="SourceGraphic" scale="5"/>
+      <filter id="oilPaintSoft" x="-3%" y="-3%" width="106%" height="106%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.015 0.025" numOctaves="2" seed="5" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </defs>
   </svg>
-  <canvas id="starryCanvas"></canvas>
+
+  <canvas id="oilCanvas"></canvas>
+  <div class="canvas-texture"></div>
