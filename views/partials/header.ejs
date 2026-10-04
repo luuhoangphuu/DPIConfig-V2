@@ -4,33 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title || 'DPIConfig HoangPhu' %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     :root {
       --sidebar-width: 270px;
-      --prussian: #0a1e3f;
-      --navy-1: #0f2847;
-      --navy-2: #14305c;
-      --navy-3: #1a4275;
-      --cyan-1: #4fc3f7;
+      --gold: #ffd700;
+      --gold-2: #fbbf24;
+      --gold-3: #f59e0b;
+      --cyan: #4fc3f7;
       --cyan-2: #29b6f6;
-      --cyan-3: #81d4fa;
-      --chrome-1: #ffd700;
-      --chrome-2: #fbc02d;
-      --amber: #ffb300;
-      --orange: #ff8f00;
+      --navy: #0a1e3f;
+      --navy-2: #0f2847;
+      --navy-3: #1a4275;
       --cream: #fff8e1;
-      --text: #e8f0ff;
-      --text-muted: #a8bfd9;
+      --text: #f5f5f5;
+      --text-muted: #b8c5d9;
       --ink: #050d1f;
+      --glass: rgba(10, 30, 63, 0.72);
+      --glass-light: rgba(15, 40, 71, 0.55);
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
+
     body {
-      font-family: 'Kalam', cursive;
+      font-family: 'Inter', sans-serif;
       background: #050d1f;
       color: var(--text);
       overflow-x: hidden;
@@ -39,113 +39,113 @@
     }
 
     /* ============================================
-       CANVAS PAINTING - NỀN SƠN DẦU THẬT
+       NỀN ẢNH THẬT STARRY NIGHT
        ============================================ */
-    #oilCanvas {
-      position: fixed; inset: 0;
-      width: 100%; height: 100%;
-      z-index: -2;
-      display: block;
+    .starry-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background-image: url('/images/starry-night.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
     }
 
-    /* ============================================
-       CANVAS TEXTURE - VẢI THÔ (đè lên toàn bộ)
-       ============================================ */
+    /* Overlay tối để chữ đọc được */
+    .starry-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(180deg,
+          rgba(5, 13, 31, 0.55) 0%,
+          rgba(5, 13, 31, 0.7) 40%,
+          rgba(5, 13, 31, 0.85) 100%);
+      pointer-events: none;
+    }
+
+    /* Lớp texture vải canvas */
     .canvas-texture {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.35;
+      opacity: 0.25;
       mix-blend-mode: overlay;
       background-image:
-        repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px),
-        repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px);
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 3px);
     }
 
     /* ============================================
-       SVG FILTERS - RUN RẨY NHƯ VẼ TAY
-       ============================================ */
-    .svg-filters { position: absolute; width: 0; height: 0; }
-
-    /* Áp filter cho TẤT CẢ element chính */
-    .paintable {
-      filter: url(#oilPaint);
-    }
-    .paintable-soft {
-      filter: url(#oilPaintSoft);
-    }
-
-    /* ============================================
-       SIDEBAR - NHƯ MỘT BỨC TRANH DỌC
+       SIDEBAR - KÍNH MỜ TRÊN TRANH
        ============================================ */
     .vg-sidebar {
       position: fixed;
       left: 0; top: 0;
       width: var(--sidebar-width);
       min-height: 100vh;
-      background: linear-gradient(180deg,
-        rgba(10, 30, 63, 0.94) 0%,
-        rgba(15, 40, 71, 0.92) 40%,
-        rgba(26, 66, 117, 0.9) 100%);
-      backdrop-filter: blur(16px);
+      background:
+        linear-gradient(180deg,
+          rgba(5, 13, 31, 0.92) 0%,
+          rgba(10, 30, 63, 0.88) 50%,
+          rgba(15, 40, 71, 0.85) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 215, 0, 0.25);
       z-index: 100;
       display: flex; flex-direction: column;
-      /* Viền đen contour - đặc trưng Van Gogh */
-      border-right: 3px solid var(--ink);
       box-shadow:
-        6px 0 0 rgba(255, 215, 0, 0.15),
-        8px 0 40px rgba(0, 0, 0, 0.6);
-      filter: url(#oilPaintSoft);
+        4px 0 40px rgba(0, 0, 0, 0.6),
+        inset -1px 0 0 rgba(255, 215, 0, 0.15);
     }
     .vg-sidebar::before {
       content: '';
       position: absolute;
-      top: 0; right: -3px;
-      width: 3px; height: 100%;
+      top: 0; right: -1px;
+      width: 1px; height: 100%;
       background: linear-gradient(180deg,
         transparent 0%,
-        var(--chrome-1) 25%,
-        var(--cyan-1) 50%,
-        var(--chrome-1) 75%,
+        var(--gold) 25%,
+        var(--cyan) 50%,
+        var(--gold) 75%,
         transparent 100%);
-      opacity: 0.5;
+      opacity: 0.6;
       animation: brushFlow 5s ease-in-out infinite;
-      z-index: 1;
     }
     @keyframes brushFlow {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.85; }
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.8; }
     }
 
-    /* ============================================
-       LOGO - SAO XOÁY
-       ============================================ */
+    /* Logo */
     .vg-logo {
       padding: 32px 20px 24px;
       text-align: center;
-      border-bottom: 2px solid var(--ink);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.15);
       position: relative;
     }
     .vg-logo::after {
       content: '';
       position: absolute;
-      bottom: -2px; left: 15%; right: 15%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--chrome-1), var(--cyan-1), var(--chrome-1), transparent);
+      bottom: -1px; left: 15%; right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), var(--gold), transparent);
     }
     .vg-star-logo {
-      width: 78px; height: 78px;
+      width: 76px; height: 76px;
       margin: 0 auto 14px;
       position: relative;
       animation: logoFloat 6s ease-in-out infinite;
     }
     @keyframes logoFloat {
       0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-6px) rotate(5deg); }
+      50% { transform: translateY(-5px) rotate(4deg); }
     }
     .vg-star-logo svg {
       width: 100%; height: 100%;
-      filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.7));
+      filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8));
     }
     .vg-star-logo .star-core {
       position: absolute;
@@ -155,6 +155,7 @@
       background: radial-gradient(circle, #fff 0%, #ffd700 60%, transparent 100%);
       border-radius: 50%;
       animation: starPulse 2.5s ease-in-out infinite;
+      box-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
     }
     @keyframes starPulse {
       0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -163,15 +164,13 @@
     .vg-logo h5 {
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 2rem;
-      color: var(--chrome-1);
+      font-size: 1.9rem;
+      color: var(--gold);
       margin: 0;
       letter-spacing: 0.5px;
       text-shadow:
-        0 0 25px rgba(255, 215, 0, 0.6),
-        3px 3px 0 var(--ink),
-        -1px -1px 0 var(--ink);
-      transform: rotate(-2deg);
+        0 0 30px rgba(255, 215, 0, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.3);
     }
     .vg-logo small {
       display: block;
@@ -180,13 +179,10 @@
       font-size: 0.7rem;
       letter-spacing: 4px;
       text-transform: uppercase;
-      font-family: 'Kalam', cursive;
-      font-weight: 700;
+      font-weight: 600;
     }
 
-    /* ============================================
-       NAV - NÉT CỌ VÀNG
-       ============================================ */
+    /* Nav */
     .vg-nav {
       padding: 20px 0;
       flex: 1;
@@ -202,11 +198,11 @@
       margin: 0 12px;
       color: var(--text-muted);
       text-decoration: none;
-      border-radius: 14px 4px 14px 4px;
+      border-radius: 14px;
       font-family: 'Caveat', cursive;
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 600;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       border: 1.5px solid transparent;
       letter-spacing: 0.5px;
@@ -214,74 +210,61 @@
     .vg-nav .nav-link i {
       width: 24px;
       font-size: 1.05rem;
-      transition: transform 0.4s;
+      transition: transform 0.3s;
       text-align: center;
     }
     .vg-nav .nav-link:hover {
       background: rgba(79, 195, 247, 0.1);
-      color: var(--cyan-1);
-      border-color: rgba(79, 195, 247, 0.4);
-      transform: translateX(5px) rotate(-1deg);
+      color: var(--cyan);
+      border-color: rgba(79, 195, 247, 0.35);
+      transform: translateX(4px);
     }
     .vg-nav .nav-link:hover i {
-      transform: rotate(-12deg) scale(1.2);
+      transform: rotate(-10deg) scale(1.15);
     }
     .vg-nav .nav-link.active {
       background: linear-gradient(135deg,
-        rgba(255, 215, 0, 0.18) 0%,
+        rgba(255, 215, 0, 0.2) 0%,
         rgba(79, 195, 247, 0.15) 100%);
-      color: var(--chrome-1);
-      border-color: var(--chrome-1);
+      color: var(--gold);
+      border-color: rgba(255, 215, 0, 0.5);
       box-shadow:
-        0 0 0 2px var(--ink),
-        0 0 30px rgba(255, 215, 0, 0.35),
-        inset 0 0 20px rgba(255, 215, 0, 0.08);
-      transform: rotate(-1deg);
+        0 0 30px rgba(255, 215, 0, 0.3),
+        inset 0 0 25px rgba(255, 215, 0, 0.1);
     }
     .vg-nav .nav-link.active::before {
       content: '';
       position: absolute;
-      left: -3px; top: 15%; bottom: 15%;
-      width: 5px;
-      background: linear-gradient(180deg, var(--chrome-1), var(--cyan-1));
-      border-radius: 5px;
-      box-shadow: 0 0 15px var(--chrome-1);
-      border: 1px solid var(--ink);
+      left: 0; top: 20%; bottom: 20%;
+      width: 4px;
+      background: linear-gradient(180deg, var(--gold), var(--cyan));
+      border-radius: 4px;
+      box-shadow: 0 0 15px var(--gold);
     }
     .vg-nav .nav-link.active i {
-      color: var(--chrome-1);
+      color: var(--gold);
       filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
     }
 
-    /* ============================================
-       FOOTER
-       ============================================ */
+    /* Footer */
     .vg-footer {
       padding: 18px;
-      border-top: 2px solid var(--ink);
+      border-top: 1px solid rgba(255, 215, 0, 0.12);
       text-align: center;
-      position: relative;
-    }
-    .vg-footer::before {
-      content: '';
-      position: absolute;
-      top: -2px; left: 20%; right: 20%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--chrome-2), transparent);
     }
     .vg-time-badge {
       display: inline-block;
       padding: 7px 16px;
       background: rgba(5, 13, 31, 0.6);
-      border: 2px solid var(--cyan-1);
-      border-radius: 20px 4px 20px 4px;
-      color: var(--cyan-1);
-      font-size: 0.8rem;
+      border: 1.5px solid rgba(79, 195, 247, 0.4);
+      border-radius: 20px;
+      color: var(--cyan);
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 2px;
       margin-bottom: 12px;
       font-family: 'Courier New', monospace;
-      box-shadow: 0 0 15px rgba(79, 195, 247, 0.4);
+      box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
     }
     .vg-user {
       font-family: 'Caveat', cursive;
@@ -293,41 +276,38 @@
       justify-content: center;
       gap: 8px;
     }
-    .vg-user i { color: var(--chrome-2); }
+    .vg-user i { color: var(--gold-2); }
     .vg-btn-logout {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       width: 100%;
-      padding: 11px 16px;
+      padding: 10px 16px;
       background: rgba(255, 215, 0, 0.08);
-      border: 2px solid var(--chrome-1);
-      color: var(--chrome-1);
-      border-radius: 14px 4px 14px 4px;
+      border: 1.5px solid rgba(255, 215, 0, 0.4);
+      color: var(--gold);
+      border-radius: 12px;
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       text-decoration: none;
-      transition: all 0.35s;
+      transition: all 0.3s;
       letter-spacing: 0.5px;
-      box-shadow: 0 0 0 1px var(--ink);
     }
     .vg-btn-logout:hover {
-      background: var(--chrome-1);
-      color: var(--ink);
-      transform: translateY(-2px) rotate(-1deg);
-      box-shadow:
-        0 0 0 1px var(--ink),
-        0 0 30px rgba(255, 215, 0, 0.6);
+      background: rgba(255, 215, 0, 0.2);
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+      transform: translateY(-2px);
     }
     .vg-copyright {
       color: var(--text-muted);
       font-family: 'Caveat', cursive;
       font-size: 0.95rem;
       margin-top: 14px;
-      opacity: 0.7;
-      transform: rotate(-1deg);
+      opacity: 0.6;
     }
 
     /* ============================================
@@ -352,82 +332,67 @@
       font-weight: 700;
       font-size: 3.8rem;
       line-height: 1;
-      color: var(--chrome-1);
+      color: var(--gold);
       margin: 0 0 8px;
       text-shadow:
-        0 0 40px rgba(255, 215, 0, 0.5),
-        4px 4px 0 var(--ink),
-        -1px -1px 0 var(--cyan-1),
-        6px 6px 20px rgba(0, 0, 0, 0.6);
+        0 0 40px rgba(255, 215, 0, 0.6),
+        0 0 80px rgba(255, 215, 0, 0.3),
+        2px 2px 8px rgba(0, 0, 0, 0.8);
       letter-spacing: 2px;
-      transform: rotate(-2deg);
+      transform: rotate(-1deg);
       display: inline-block;
     }
     .vg-page-sub {
       font-family: 'Caveat', cursive;
       font-size: 1.4rem;
-      color: var(--cyan-3);
+      color: var(--cyan);
       margin: 0;
-      opacity: 0.9;
+      opacity: 0.95;
       font-weight: 500;
       letter-spacing: 0.5px;
-      text-shadow: 2px 2px 0 var(--ink);
-      transform: rotate(-0.5deg);
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
     }
 
     /* ============================================
-       CARD - NHƯ MỘT MẢNG SƠN DẦU
+       CARD - KÍNH MỜ TRÊN TRANH
        ============================================ */
     .vg-card {
       position: relative;
-      background:
-        linear-gradient(135deg,
-          rgba(15, 40, 71, 0.88) 0%,
-          rgba(26, 66, 117, 0.82) 100%);
-      /* Viền đen + vàng = contour của Van Gogh */
-      border: 2.5px solid var(--ink);
-      border-radius: 24px 6px 24px 6px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: 20px;
       padding: 24px;
-      backdrop-filter: blur(12px);
       box-shadow:
-        0 0 0 1.5px var(--chrome-1),
-        8px 8px 0 rgba(5, 13, 31, 0.4),
-        12px 12px 40px rgba(0, 0, 0, 0.5);
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 215, 0, 0.15);
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
-      filter: url(#oilPaintSoft);
     }
     .vg-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 3px;
+      height: 2px;
       background: linear-gradient(90deg,
-        transparent 0%, var(--chrome-1) 25%, var(--cyan-1) 50%, var(--chrome-1) 75%, transparent 100%);
-      opacity: 0.8;
-    }
-    .vg-card::after {
-      content: '';
-      position: absolute;
-      inset: 6px;
-      border-radius: 18px 3px 18px 3px;
-      border: 1px dashed rgba(255, 215, 0, 0.15);
-      pointer-events: none;
+        transparent 0%, var(--gold) 30%, var(--cyan) 50%, var(--gold) 70%, transparent 100%);
+      opacity: 0.7;
     }
     .vg-card:hover {
-      transform: translateY(-6px) rotate(-1deg);
+      transform: translateY(-4px);
+      border-color: rgba(255, 215, 0, 0.5);
       box-shadow:
-        0 0 0 2px var(--chrome-1),
-        10px 10px 0 rgba(5, 13, 31, 0.5),
-        0 0 60px rgba(255, 215, 0, 0.3);
-      border-color: var(--ink);
+        0 16px 48px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.25),
+        inset 0 1px 0 rgba(255, 215, 0, 0.3);
     }
 
     /* Stat card */
     .vg-stat { padding: 26px; position: relative; overflow: hidden; }
     .vg-stat-icon {
       width: 62px; height: 62px;
-      border-radius: 20px 6px 20px 6px;
+      border-radius: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -435,71 +400,71 @@
       margin-bottom: 18px;
       position: relative;
       box-shadow:
-        0 6px 0 rgba(5, 13, 31, 0.6),
-        inset 0 2px 0 rgba(255, 255, 255, 0.3);
-      border: 2px solid var(--ink);
-      transform: rotate(-3deg);
+        0 8px 20px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
-    .vg-stat-icon.icon-total { background: linear-gradient(135deg, var(--cyan-1), var(--cyan-2)); color: var(--ink); }
-    .vg-stat-icon.icon-active { background: linear-gradient(135deg, #66bb6a, #43a047); color: var(--ink); }
+    .vg-stat-icon::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 22px;
+      background: inherit;
+      opacity: 0.35;
+      filter: blur(12px);
+      z-index: -1;
+    }
+    .vg-stat-icon.icon-total { background: linear-gradient(135deg, var(--cyan), var(--cyan-2)); color: var(--ink); }
+    .vg-stat-icon.icon-active { background: linear-gradient(135deg, #66bb6a, #43a047); color: #fff; }
     .vg-stat-icon.icon-expired { background: linear-gradient(135deg, #ef5350, #c62828); color: #fff; }
-    .vg-stat-icon.icon-devices { background: linear-gradient(135deg, var(--chrome-1), var(--amber)); color: var(--ink); }
+    .vg-stat-icon.icon-devices { background: linear-gradient(135deg, var(--gold), var(--gold-3)); color: var(--ink); }
     .vg-stat-label {
       color: var(--text-muted);
-      font-family: 'Kalam', cursive;
-      font-size: 0.82rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 2.5px;
+      letter-spacing: 2px;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .vg-stat-value {
       font-family: 'Caveat', cursive;
-      font-size: 3.6rem;
+      font-size: 3.4rem;
       font-weight: 700;
       line-height: 1;
-      letter-spacing: -1px;
-      text-shadow:
-        3px 3px 0 var(--ink),
-        -1px -1px 0 rgba(255, 255, 255, 0.1);
-      transform: rotate(-2deg);
-      display: inline-block;
+      letter-spacing: -0.5px;
     }
-    .vg-stat.stat-total .vg-stat-value { color: var(--cyan-1); }
-    .vg-stat.stat-active .vg-stat-value { color: #81c784; }
-    .vg-stat.stat-expired .vg-stat-value { color: #ef5350; }
-    .vg-stat.stat-devices .vg-stat-value { color: var(--chrome-1); }
+    .vg-stat.stat-total .vg-stat-value { color: var(--cyan); text-shadow: 0 0 25px rgba(79, 195, 247, 0.6); }
+    .vg-stat.stat-active .vg-stat-value { color: #81c784; text-shadow: 0 0 25px rgba(129, 199, 132, 0.6); }
+    .vg-stat.stat-expired .vg-stat-value { color: #ef5350; text-shadow: 0 0 25px rgba(239, 83, 80, 0.6); }
+    .vg-stat.stat-devices .vg-stat-value { color: var(--gold); text-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
 
-    /* ============================================
-       SECTION TITLE
-       ============================================ */
+    /* Section title */
     .vg-section-title {
       font-family: 'Caveat', cursive;
       font-size: 2.4rem;
       font-weight: 700;
-      color: var(--chrome-1);
+      color: var(--gold);
       margin: 0;
       display: flex;
       align-items: center;
       gap: 14px;
       text-shadow:
-        0 0 30px rgba(255, 215, 0, 0.4),
-        3px 3px 0 var(--ink);
-      transform: rotate(-1.5deg);
+        0 0 30px rgba(255, 215, 0, 0.5),
+        2px 2px 6px rgba(0, 0, 0, 0.8);
+      transform: rotate(-0.5deg);
       letter-spacing: 1px;
     }
     .vg-section-title i {
       font-size: 1.6rem;
-      color: var(--cyan-1);
+      color: var(--cyan);
       filter: drop-shadow(0 0 10px rgba(79, 195, 247, 0.8));
     }
 
     /* ============================================
-       TABLE - NHƯ SỔ TAY VẼ TAY
+       TABLE
        ============================================ */
     .vg-table-wrap {
       overflow: hidden;
-      border-radius: 20px 5px 20px 5px;
+      border-radius: 20px;
     }
     .vg-table {
       width: 100%;
@@ -510,139 +475,118 @@
     .vg-table thead th {
       text-align: left;
       padding: 16px 20px;
-      font-family: 'Kalam', cursive;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 2.5px;
-      color: var(--chrome-1);
+      color: var(--gold);
       font-weight: 700;
-      background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), transparent);
-      border-bottom: 2px solid var(--ink);
-      text-shadow: 1px 1px 0 var(--ink);
+      background: linear-gradient(180deg, rgba(255, 215, 0, 0.12), transparent);
+      border-bottom: 1.5px solid rgba(255, 215, 0, 0.35);
     }
     .vg-table tbody tr {
       transition: all 0.3s;
-      border-bottom: 1.5px solid rgba(5, 13, 31, 0.5);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.08);
     }
     .vg-table tbody tr:hover {
       background: rgba(79, 195, 247, 0.08);
-      box-shadow: inset 4px 0 0 var(--chrome-1);
+      box-shadow: inset 4px 0 0 var(--gold);
     }
     .vg-table tbody td {
-      padding: 16px 20px;
+      padding: 15px 20px;
       color: var(--text);
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       vertical-align: middle;
-      font-family: 'Kalam', cursive;
     }
     .vg-table code {
       background: rgba(5, 13, 31, 0.85);
-      color: var(--cyan-1);
-      padding: 5px 12px;
-      border-radius: 8px 3px 8px 3px;
+      color: var(--cyan);
+      padding: 4px 10px;
+      border-radius: 6px;
       font-family: 'Courier New', monospace;
       font-size: 0.82rem;
       font-weight: 700;
-      border: 1.5px solid var(--cyan-1);
-      box-shadow: 2px 2px 0 rgba(5, 13, 31, 0.6);
+      border: 1px solid rgba(79, 195, 247, 0.3);
     }
 
-    /* ============================================
-       BADGES
-       ============================================ */
+    /* Badges */
     .vg-badge-vip {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 5px 14px;
-      background: linear-gradient(135deg, var(--chrome-1), var(--orange));
+      gap: 4px;
+      padding: 5px 12px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-3));
       color: var(--ink);
-      border-radius: 16px 4px 16px 4px;
-      font-family: 'Kalam', cursive;
-      font-weight: 700;
-      font-size: 0.82rem;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 0.72rem;
       letter-spacing: 0.5px;
-      border: 2px solid var(--ink);
-      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
-      transform: rotate(-2deg);
+      box-shadow: 0 4px 14px rgba(255, 215, 0, 0.4);
     }
     .vg-badge-normal {
       display: inline-flex;
       align-items: center;
-      padding: 5px 14px;
-      background: rgba(139, 163, 199, 0.2);
+      padding: 5px 12px;
+      background: rgba(184, 197, 217, 0.15);
       color: var(--text-muted);
-      border-radius: 16px 4px 16px 4px;
-      font-family: 'Kalam', cursive;
+      border-radius: 16px;
       font-weight: 700;
-      font-size: 0.82rem;
+      font-size: 0.72rem;
       letter-spacing: 0.5px;
-      border: 2px solid var(--ink);
-      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.5);
+      border: 1px solid rgba(184, 197, 217, 0.3);
     }
     .vg-badge-action {
       display: inline-block;
-      padding: 5px 14px;
+      padding: 4px 12px;
       background: rgba(79, 195, 247, 0.15);
-      color: var(--cyan-1);
-      border-radius: 8px 3px 8px 3px;
-      font-family: 'Kalam', cursive;
-      font-size: 0.78rem;
+      color: var(--cyan);
+      border-radius: 6px;
+      font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.5px;
-      border: 1.5px solid var(--cyan-1);
-      box-shadow: 2px 2px 0 rgba(5, 13, 31, 0.5);
+      border: 1px solid rgba(79, 195, 247, 0.3);
     }
 
-    /* ============================================
-       TOGGLE
-       ============================================ */
-    .vg-toggle { position: relative; display: inline-block; width: 50px; height: 26px; }
+    /* Toggle */
+    .vg-toggle { position: relative; display: inline-block; width: 46px; height: 26px; }
     .vg-toggle input { opacity: 0; width: 0; height: 0; }
     .vg-slider {
       position: absolute;
       cursor: pointer;
       inset: 0;
-      background: rgba(5, 13, 31, 0.7);
+      background: rgba(184, 197, 217, 0.3);
       transition: 0.4s;
-      border-radius: 26px 6px 26px 6px;
-      border: 2px solid var(--ink);
-      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+      border-radius: 26px;
+      border: 1.5px solid rgba(184, 197, 217, 0.3);
     }
     .vg-slider::before {
       content: "";
       position: absolute;
       height: 18px; width: 18px;
-      left: 3px; bottom: 2px;
+      left: 3px; bottom: 3px;
       background: #fff;
       transition: 0.4s;
-      border-radius: 50% 30% 50% 30%;
-      border: 1.5px solid var(--ink);
-      box-shadow: 2px 2px 0 rgba(5, 13, 31, 0.6);
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
     .vg-toggle input:checked + .vg-slider {
-      background: linear-gradient(135deg, var(--chrome-1), var(--amber));
-      border-color: var(--ink);
-      box-shadow:
-        inset 0 2px 6px rgba(0, 0, 0, 0.3),
-        0 0 25px rgba(255, 215, 0, 0.6);
+      background: linear-gradient(135deg, var(--gold), var(--gold-3));
+      border-color: transparent;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
     }
     .vg-toggle input:checked + .vg-slider::before {
-      transform: translateX(24px);
+      transform: translateX(20px);
     }
 
-    /* ============================================
-       BUTTONS
-       ============================================ */
+    /* Buttons */
     .vg-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 12px 26px;
-      background: linear-gradient(135deg, var(--chrome-1) 0%, var(--amber) 100%);
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-3) 100%);
       color: var(--ink);
-      border: 2.5px solid var(--ink);
-      border-radius: 18px 5px 18px 5px;
+      border: none;
+      border-radius: 14px;
       font-family: 'Caveat', cursive;
       font-weight: 700;
       font-size: 1.2rem;
@@ -651,11 +595,10 @@
       text-decoration: none;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow:
-        5px 5px 0 var(--ink),
-        0 0 30px rgba(255, 215, 0, 0.4);
+        0 8px 24px rgba(255, 215, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
       position: relative;
       overflow: hidden;
-      transform: rotate(-1deg);
     }
     .vg-btn::before {
       content: '';
@@ -667,10 +610,10 @@
     }
     .vg-btn:hover::before { left: 100%; }
     .vg-btn:hover {
-      transform: translate(3px, 3px) rotate(0deg);
+      transform: translateY(-3px);
       box-shadow:
-        2px 2px 0 var(--ink),
-        0 0 50px rgba(255, 215, 0, 0.7);
+        0 14px 36px rgba(255, 215, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
       color: var(--ink);
     }
     .vg-btn-ghost {
@@ -678,142 +621,129 @@
       align-items: center;
       gap: 8px;
       padding: 10px 20px;
-      background: rgba(5, 13, 31, 0.6);
-      color: var(--cyan-1);
-      border: 2.5px solid var(--cyan-1);
-      border-radius: 16px 4px 16px 4px;
+      background: rgba(5, 13, 31, 0.7);
+      color: var(--cyan);
+      border: 1.5px solid rgba(79, 195, 247, 0.4);
+      border-radius: 12px;
       font-family: 'Caveat', cursive;
       font-weight: 700;
       font-size: 1.15rem;
       cursor: pointer;
       text-decoration: none;
       transition: all 0.3s;
-      box-shadow: 4px 4px 0 var(--ink);
-      transform: rotate(-0.5deg);
+      backdrop-filter: blur(10px);
+      letter-spacing: 0.5px;
     }
     .vg-btn-ghost:hover {
-      background: var(--cyan-1);
-      color: var(--ink);
-      transform: translate(2px, 2px) rotate(0);
-      box-shadow: 2px 2px 0 var(--ink), 0 0 30px rgba(79, 195, 247, 0.6);
+      background: rgba(79, 195, 247, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 25px rgba(79, 195, 247, 0.4);
+      transform: translateY(-2px);
     }
     .vg-btn-icon {
-      width: 42px; height: 42px;
+      width: 40px; height: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: rgba(5, 13, 31, 0.7);
-      border: 2px solid var(--ink);
-      color: var(--cyan-1);
-      border-radius: 12px 4px 12px 4px;
+      background: rgba(5, 13, 31, 0.6);
+      border: 1px solid rgba(79, 195, 247, 0.3);
+      color: var(--cyan);
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       padding: 0;
-      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.8);
     }
     .vg-btn-icon:hover {
-      background: linear-gradient(135deg, var(--cyan-1), var(--cyan-2));
+      background: linear-gradient(135deg, var(--cyan), var(--cyan-2));
       color: var(--ink);
-      transform: translate(1px, 1px) rotate(-3deg);
-      box-shadow: 2px 2px 0 var(--ink), 0 0 25px rgba(79, 195, 247, 0.6);
+      border-color: transparent;
+      transform: translateY(-2px) scale(1.08);
+      box-shadow: 0 8px 20px rgba(79, 195, 247, 0.5);
     }
-    .vg-btn-icon.warn { color: var(--chrome-2); }
+    .vg-btn-icon.warn { color: var(--gold-2); border-color: rgba(255, 215, 0, 0.35); }
     .vg-btn-icon.warn:hover {
-      background: linear-gradient(135deg, var(--chrome-1), var(--amber));
-      box-shadow: 2px 2px 0 var(--ink), 0 0 25px rgba(255, 215, 0, 0.6);
+      background: linear-gradient(135deg, var(--gold), var(--gold-3));
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
     }
-    .vg-btn-icon.danger { color: #ef5350; }
+    .vg-btn-icon.danger { color: #ef5350; border-color: rgba(239, 83, 80, 0.3); }
     .vg-btn-icon.danger:hover {
       background: linear-gradient(135deg, #ef5350, #c62828);
       color: #fff;
-      box-shadow: 2px 2px 0 var(--ink), 0 0 25px rgba(239, 83, 80, 0.6);
+      box-shadow: 0 8px 20px rgba(239, 83, 80, 0.5);
     }
 
-    /* ============================================
-       SEARCH
-       ============================================ */
+    /* Search */
     .vg-search-wrap { position: relative; }
     .vg-search-wrap > i {
       position: absolute;
       left: 20px; top: 50%;
       transform: translateY(-50%);
-      color: var(--chrome-1);
+      color: var(--cyan);
       pointer-events: none;
       font-size: 1rem;
       z-index: 2;
-      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
     }
     .vg-search {
       width: 100%;
       padding: 15px 22px 15px 50px;
-      background: rgba(5, 13, 31, 0.75);
-      border: 2.5px solid var(--ink);
-      border-radius: 18px 5px 18px 5px;
+      background: rgba(5, 13, 31, 0.7);
+      border: 1.5px solid rgba(79, 195, 247, 0.3);
+      border-radius: 14px;
       color: var(--text);
-      font-family: 'Kalam', cursive;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 500;
       transition: all 0.3s;
       backdrop-filter: blur(10px);
-      box-shadow:
-        inset 0 2px 8px rgba(0, 0, 0, 0.4),
-        0 0 0 1.5px var(--cyan-1);
     }
-    .vg-search::placeholder { color: var(--text-muted); opacity: 0.8; font-style: italic; }
+    .vg-search::placeholder { color: var(--text-muted); opacity: 0.7; }
     .vg-search:focus {
       outline: none;
-      border-color: var(--chrome-1);
+      border-color: var(--gold);
       background: rgba(5, 13, 31, 0.9);
       box-shadow:
-        inset 0 2px 8px rgba(0, 0, 0, 0.4),
-        0 0 0 2px var(--chrome-1),
-        0 0 30px rgba(255, 215, 0, 0.3);
+        0 0 0 4px rgba(255, 215, 0, 0.1),
+        0 0 30px rgba(255, 215, 0, 0.25);
     }
 
-    /* ============================================
-       MODAL
-       ============================================ */
+    /* Modal */
     .vg-modal {
-      background:
-        linear-gradient(180deg,
-          rgba(15, 40, 71, 0.98) 0%,
-          rgba(5, 13, 31, 0.98) 100%);
-      border: 3px solid var(--ink);
-      border-radius: 26px 6px 26px 6px;
+      background: linear-gradient(180deg,
+        rgba(10, 30, 63, 0.98) 0%,
+        rgba(5, 13, 31, 0.98) 100%);
+      backdrop-filter: blur(24px);
+      border: 1.5px solid rgba(255, 215, 0, 0.3);
+      border-radius: 20px;
       color: var(--text);
       box-shadow:
-        0 0 0 2px var(--chrome-1),
-        0 25px 80px rgba(0, 0, 0, 0.7),
-        0 0 60px rgba(255, 215, 0, 0.2);
-      filter: url(#oilPaintSoft);
+        0 24px 80px rgba(0, 0, 0, 0.7),
+        0 0 60px rgba(255, 215, 0, 0.15),
+        inset 0 1px 0 rgba(255, 215, 0, 0.2);
     }
     .vg-modal .modal-header {
-      border-bottom: 2.5px solid var(--ink);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
       padding: 22px 26px;
       position: relative;
     }
     .vg-modal .modal-header::after {
       content: '';
       position: absolute;
-      bottom: -2.5px; left: 15%; right: 15%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--chrome-1), var(--cyan-1), var(--chrome-1), transparent);
+      bottom: -1px; left: 15%; right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), var(--gold), transparent);
     }
     .vg-modal .modal-title {
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 2rem;
-      color: var(--chrome-1);
+      font-size: 1.9rem;
+      color: var(--gold);
       display: flex;
       align-items: center;
       gap: 10px;
-      text-shadow:
-        0 0 25px rgba(255, 215, 0, 0.5),
-        2px 2px 0 var(--ink);
-      transform: rotate(-1deg);
+      text-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
     }
-    .vg-modal .modal-title i { color: var(--cyan-1); }
+    .vg-modal .modal-title i { color: var(--cyan); }
     .vg-modal .btn-close {
       filter: invert(1) brightness(2);
       opacity: 0.7;
@@ -821,52 +751,39 @@
     .vg-modal .btn-close:hover { opacity: 1; }
     .vg-modal .modal-body { padding: 26px; }
     .vg-modal .modal-footer {
-      border-top: 2.5px solid var(--ink);
+      border-top: 1px solid rgba(255, 215, 0, 0.15);
       padding: 20px 26px;
       gap: 12px;
-      position: relative;
-    }
-    .vg-modal .modal-footer::before {
-      content: '';
-      position: absolute;
-      top: -2.5px; left: 15%; right: 15%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--cyan-1), transparent);
     }
     .vg-modal .form-label {
-      font-family: 'Kalam', cursive;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      color: var(--chrome-1);
+      color: var(--gold);
       letter-spacing: 1.5px;
       text-transform: uppercase;
       margin-bottom: 8px;
       display: block;
-      text-shadow: 1px 1px 0 var(--ink);
     }
     .vg-modal .form-control,
     .vg-modal .form-select {
       width: 100%;
       padding: 13px 18px;
       background: rgba(5, 13, 31, 0.8);
-      border: 2.5px solid var(--ink);
-      border-radius: 14px 4px 14px 4px;
+      border: 1.5px solid rgba(79, 195, 247, 0.3);
+      border-radius: 10px;
       color: var(--text);
-      font-family: 'Kalam', cursive;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 500;
       transition: all 0.3s;
-      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1.5px rgba(79, 195, 247, 0.4);
     }
     .vg-modal .form-control:focus,
     .vg-modal .form-select:focus {
       outline: none;
-      border-color: var(--ink);
+      border-color: var(--gold);
       background: rgba(5, 13, 31, 0.95);
       box-shadow:
-        inset 0 2px 8px rgba(0, 0, 0, 0.5),
-        0 0 0 2px var(--chrome-1),
-        0 0 30px rgba(255, 215, 0, 0.3);
+        0 0 0 4px rgba(255, 215, 0, 0.1),
+        0 0 30px rgba(255, 215, 0, 0.25);
       color: var(--text);
     }
     .vg-modal .form-select option {
@@ -874,9 +791,7 @@
       color: var(--text);
     }
 
-    /* ============================================
-       PAGINATION
-       ============================================ */
+    /* Pagination */
     .vg-pagination {
       display: flex;
       gap: 8px;
@@ -889,48 +804,43 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 44px;
-      height: 44px;
+      min-width: 42px;
+      height: 42px;
       padding: 0 14px;
-      background: rgba(5, 13, 31, 0.75);
-      border: 2.5px solid var(--ink);
-      border-radius: 14px 4px 14px 4px;
-      color: var(--cyan-1);
-      font-family: 'Caveat', cursive;
+      background: rgba(5, 13, 31, 0.7);
+      border: 1.5px solid rgba(79, 195, 247, 0.3);
+      border-radius: 10px;
+      color: var(--cyan);
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 0.9rem;
       text-decoration: none;
       transition: all 0.25s;
-      box-shadow: 3px 3px 0 rgba(5, 13, 31, 0.8), 0 0 0 1.5px rgba(79, 195, 247, 0.4);
+      backdrop-filter: blur(10px);
     }
     .vg-pagination a:hover {
       background: rgba(79, 195, 247, 0.15);
-      transform: translate(1px, 1px) rotate(-3deg);
-      box-shadow: 2px 2px 0 var(--ink), 0 0 0 2px var(--cyan-1);
+      border-color: var(--cyan);
+      transform: translateY(-2px);
     }
     .vg-pagination .active a {
-      background: linear-gradient(135deg, var(--chrome-1), var(--amber));
+      background: linear-gradient(135deg, var(--gold), var(--gold-3));
       color: var(--ink);
-      box-shadow: 3px 3px 0 var(--ink), 0 0 30px rgba(255, 215, 0, 0.5);
+      border-color: transparent;
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
     }
 
-    /* ============================================
-       COUNTDOWN
-       ============================================ */
+    /* Countdown */
     .countdown {
       font-family: 'Caveat', cursive;
       font-weight: 700;
-      font-size: 1.2rem;
-      text-shadow: 1px 1px 0 var(--ink);
-      letter-spacing: 0.5px;
+      font-size: 1.15rem;
+      letter-spacing: 0.3px;
     }
     .countdown.safe { color: #81c784; }
-    .countdown.warning { color: var(--chrome-1); }
+    .countdown.warning { color: var(--gold); }
     .countdown.danger { color: #ef5350; }
 
-    /* ============================================
-       EMPTY STATE
-       ============================================ */
+    /* Empty state */
     .vg-empty {
       text-align: center;
       padding: 70px 20px;
@@ -938,41 +848,36 @@
     }
     .vg-empty i {
       font-size: 3.5rem;
-      color: var(--cyan-2);
-      opacity: 0.5;
+      color: var(--cyan);
+      opacity: 0.6;
       margin-bottom: 18px;
       display: block;
-      filter: drop-shadow(0 0 15px rgba(79, 195, 247, 0.6));
+      filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.7));
       animation: logoFloat 4s ease-in-out infinite;
     }
     .vg-empty p {
       font-family: 'Caveat', cursive;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       margin: 0;
       opacity: 0.9;
-      text-shadow: 1px 1px 0 var(--ink);
     }
 
-    /* ============================================
-       SCROLLBAR
-       ============================================ */
+    /* Scrollbar */
     ::-webkit-scrollbar { width: 12px; }
     ::-webkit-scrollbar-track {
       background: rgba(5, 13, 31, 0.8);
-      border-left: 2px solid var(--ink);
+      border-left: 1px solid rgba(255, 215, 0, 0.15);
     }
     ::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, var(--chrome-1), var(--cyan-1), var(--chrome-1));
+      background: linear-gradient(180deg, var(--gold), var(--cyan), var(--gold));
       border-radius: 6px;
-      border: 2px solid var(--ink);
+      border: 2px solid rgba(5, 13, 31, 0.8);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, var(--cyan-1), var(--chrome-1), var(--cyan-1));
+      background: linear-gradient(180deg, var(--cyan), var(--gold), var(--cyan));
     }
 
-    /* ============================================
-       ANIMATIONS
-       ============================================ */
+    /* Animations */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
       to { opacity: 1; transform: translateY(0); }
@@ -983,9 +888,7 @@
     .d3 { animation-delay: 0.18s; }
     .d4 { animation-delay: 0.24s; }
 
-    /* ============================================
-       RESPONSIVE
-       ============================================ */
+    /* Responsive */
     @media (max-width: 768px) {
       .vg-sidebar { width: 76px; }
       .vg-sidebar span,
@@ -1000,19 +903,6 @@
   </style>
 </head>
 <body>
-  <!-- SVG Filters: turbulence + displacement = wobble vẽ tay -->
-  <svg class="svg-filters" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="oilPaint" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="3" seed="2" result="noise"/>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-      <filter id="oilPaintSoft" x="-3%" y="-3%" width="106%" height="106%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.015 0.025" numOctaves="2" seed="5" result="noise"/>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-    </defs>
-  </svg>
-
-  <canvas id="oilCanvas"></canvas>
+  <div class="starry-bg"></div>
+  <div class="starry-overlay"></div>
   <div class="canvas-texture"></div>
