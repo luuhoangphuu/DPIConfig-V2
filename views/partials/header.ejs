@@ -43,15 +43,43 @@
        ============================================ */
     .starry-bg {
       position: fixed;
-      inset: -10%;
+      inset: -5%;
       z-index: -3;
       background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/1920px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg');
       background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
-      filter: brightness(0.72) saturate(1.15) contrast(1.05);
-      animation: paintingBreath 30s ease-in-out infinite;
-      transform-origin: center center;
+      /* Ken Burns: zoom + pan chậm rãi 40s rồi lặp */
+      animation: kenBurns 40s ease-in-out infinite alternate;
+      will-change: transform;
+      filter: brightness(0.85) saturate(1.2) contrast(1.08);
+    }
+    /* Ken Burns: zoom từ 1.0 → 1.18, pan nhẹ theo đường chéo */
+    @keyframes kenBurns {
+      0% {
+        transform: scale(1) translate(0, 0);
+      }
+      100% {
+        transform: scale(1.18) translate(-2%, -1.5%);
+      }
+    }
+    /* Ken Burns: zoom từ 1.0 → 1.18, pan nhẹ theo đường chéo */
+    @keyframes kenBurns {
+      0% {
+        transform: scale(1) translate(0, 0);
+      }
+      100% {
+        transform: scale(1.18) translate(-2%, -1.5%);
+      }
+    }
+    /* Ken Burns: zoom từ 1.0 → 1.18, pan nhẹ theo đường chéo */
+    @keyframes kenBurns {
+      0% {
+        transform: scale(1) translate(0, 0);
+      }
+      100% {
+        transform: scale(1.18) translate(-2%, -1.5%);
+      }
     }
     @keyframes paintingBreath {
       0% {
@@ -82,44 +110,23 @@
       inset: 0;
       z-index: -2;
       background:
-        radial-gradient(circle at 50% 40%,
-          rgba(5, 13, 31, 0.15) 0%,
-          rgba(5, 13, 31, 0.35) 45%,
-          rgba(5, 13, 31, 0.7) 100%),
-        linear-gradient(180deg,
-          rgba(5, 13, 31, 0.15) 0%,
-          rgba(5, 13, 31, 0.35) 50%,
-          rgba(5, 13, 31, 0.6) 100%);
+        radial-gradient(circle at 50% 45%,
+          rgba(5, 13, 31, 0.1) 0%,
+          rgba(5, 13, 31, 0.25) 55%,
+          rgba(5, 13, 31, 0.5) 100%);
       pointer-events: none;
-      animation: overlayGlow 15s ease-in-out infinite;
     }
     @keyframes overlayGlow {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.85; }
     }
     /* Sao trôi lấp lánh phủ khắp màn hình */
-    .floating-stars {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .floating-stars .star {
-      position: absolute;
-      width: 3px;
-      height: 3px;
-      background: radial-gradient(circle, #fff 0%, #ffd700 50%, transparent 100%);
-      border-radius: 50%;
-      box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.6);
-      animation: starFloat linear infinite, starTwinkle ease-in-out infinite;
-    }
-    @keyframes starFloat {
-      0% { transform: translate(0, 0); }
+    
+    
+    
       100% { transform: translate(calc(100vw - 100px), -100vh); }
     }
-    @keyframes starTwinkle {
-      0%, 100% { opacity: 0.3; }
+    
       50% { opacity: 1; }
     }
 
@@ -146,17 +153,17 @@
       min-height: 100vh;
       background:
         linear-gradient(180deg,
-          rgba(5, 13, 31, 0.82) 0%,
-          rgba(10, 30, 63, 0.78) 50%,
-          rgba(15, 40, 71, 0.75) 100%);
-      backdrop-filter: blur(28px) saturate(1.4);
-      -webkit-backdrop-filter: blur(28px) saturate(1.4);
-      border-right: 1px solid rgba(255, 215, 0, 0.15);
+          rgba(5, 13, 31, 0.45) 0%,
+          rgba(10, 30, 63, 0.5) 50%,
+          rgba(15, 40, 71, 0.55) 100%);
+      backdrop-filter: blur(36px) saturate(1.5);
+      -webkit-backdrop-filter: blur(36px) saturate(1.5);
+      border-right: 1px solid rgba(255, 215, 0, 0.12);
       z-index: 100;
       display: flex; flex-direction: column;
       box-shadow:
-        8px 0 60px rgba(0, 0, 0, 0.5),
-        inset -1px 0 0 rgba(255, 215, 0, 0.12);
+        8px 0 60px rgba(0, 0, 0, 0.4),
+        inset -1px 0 0 rgba(255, 215, 0, 0.08);
     }
     .vg-sidebar::before {
       content: '';
@@ -435,19 +442,17 @@
     .vg-card {
       position: relative;
       background:
-        radial-gradient(circle at 30% 20%,
-          rgba(15, 40, 71, 0.45) 0%,
-          rgba(10, 30, 63, 0.65) 60%,
-          rgba(5, 13, 31, 0.75) 100%);
-      backdrop-filter: blur(24px) saturate(1.3);
-      -webkit-backdrop-filter: blur(24px) saturate(1.3);
-      border: 1px solid rgba(255, 215, 0, 0.18);
-      border-radius: 24px;
+        linear-gradient(135deg,
+          rgba(10, 30, 63, 0.28) 0%,
+          rgba(15, 40, 71, 0.22) 100%);
+      backdrop-filter: blur(32px) saturate(1.5);
+      -webkit-backdrop-filter: blur(32px) saturate(1.5);
+      border: 1px solid rgba(255, 215, 0, 0.15);
+      border-radius: 22px;
       padding: 24px;
       box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 215, 0, 0.1),
-        inset 0 -1px 0 rgba(79, 195, 247, 0.08);
+        0 12px 40px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 215, 0, 0.08);
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
       isolation: isolate;
@@ -468,13 +473,16 @@
       transition: all 0.5s;
     }
     .vg-card:hover {
-      transform: translateY(-5px) scale(1.01);
-      border-color: rgba(255, 215, 0, 0.4);
+      transform: translateY(-5px);
+      border-color: rgba(255, 215, 0, 0.35);
+      background:
+        linear-gradient(135deg,
+          rgba(10, 30, 63, 0.35) 0%,
+          rgba(15, 40, 71, 0.28) 100%);
       box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.55),
-        0 0 80px rgba(255, 215, 0, 0.2),
-        inset 0 1px 0 rgba(255, 215, 0, 0.25),
-        inset 0 -1px 0 rgba(79, 195, 247, 0.15);
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 0 60px rgba(255, 215, 0, 0.15),
+        inset 0 1px 0 rgba(255, 215, 0, 0.2);
     }
     .vg-card:hover::before {
       opacity: 1;
@@ -558,7 +566,17 @@
        ============================================ */
     .vg-table-wrap {
       overflow: hidden;
-      border-radius: 20px;
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg,
+          rgba(10, 30, 63, 0.3) 0%,
+          rgba(15, 40, 71, 0.25) 100%);
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      border: 1px solid rgba(255, 215, 0, 0.12);
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 215, 0, 0.08);
     }
     .vg-table {
       width: 100%;
@@ -1000,35 +1018,4 @@
   <div class="starry-bg"></div>
   <div class="starry-overlay"></div>
   <div class="canvas-texture"></div>
-  <div class="floating-stars">
-  <div class="star" style="left: 63.94%; top: 2.5%; width: 2.83px; height: 2.83px; animation-duration: 43.4s, 4.2s; animation-delay: 13.5s, 2.7s;"></div>
-  <div class="star" style="left: 8.69%; top: 42.19%; width: 2.09px; height: 2.09px; animation-duration: 43.1s, 3.5s; animation-delay: 0.5s, 0.6s;"></div>
-  <div class="star" style="left: 64.99%; top: 54.49%; width: 2.66px; height: 2.66px; animation-duration: 65.4s, 4.4s; animation-delay: 0.1s, 2.4s;"></div>
-  <div class="star" style="left: 69.81%; top: 34.03%; width: 2.47px; height: 2.47px; animation-duration: 87.4s, 3.0s; animation-delay: 1.9s, 0.3s;"></div>
-  <div class="star" style="left: 84.75%; top: 60.37%; width: 4.42px; height: 4.42px; animation-duration: 73.8s, 3.6s; animation-delay: 19.5s, 1.1s;"></div>
-  <div class="star" style="left: 55.2%; top: 82.94%; width: 3.86px; height: 3.86px; animation-duration: 81.7s, 3.7s; animation-delay: 14.1s, 0.1s;"></div>
-  <div class="star" style="left: 22.79%; top: 28.94%; width: 2.24px; height: 2.24px; animation-duration: 44.0s, 2.3s; animation-delay: 5.6s, 1.9s;"></div>
-  <div class="star" style="left: 36.48%; top: 37.02%; width: 2.63px; height: 2.63px; animation-duration: 46.0s, 4.8s; animation-delay: 13.0s, 1.8s;"></div>
-  <div class="star" style="left: 17.11%; top: 72.91%; width: 2.49px; height: 2.49px; animation-duration: 52.8s, 5.0s; animation-delay: 12.8s, 1.7s;"></div>
-  <div class="star" style="left: 68.46%; top: 84.29%; width: 4.33px; height: 4.33px; animation-duration: 43.7s, 2.1s; animation-delay: 6.3s, 0.8s;"></div>
-  <div class="star" style="left: 21.1%; top: 94.29%; width: 4.63px; height: 4.63px; animation-duration: 48.9s, 4.0s; animation-delay: 7.9s, 2.7s;"></div>
-  <div class="star" style="left: 45.89%; top: 26.49%; width: 2.74px; height: 2.74px; animation-duration: 63.7s, 2.8s; animation-delay: 11.7s, 2.7s;"></div>
-  <div class="star" style="left: 39.94%; top: 21.93%; width: 4.99px; height: 4.99px; animation-duration: 60.6s, 2.3s; animation-delay: 0.9s, 0.3s;"></div>
-  <div class="star" style="left: 62.74%; top: 79.21%; width: 3.27px; height: 3.27px; animation-duration: 33.8s, 3.1s; animation-delay: 19.9s, 1.6s;"></div>
-  <div class="star" style="left: 97.11%; top: 86.08%; width: 2.03px; height: 2.03px; animation-duration: 73.2s, 4.0s; animation-delay: 10.7s, 0.8s;"></div>
-  <div class="star" style="left: 64.1%; top: 11.16%; width: 3.3px; height: 3.3px; animation-duration: 57.2s, 4.9s; animation-delay: 17.5s, 0.8s;"></div>
-  <div class="star" style="left: 50.06%; top: 17.87%; width: 4.74px; height: 4.74px; animation-duration: 82.2s, 2.9s; animation-delay: 12.8s, 1.8s;"></div>
-  <div class="star" style="left: 15.28%; top: 76.25%; width: 3.62px; height: 3.62px; animation-duration: 76.7s, 3.6s; animation-delay: 0.0s, 1.0s;"></div>
-  <div class="star" style="left: 1.95%; top: 92.91%; width: 4.64px; height: 4.64px; animation-duration: 79.9s, 2.9s; animation-delay: 1.2s, 2.6s;"></div>
-  <div class="star" style="left: 94.69%; top: 8.57%; width: 3.46px; height: 3.46px; animation-duration: 34.2s, 4.3s; animation-delay: 15.3s, 0.4s;"></div>
-  <div class="star" style="left: 47.53%; top: 54.98%; width: 2.8px; height: 2.8px; animation-duration: 82.3s, 3.3s; animation-delay: 4.2s, 1.6s;"></div>
-  <div class="star" style="left: 72.99%; top: 20.12%; width: 2.94px; height: 2.94px; animation-duration: 89.7s, 3.9s; animation-delay: 8.8s, 1.6s;"></div>
-  <div class="star" style="left: 12.1%; top: 22.47%; width: 3.01px; height: 3.01px; animation-duration: 65.3s, 2.7s; animation-delay: 4.4s, 0.2s;"></div>
-  <div class="star" style="left: 63.11%; top: 22.89%; width: 4.72px; height: 4.72px; animation-duration: 81.6s, 2.2s; animation-delay: 4.8s, 2.0s;"></div>
-  <div class="star" style="left: 21.42%; top: 13.23%; width: 4.81px; height: 4.81px; animation-duration: 64.3s, 3.4s; animation-delay: 15.7s, 2.4s;"></div>
-  <div class="star" style="left: 19.04%; top: 9.69%; width: 3.29px; height: 3.29px; animation-duration: 55.4s, 3.4s; animation-delay: 14.6s, 2.0s;"></div>
-  <div class="star" style="left: 98.42%; top: 9.84%; width: 3.21px; height: 3.21px; animation-duration: 50.4s, 4.6s; animation-delay: 5.0s, 0.6s;"></div>
-  <div class="star" style="left: 44.86%; top: 42.19%; width: 2.84px; height: 2.84px; animation-duration: 45.0s, 4.8s; animation-delay: 8.9s, 2.6s;"></div>
-  <div class="star" style="left: 55.03%; top: 5.06%; width: 5.0px; height: 5.0px; animation-duration: 80.2s, 4.9s; animation-delay: 18.5s, 2.5s;"></div>
-  <div class="star" style="left: 16.63%; top: 48.56%; width: 2.64px; height: 2.64px; animation-duration: 54.1s, 2.2s; animation-delay: 7.6s, 3.0s;"></div>
-</div>
+  
