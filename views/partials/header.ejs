@@ -19,16 +19,12 @@
       --navy: #0a1e3f;
       --navy-2: #0f2847;
       --navy-3: #1a4275;
-      --cream: #fff8e1;
       --text: #f5f5f5;
       --text-muted: #b8c5d9;
       --ink: #050d1f;
-      --glass: rgba(10, 30, 63, 0.72);
-      --glass-light: rgba(15, 40, 71, 0.55);
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
-
     body {
       font-family: 'Inter', sans-serif;
       background: #050d1f;
@@ -39,104 +35,46 @@
     }
 
     /* ============================================
-       NỀN ẢNH THẬT STARRY NIGHT
+       WEBGL CANVAS - LIVING PAINTING
        ============================================ */
-    .starry-bg {
+    #livingCanvas {
       position: fixed;
-      inset: -5%;
+      inset: 0;
       z-index: -3;
-      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/1920px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg');
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* Fallback ảnh tĩnh nếu WebGL fail */
+    #livingCanvas.fallback {
+      background-image: url('/images/starry-night.jpg');
       background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-      /* Ken Burns: zoom + pan chậm rãi 40s rồi lặp */
-      animation: kenBurns 40s ease-in-out infinite alternate;
-      will-change: transform;
-      filter: brightness(0.85) saturate(1.2) contrast(1.08);
+      background-position: center;
+      animation: kenBurns 60s ease-in-out infinite alternate;
     }
-    /* Ken Burns: zoom từ 1.0 → 1.18, pan nhẹ theo đường chéo */
     @keyframes kenBurns {
-      0% {
-        transform: scale(1) translate(0, 0);
-      }
-      100% {
-        transform: scale(1.18) translate(-2%, -1.5%);
-      }
-    }
-    /* Ken Burns: zoom từ 1.0 → 1.18, pan nhẹ theo đường chéo */
-    @keyframes kenBurns {
-      0% {
-        transform: scale(1) translate(0, 0);
-      }
-      100% {
-        transform: scale(1.18) translate(-2%, -1.5%);
-      }
-    }
-    /* Ken Burns: zoom từ 1.0 → 1.18, pan nhẹ theo đường chéo */
-    @keyframes kenBurns {
-      0% {
-        transform: scale(1) translate(0, 0);
-      }
-      100% {
-        transform: scale(1.18) translate(-2%, -1.5%);
-      }
-    }
-    @keyframes paintingBreath {
-      0% {
-        transform: scale(1.05) rotate(0deg) translate(0, 0);
-        filter: brightness(0.72) saturate(1.15) contrast(1.05) hue-rotate(0deg);
-      }
-      25% {
-        transform: scale(1.08) rotate(0.5deg) translate(-1%, 0.5%);
-        filter: brightness(0.75) saturate(1.2) contrast(1.05) hue-rotate(3deg);
-      }
-      50% {
-        transform: scale(1.1) rotate(0deg) translate(-2%, -1%);
-        filter: brightness(0.78) saturate(1.25) contrast(1.08) hue-rotate(5deg);
-      }
-      75% {
-        transform: scale(1.08) rotate(-0.5deg) translate(-1%, 0.5%);
-        filter: brightness(0.75) saturate(1.2) contrast(1.05) hue-rotate(3deg);
-      }
-      100% {
-        transform: scale(1.05) rotate(0deg) translate(0, 0);
-        filter: brightness(0.72) saturate(1.15) contrast(1.05) hue-rotate(0deg);
-      }
+      0% { transform: scale(1) translate(0, 0); }
+      100% { transform: scale(1.15) translate(-2%, -1.5%); }
     }
 
-    /* Overlay tối để chữ đọc được */
+    /* Overlay tối nhẹ để chữ đọc được */
     .starry-overlay {
       position: fixed;
       inset: 0;
       z-index: -2;
       background:
         radial-gradient(circle at 50% 45%,
-          rgba(5, 13, 31, 0.1) 0%,
-          rgba(5, 13, 31, 0.25) 55%,
-          rgba(5, 13, 31, 0.5) 100%);
+          rgba(5, 13, 31, 0.08) 0%,
+          rgba(5, 13, 31, 0.2) 55%,
+          rgba(5, 13, 31, 0.45) 100%);
       pointer-events: none;
     }
-    @keyframes overlayGlow {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.85; }
-    }
-    /* Sao trôi lấp lánh phủ khắp màn hình */
-    
-    
-    
-      100% { transform: translate(calc(100vw - 100px), -100vh); }
-    }
-    
-      50% { opacity: 1; }
-    }
-
-    /* Lớp texture vải canvas */
     .canvas-texture {
       position: fixed;
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.25;
+      opacity: 0.2;
       mix-blend-mode: overlay;
       background-image:
         repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
@@ -144,7 +82,7 @@
     }
 
     /* ============================================
-       SIDEBAR - KÍNH MỜ TRÊN TRANH
+       SIDEBAR - KÍNH MỜ NHẸ
        ============================================ */
     .vg-sidebar {
       position: fixed;
@@ -153,17 +91,17 @@
       min-height: 100vh;
       background:
         linear-gradient(180deg,
-          rgba(5, 13, 31, 0.45) 0%,
-          rgba(10, 30, 63, 0.5) 50%,
-          rgba(15, 40, 71, 0.55) 100%);
-      backdrop-filter: blur(36px) saturate(1.5);
-      -webkit-backdrop-filter: blur(36px) saturate(1.5);
-      border-right: 1px solid rgba(255, 215, 0, 0.12);
+          rgba(5, 13, 31, 0.55) 0%,
+          rgba(10, 30, 63, 0.6) 50%,
+          rgba(15, 40, 71, 0.65) 100%);
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      border-right: 1px solid rgba(255, 215, 0, 0.18);
       z-index: 100;
       display: flex; flex-direction: column;
       box-shadow:
-        8px 0 60px rgba(0, 0, 0, 0.4),
-        inset -1px 0 0 rgba(255, 215, 0, 0.08);
+        6px 0 40px rgba(0, 0, 0, 0.4),
+        inset -1px 0 0 rgba(255, 215, 0, 0.1);
     }
     .vg-sidebar::before {
       content: '';
@@ -176,15 +114,13 @@
         var(--cyan) 50%,
         var(--gold) 75%,
         transparent 100%);
-      opacity: 0.6;
-      animation: brushFlow 5s ease-in-out infinite;
+      opacity: 0.5;
+      animation: brushFlow 6s ease-in-out infinite;
     }
     @keyframes brushFlow {
-      0%, 100% { opacity: 0.35; }
-      50% { opacity: 0.8; }
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.85; }
     }
-
-    /* Logo */
     .vg-logo {
       padding: 32px 20px 24px;
       text-align: center;
@@ -246,14 +182,7 @@
       text-transform: uppercase;
       font-weight: 600;
     }
-
-    /* Nav */
-    .vg-nav {
-      padding: 20px 0;
-      flex: 1;
-      list-style: none;
-      margin: 0;
-    }
+    .vg-nav { padding: 20px 0; flex: 1; list-style: none; margin: 0; }
     .vg-nav li { margin: 6px 0; }
     .vg-nav .nav-link {
       display: flex;
@@ -267,30 +196,21 @@
       font-family: 'Caveat', cursive;
       font-size: 1.35rem;
       font-weight: 600;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s;
       position: relative;
       border: 1.5px solid transparent;
       letter-spacing: 0.5px;
     }
-    .vg-nav .nav-link i {
-      width: 24px;
-      font-size: 1.05rem;
-      transition: transform 0.3s;
-      text-align: center;
-    }
+    .vg-nav .nav-link i { width: 24px; font-size: 1.05rem; transition: transform 0.3s; text-align: center; }
     .vg-nav .nav-link:hover {
       background: rgba(79, 195, 247, 0.1);
       color: var(--cyan);
       border-color: rgba(79, 195, 247, 0.35);
       transform: translateX(4px);
     }
-    .vg-nav .nav-link:hover i {
-      transform: rotate(-10deg) scale(1.15);
-    }
+    .vg-nav .nav-link:hover i { transform: rotate(-10deg) scale(1.15); }
     .vg-nav .nav-link.active {
-      background: linear-gradient(135deg,
-        rgba(255, 215, 0, 0.2) 0%,
-        rgba(79, 195, 247, 0.15) 100%);
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(79, 195, 247, 0.15) 100%);
       color: var(--gold);
       border-color: rgba(255, 215, 0, 0.5);
       box-shadow:
@@ -306,12 +226,7 @@
       border-radius: 4px;
       box-shadow: 0 0 15px var(--gold);
     }
-    .vg-nav .nav-link.active i {
-      color: var(--gold);
-      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
-    }
-
-    /* Footer */
+    .vg-nav .nav-link.active i { color: var(--gold); filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)); }
     .vg-footer {
       padding: 18px;
       border-top: 1px solid rgba(255, 215, 0, 0.12);
@@ -320,7 +235,7 @@
     .vg-time-badge {
       display: inline-block;
       padding: 7px 16px;
-      background: rgba(5, 13, 31, 0.6);
+      background: rgba(5, 13, 31, 0.5);
       border: 1.5px solid rgba(79, 195, 247, 0.4);
       border-radius: 20px;
       color: var(--cyan);
@@ -407,23 +322,6 @@
       letter-spacing: 2px;
       transform: rotate(-1deg);
       display: inline-block;
-      animation: titleGlow 4s ease-in-out infinite;
-    }
-    @keyframes titleGlow {
-      0%, 100% {
-        text-shadow:
-          0 0 20px rgba(255, 215, 0, 0.8),
-          0 0 40px rgba(255, 215, 0, 0.5),
-          0 0 80px rgba(255, 215, 0, 0.3),
-          2px 2px 8px rgba(0, 0, 0, 0.9);
-      }
-      50% {
-        text-shadow:
-          0 0 30px rgba(255, 215, 0, 1),
-          0 0 60px rgba(255, 215, 0, 0.7),
-          0 0 100px rgba(255, 215, 0, 0.4),
-          2px 2px 8px rgba(0, 0, 0, 0.9);
-      }
     }
     .vg-page-sub {
       font-family: 'Caveat', cursive;
@@ -437,60 +335,39 @@
     }
 
     /* ============================================
-       CARD - KÍNH MỜ TRÊN TRANH
+       CARD - TRONG SUỐT MỜ
        ============================================ */
     .vg-card {
       position: relative;
-      background:
-        linear-gradient(135deg,
-          rgba(10, 30, 63, 0.28) 0%,
-          rgba(15, 40, 71, 0.22) 100%);
-      backdrop-filter: blur(32px) saturate(1.5);
-      -webkit-backdrop-filter: blur(32px) saturate(1.5);
-      border: 1px solid rgba(255, 215, 0, 0.15);
+      background: linear-gradient(135deg, rgba(10, 30, 63, 0.35) 0%, rgba(15, 40, 71, 0.3) 100%);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(255, 215, 0, 0.18);
       border-radius: 22px;
       padding: 24px;
       box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 215, 0, 0.08);
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        0 12px 40px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 215, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
-      isolation: isolate;
     }
     .vg-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
-      background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(255, 215, 0, 0.5) 25%,
-        rgba(79, 195, 247, 0.5) 50%,
-        rgba(255, 215, 0, 0.5) 75%,
-        transparent 100%);
-      opacity: 0.6;
-      filter: blur(0.5px);
-      transition: all 0.5s;
+      background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--cyan) 50%, var(--gold) 70%, transparent 100%);
+      opacity: 0.7;
     }
     .vg-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(255, 215, 0, 0.35);
-      background:
-        linear-gradient(135deg,
-          rgba(10, 30, 63, 0.35) 0%,
-          rgba(15, 40, 71, 0.28) 100%);
+      transform: translateY(-4px);
+      border-color: rgba(255, 215, 0, 0.5);
+      background: linear-gradient(135deg, rgba(10, 30, 63, 0.45) 0%, rgba(15, 40, 71, 0.4) 100%);
       box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.4),
-        0 0 60px rgba(255, 215, 0, 0.15),
-        inset 0 1px 0 rgba(255, 215, 0, 0.2);
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(255, 215, 0, 0.2),
+        inset 0 1px 0 rgba(255, 215, 0, 0.25);
     }
-    .vg-card:hover::before {
-      opacity: 1;
-      filter: blur(0px);
-      height: 3px;
-    }
-
-    /* Stat card */
     .vg-stat { padding: 26px; position: relative; overflow: hidden; }
     .vg-stat-icon {
       width: 62px; height: 62px;
@@ -539,7 +416,6 @@
     .vg-stat.stat-expired .vg-stat-value { color: #ef5350; text-shadow: 0 0 25px rgba(239, 83, 80, 0.6); }
     .vg-stat.stat-devices .vg-stat-value { color: var(--gold); text-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
 
-    /* Section title */
     .vg-section-title {
       font-family: 'Caveat', cursive;
       font-size: 2.4rem;
@@ -561,29 +437,17 @@
       filter: drop-shadow(0 0 10px rgba(79, 195, 247, 0.8));
     }
 
-    /* ============================================
-       TABLE
-       ============================================ */
+    /* Table */
     .vg-table-wrap {
       overflow: hidden;
       border-radius: 22px;
-      background:
-        linear-gradient(135deg,
-          rgba(10, 30, 63, 0.3) 0%,
-          rgba(15, 40, 71, 0.25) 100%);
-      backdrop-filter: blur(28px) saturate(1.4);
-      -webkit-backdrop-filter: blur(28px) saturate(1.4);
-      border: 1px solid rgba(255, 215, 0, 0.12);
-      box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 215, 0, 0.08);
+      background: linear-gradient(135deg, rgba(10, 30, 63, 0.35) 0%, rgba(15, 40, 71, 0.3) 100%);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(255, 215, 0, 0.15);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 215, 0, 0.1);
     }
-    .vg-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      margin: 0;
-    }
+    .vg-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 0; }
     .vg-table thead th {
       text-align: left;
       padding: 16px 20px;
@@ -595,22 +459,11 @@
       background: linear-gradient(180deg, rgba(255, 215, 0, 0.12), transparent);
       border-bottom: 1.5px solid rgba(255, 215, 0, 0.35);
     }
-    .vg-table tbody tr {
-      transition: all 0.3s;
-      border-bottom: 1px solid rgba(255, 215, 0, 0.08);
-    }
-    .vg-table tbody tr:hover {
-      background: rgba(79, 195, 247, 0.08);
-      box-shadow: inset 4px 0 0 var(--gold);
-    }
-    .vg-table tbody td {
-      padding: 15px 20px;
-      color: var(--text);
-      font-size: 0.9rem;
-      vertical-align: middle;
-    }
+    .vg-table tbody tr { transition: all 0.3s; border-bottom: 1px solid rgba(255, 215, 0, 0.08); }
+    .vg-table tbody tr:hover { background: rgba(79, 195, 247, 0.08); box-shadow: inset 4px 0 0 var(--gold); }
+    .vg-table tbody td { padding: 15px 20px; color: var(--text); font-size: 0.9rem; vertical-align: middle; }
     .vg-table code {
-      background: rgba(5, 13, 31, 0.85);
+      background: rgba(5, 13, 31, 0.75);
       color: var(--cyan);
       padding: 4px 10px;
       border-radius: 6px;
@@ -685,9 +538,7 @@
       border-color: transparent;
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
     }
-    .vg-toggle input:checked + .vg-slider::before {
-      transform: translateX(20px);
-    }
+    .vg-toggle input:checked + .vg-slider::before { transform: translateX(20px); }
 
     /* Buttons */
     .vg-btn {
@@ -705,10 +556,8 @@
       letter-spacing: 0.8px;
       cursor: pointer;
       text-decoration: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow:
-        0 8px 24px rgba(255, 215, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: all 0.3s;
+      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
       position: relative;
       overflow: hidden;
     }
@@ -723,9 +572,7 @@
     .vg-btn:hover::before { left: 100%; }
     .vg-btn:hover {
       transform: translateY(-3px);
-      box-shadow:
-        0 14px 36px rgba(255, 215, 0, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      box-shadow: 0 14px 36px rgba(255, 215, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
       color: var(--ink);
     }
     .vg-btn-ghost {
@@ -733,7 +580,7 @@
       align-items: center;
       gap: 8px;
       padding: 10px 20px;
-      background: rgba(5, 13, 31, 0.7);
+      background: rgba(5, 13, 31, 0.55);
       color: var(--cyan);
       border: 1.5px solid rgba(79, 195, 247, 0.4);
       border-radius: 12px;
@@ -758,7 +605,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: rgba(5, 13, 31, 0.6);
+      background: rgba(5, 13, 31, 0.55);
       border: 1px solid rgba(79, 195, 247, 0.3);
       color: var(--cyan);
       border-radius: 10px;
@@ -800,7 +647,7 @@
     .vg-search {
       width: 100%;
       padding: 15px 22px 15px 50px;
-      background: rgba(5, 13, 31, 0.7);
+      background: rgba(5, 13, 31, 0.55);
       border: 1.5px solid rgba(79, 195, 247, 0.3);
       border-radius: 14px;
       color: var(--text);
@@ -813,31 +660,20 @@
     .vg-search:focus {
       outline: none;
       border-color: var(--gold);
-      background: rgba(5, 13, 31, 0.9);
-      box-shadow:
-        0 0 0 4px rgba(255, 215, 0, 0.1),
-        0 0 30px rgba(255, 215, 0, 0.25);
+      background: rgba(5, 13, 31, 0.8);
+      box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1), 0 0 30px rgba(255, 215, 0, 0.25);
     }
 
     /* Modal */
     .vg-modal {
-      background: linear-gradient(180deg,
-        rgba(10, 30, 63, 0.98) 0%,
-        rgba(5, 13, 31, 0.98) 100%);
-      backdrop-filter: blur(24px);
+      background: linear-gradient(180deg, rgba(10, 30, 63, 0.96) 0%, rgba(5, 13, 31, 0.97) 100%);
+      backdrop-filter: blur(30px);
       border: 1.5px solid rgba(255, 215, 0, 0.3);
       border-radius: 20px;
       color: var(--text);
-      box-shadow:
-        0 24px 80px rgba(0, 0, 0, 0.7),
-        0 0 60px rgba(255, 215, 0, 0.15),
-        inset 0 1px 0 rgba(255, 215, 0, 0.2);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(255, 215, 0, 0.15);
     }
-    .vg-modal .modal-header {
-      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-      padding: 22px 26px;
-      position: relative;
-    }
+    .vg-modal .modal-header { border-bottom: 1px solid rgba(255, 215, 0, 0.2); padding: 22px 26px; position: relative; }
     .vg-modal .modal-header::after {
       content: '';
       position: absolute;
@@ -856,17 +692,10 @@
       text-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
     }
     .vg-modal .modal-title i { color: var(--cyan); }
-    .vg-modal .btn-close {
-      filter: invert(1) brightness(2);
-      opacity: 0.7;
-    }
+    .vg-modal .btn-close { filter: invert(1) brightness(2); opacity: 0.7; }
     .vg-modal .btn-close:hover { opacity: 1; }
     .vg-modal .modal-body { padding: 26px; }
-    .vg-modal .modal-footer {
-      border-top: 1px solid rgba(255, 215, 0, 0.15);
-      padding: 20px 26px;
-      gap: 12px;
-    }
+    .vg-modal .modal-footer { border-top: 1px solid rgba(255, 215, 0, 0.15); padding: 20px 26px; gap: 12px; }
     .vg-modal .form-label {
       font-size: 0.78rem;
       font-weight: 700;
@@ -893,25 +722,13 @@
       outline: none;
       border-color: var(--gold);
       background: rgba(5, 13, 31, 0.95);
-      box-shadow:
-        0 0 0 4px rgba(255, 215, 0, 0.1),
-        0 0 30px rgba(255, 215, 0, 0.25);
+      box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1), 0 0 30px rgba(255, 215, 0, 0.25);
       color: var(--text);
     }
-    .vg-modal .form-select option {
-      background: #0a1e3f;
-      color: var(--text);
-    }
+    .vg-modal .form-select option { background: #0a1e3f; color: var(--text); }
 
     /* Pagination */
-    .vg-pagination {
-      display: flex;
-      gap: 8px;
-      list-style: none;
-      padding: 0;
-      justify-content: center;
-      margin: 30px 0 0;
-    }
+    .vg-pagination { display: flex; gap: 8px; list-style: none; padding: 0; justify-content: center; margin: 30px 0 0; }
     .vg-pagination a {
       display: inline-flex;
       align-items: center;
@@ -919,7 +736,7 @@
       min-width: 42px;
       height: 42px;
       padding: 0 14px;
-      background: rgba(5, 13, 31, 0.7);
+      background: rgba(5, 13, 31, 0.55);
       border: 1.5px solid rgba(79, 195, 247, 0.3);
       border-radius: 10px;
       color: var(--cyan);
@@ -929,11 +746,7 @@
       transition: all 0.25s;
       backdrop-filter: blur(10px);
     }
-    .vg-pagination a:hover {
-      background: rgba(79, 195, 247, 0.15);
-      border-color: var(--cyan);
-      transform: translateY(-2px);
-    }
+    .vg-pagination a:hover { background: rgba(79, 195, 247, 0.15); border-color: var(--cyan); transform: translateY(-2px); }
     .vg-pagination .active a {
       background: linear-gradient(135deg, var(--gold), var(--gold-3));
       color: var(--ink);
@@ -942,22 +755,13 @@
     }
 
     /* Countdown */
-    .countdown {
-      font-family: 'Caveat', cursive;
-      font-weight: 700;
-      font-size: 1.15rem;
-      letter-spacing: 0.3px;
-    }
+    .countdown { font-family: 'Caveat', cursive; font-weight: 700; font-size: 1.15rem; letter-spacing: 0.3px; }
     .countdown.safe { color: #81c784; }
     .countdown.warning { color: var(--gold); }
     .countdown.danger { color: #ef5350; }
 
-    /* Empty state */
-    .vg-empty {
-      text-align: center;
-      padding: 70px 20px;
-      color: var(--text-muted);
-    }
+    /* Empty */
+    .vg-empty { text-align: center; padding: 70px 20px; color: var(--text-muted); }
     .vg-empty i {
       font-size: 3.5rem;
       color: var(--cyan);
@@ -967,26 +771,15 @@
       filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.7));
       animation: logoFloat 4s ease-in-out infinite;
     }
-    .vg-empty p {
-      font-family: 'Caveat', cursive;
-      font-size: 1.5rem;
-      margin: 0;
-      opacity: 0.9;
-    }
+    .vg-empty p { font-family: 'Caveat', cursive; font-size: 1.5rem; margin: 0; opacity: 0.9; }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 12px; }
-    ::-webkit-scrollbar-track {
-      background: rgba(5, 13, 31, 0.8);
-      border-left: 1px solid rgba(255, 215, 0, 0.15);
-    }
+    ::-webkit-scrollbar-track { background: rgba(5, 13, 31, 0.8); border-left: 1px solid rgba(255, 215, 0, 0.15); }
     ::-webkit-scrollbar-thumb {
       background: linear-gradient(180deg, var(--gold), var(--cyan), var(--gold));
       border-radius: 6px;
       border: 2px solid rgba(5, 13, 31, 0.8);
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, var(--cyan), var(--gold), var(--cyan));
     }
 
     /* Animations */
@@ -1000,14 +793,9 @@
     .d3 { animation-delay: 0.18s; }
     .d4 { animation-delay: 0.24s; }
 
-    /* Responsive */
     @media (max-width: 768px) {
       .vg-sidebar { width: 76px; }
-      .vg-sidebar span,
-      .vg-logo h5,
-      .vg-logo small,
-      .vg-user span,
-      .vg-copyright { display: none; }
+      .vg-sidebar span, .vg-logo h5, .vg-logo small, .vg-user span, .vg-copyright { display: none; }
       .vg-main { margin-left: 76px; padding: 22px; }
       .vg-page-title { font-size: 2.4rem; }
       .vg-stat-value { font-size: 2.4rem; }
@@ -1015,7 +803,209 @@
   </style>
 </head>
 <body>
-  <div class="starry-bg"></div>
+  <canvas id="livingCanvas"></canvas>
   <div class="starry-overlay"></div>
   <div class="canvas-texture"></div>
-  
+
+  <script>
+    // ==========================================
+    // LIVING PAINTING - WEBGL FLOW FIELD
+    // ==========================================
+    (function() {
+      const canvas = document.getElementById('livingCanvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+      if (!gl) {
+        canvas.classList.add('fallback');
+        console.warn('WebGL không hỗ trợ, dùng ảnh tĩnh');
+        return;
+      }
+
+      const vsSource = `
+        attribute vec2 aPos;
+        varying vec2 vUv;
+        void main() {
+          vUv = (aPos + 1.0) * 0.5;
+          gl_Position = vec4(aPos, 0.0, 1.0);
+        }
+      `;
+
+      const fsSource = `
+        precision highp float;
+        uniform sampler2D uTex;
+        uniform float uTime;
+        uniform vec2 uResolution;
+        uniform vec2 uTexResolution;
+        varying vec2 vUv;
+
+        // Simplex noise 2D
+        vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+        float snoise(vec2 v){
+          const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                   -0.577350269189626, 0.024390243902439);
+          vec2 i = floor(v + dot(v, C.yy));
+          vec2 x0 = v - i + dot(i, C.xx);
+          vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+          vec4 x12 = x0.xyxy + C.xxzz;
+          x12.xy -= i1;
+          i = mod(i, 289.0);
+          vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+            + i.x + vec3(0.0, i1.x, 1.0));
+          vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+            dot(x12.zw,x12.zw)), 0.0);
+          m = m*m;
+          m = m*m;
+          vec3 x = 2.0 * fract(p * C.www) - 1.0;
+          vec3 h = abs(x) - 0.5;
+          vec3 ox = floor(x + 0.5);
+          vec3 a0 = x - ox;
+          m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+          vec3 g;
+          g.x = a0.x * x0.x + h.x * x0.y;
+          g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+          return 130.0 * dot(m, g);
+        }
+
+        void main() {
+          // Xử lý aspect ratio để ảnh không bị méo
+          vec2 ratio = vec2(
+            min((uResolution.x / uResolution.y) / (uTexResolution.x / uTexResolution.y), 1.0),
+            min((uResolution.y / uResolution.x) / (uTexResolution.y / uTexResolution.x), 1.0)
+          );
+          vec2 uv = vec2(
+            vUv.x * ratio.x + (1.0 - ratio.x) * 0.5,
+            vUv.y * ratio.y + (1.0 - ratio.y) * 0.5
+          );
+
+          // ===== TẠO FLOW FIELD (trường vector chảy) =====
+          float t = uTime * 0.12;
+
+          // Nhiều lớp noise chồng nhau tạo dòng chảy phức tạp
+          float n1 = snoise(uv * 2.5 + vec2(t, t * 0.7));
+          float n2 = snoise(uv * 5.0 + vec2(-t * 0.8, t * 1.1));
+          float n3 = snoise(uv * 11.0 + vec2(t * 1.4, -t * 0.6));
+
+          // ===== SWIRL QUANH TÂM (như xoáy sao Van Gogh) =====
+          vec2 center = vec2(0.5, 0.45);
+          vec2 d = uv - center;
+          float dist = length(d);
+          float angle = atan(d.y, d.x);
+
+          // Xoáy xoay theo chiều kim đồng hồ, mạnh hơn ở gần tâm
+          float swirl = (0.012 + 0.03 / (dist + 0.3)) * (0.6 + n1 * 0.4);
+          float newAngle = angle + swirl;
+          vec2 swirlUv = center + vec2(cos(newAngle), sin(newAngle)) * dist;
+
+          // ===== DISTORTION CHÍNH =====
+          // Biên độ nhỏ để tranh vẫn nhận ra, nhưng đủ để "thở"
+          vec2 flow = vec2(
+            n1 * 0.012 + n2 * 0.007 + n3 * 0.003,
+            n1 * 0.009 + n2 * 0.008 + n3 * 0.004
+          );
+
+          // Kết hợp swirl + flow
+          vec2 finalUv = swirlUv + flow;
+
+          // Clamp để không sample ra ngoài ảnh
+          finalUv = clamp(finalUv, 0.001, 0.999);
+
+          // ===== SAMPLE ẢNH =====
+          vec3 color = texture2D(uTex, finalUv).rgb;
+
+          // Thêm subtle shine theo noise để tăng "thở"
+          color += vec3(n1 * 0.02);
+
+          // Tăng saturation nhẹ
+          vec3 gray = vec3(dot(color, vec3(0.299, 0.587, 0.114)));
+          color = mix(gray, color, 1.15);
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+
+      function createShader(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          console.error('Shader error:', gl.getShaderInfoLog(shader));
+          return null;
+        }
+        return shader;
+      }
+
+      const vs = createShader(gl.VERTEX_SHADER, vsSource);
+      const fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+      if (!vs || !fs) {
+        canvas.classList.add('fallback');
+        return;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('Program error:', gl.getProgramInfoLog(program));
+        canvas.classList.add('fallback');
+        return;
+      }
+      gl.useProgram(program);
+
+      // Quad full screen
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1, 1, -1, -1, 1,
+        -1, 1, 1, -1, 1, 1
+      ]), gl.STATIC_DRAW);
+
+      const aPos = gl.getAttribLocation(program, 'aPos');
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      const uTex = gl.getUniformLocation(program, 'uTex');
+      const uTime = gl.getUniformLocation(program, 'uTime');
+      const uResolution = gl.getUniformLocation(program, 'uResolution');
+      const uTexResolution = gl.getUniformLocation(program, 'uTexResolution');
+
+      // Load ảnh
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        gl.uniform1i(uTex, 0);
+        gl.uniform2f(uTexResolution, img.width, img.height);
+
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+          gl.uniform2f(uResolution, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const startTime = performance.now();
+        function render() {
+          const elapsed = (performance.now() - startTime) / 1000;
+          gl.uniform1f(uTime, elapsed);
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+          requestAnimationFrame(render);
+        }
+        render();
+      };
+      img.onerror = function() {
+        console.error('Không tải được ảnh, dùng fallback');
+        canvas.classList.add('fallback');
+      };
+      img.src = '/images/starry-night.jpg';
+    })();
+  </script>
