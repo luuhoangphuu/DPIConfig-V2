@@ -433,21 +433,6 @@ router.post('/sellers/create', requireSuperAdmin, async (req, res) => {
     res.redirect('/admin/sellers?error=' + encodeURIComponent(err.message));
   }
 });
-    if (dup) return res.redirect('/admin/sellers?error=email_exists');
-    await Seller.create({
-      email, password_hash: bcrypt.hashSync(password, 10),
-      name: name || 'Seller', phone,
-      quota: parseInt(quota) || 0, quota_used: 0,
-      can_choose_tier: can_choose_tier === 'on',
-      can_choose_duration: can_choose_duration === 'on',
-      default_tier: default_tier || 'Normal',
-      max_devices_default: parseInt(max_devices_default) || 1,
-      is_active: true, created_by: req.admin.email
-    });
-    res.redirect('/admin/sellers?success=created');
-  } catch (err) { res.redirect('/admin/sellers?error=1'); }
-});
-
 router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
   try {
     const s = await Seller.findByPk(req.params.id);
