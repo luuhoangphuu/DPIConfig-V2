@@ -6,11 +6,6 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
 const { Key, Log, KeyDevice, AppVersion, Announcement, Admin, Seller } = require('../models');
-const {
-  notifyKeyCreated, notifyKeyToggled, notifyKeyDeleted,
-  notifyKickAll, notifyDeleteAllDevices,
-  notifyDeviceToggled, notifyDeviceDeleted
-} = require('../utils/email');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -43,11 +38,98 @@ function requireAdmin(req, res, next) {
 function requireSuperAdmin(req, res, next) {
   if (!req.admin) return res.redirect('/admin/login');
   if (req.admin.role !== 'super' && req.admin.is_super !== true) {
-    return res.status(403).send('Không có quyền truy cập');
+    return res.status(403).send('Không có quyền');
   }
   next();
 }
 
+// ==================== FORCE LOGIN (TEST) ====================
+router.get('/force-login', async (req, res) => {
+  const { email, password } = req.query;
+  
+  if (!email || !password) {
+    return res.send(`
+      <html><head><title>Force Login</title>
+      <style>
+        body{font-family:monospace;padding:40px;background:#0a1e3f;color:#fff;max-width:700px;margin:auto}
+        input{display:block;padding:12px;margin:10px 0;width:100%;background:#050d1f;border:1px solid #ffd700;color:#fff;border-radius:8px;font-size:16px}
+        button{padding:14px 24px;background:#ffd700;color:#0a1e3f;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:16px}
+        .info{background:rgba(255,215,0,0.1);padding:20px;border-radius:12px;margin-bottom:20px}
+        code{color:#4fc3f7;background:#050d1f;padding:2px 8px;border-radius:4px}
+        .result{background:#050d1f;padding:20px;border-radius:12px;margin-top:20px;white-space:pre-wrap;font-size:14px}
+      </style></head><body>
+      <h1 style="color:#ffd700">🔐 Force Login Test</h1>
+      <div class="info">
+        <p>ENV ADMIN_EMAIL: <code>${ADMIN_EMAIL}</code></p>
+        <p>ENV HASH: <code>${ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.substring(0, 15) + '...' + ADMIN_PASSWORD_HASH.substring(ADMIN_PASSWORD_HASH.length - 5) : 'KHÔNG CÓ'}</code></p>
+        <p>Hash length: <code>${ADMIN_PASSWORD_HASH.length} ký tự</code></p>
+      </div>
+      <form action="/admin/force-login" method="GET">
+        <input type="email" name="email" placeholder="Email" value="${ADMIN_EMAIL}" required>
+        <input type="text" name="password" placeholder="Mật khẩu" required>
+        <button type="submit">🚀 Force Login</button>
+      </form>
+      </body></html>
+    `);
+  }
+  
+  // Kiểm tra
+  const emailMatch = email === ADMIN_EMAIL;
+  let passMatch = false;
+  let bcryptErr = null;
+  
+  try {
+    passMatch = bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
+  } catch (e) {
+    bcryptErr = e.message;
+  }
+  
+  // Nếu đúng cả 2 → set cookie và login luôn
+  if (emailMatch && passMatch) {
+    const token = jwt.sign({
+      email, role: 'super', name: 'Owner', is_super: true
+    }, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.cookie('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    
+    return res.redirect('/admin/dashboard');
+  }
+  
+  // Nếu sai → hiện kết quả debug
+  res.send(`
+    <html><head><title>Force Login Result</title>
+    <style>
+      body{font-family:monospace;padding:40px;background:#0a1e3f;color:#fff;max-width:700px;margin:auto}
+      .result{background:#050d1f;padding:20px;border-radius:12px;margin-top:20px;white-space:pre-wrap;font-size:14px;color:#4fc3f7}
+      .bad{color:#ef5350}
+      .good{color:#81c784}
+      a{color:#ffd700;display:inline-block;margin-top:20px;padding:10px 20px;background:#ffd700;color:#0a1e3f;text-decoration:none;border-radius:8px;font-weight:bold}
+    </style></head><body>
+    <h1 class="bad">❌ Login thất bại</h1>
+    <div class="result">Email match: <span class="${emailMatch ? 'good' : 'bad'}">${emailMatch}</span>
+Password match: <span class="${passMatch ? 'good' : 'bad'}">${passMatch}</span>
+${bcryptErr ? 'Bcrypt error: ' + bcryptErr : ''}
+
+=== CHI TIẾT ===
+Bạn nhập email: ${email}
+ENV email: ${ADMIN_EMAIL}
+${emailMatch ? '✅ Email khớp' : '❌ Email không khớp'}
+
+Bạn nhập password: ${password}
+Hash trong ENV: ${ADMIN_PASSWORD_HASH.substring(0, 20)}...${ADMIN_PASSWORD_HASH.substring(ADMIN_PASSWORD_HASH.length - 10)}
+${passMatch ? '✅ Mật khẩu khớp hash' : '❌ Mật khẩu KHÔNG khớp hash trong ENV'}
+</div>
+    <a href="/admin/force-login">← Thử lại</a>
+    </body></html>
+  `);
+});
+
+// ==================== LOGIN THƯỜNG ====================
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
 router.post('/login', bruteforce.prevent, async (req, res) => {
@@ -84,14 +166,12 @@ router.post('/login', bruteforce.prevent, async (req, res) => {
 
 router.get('/logout', (req, res) => {
   res.clearCookie('admin_token');
-  res.clearCookie('seller_token');
   res.redirect('/admin/login');
 });
 
 router.get('/force-logout', (req, res) => {
   res.clearCookie('admin_token');
-  res.clearCookie('seller_token');
-  res.redirect('/admin/login');
+  res.redirect('/admin/force-login');
 });
 
 router.get('/whoami', (req, res) => {
@@ -101,14 +181,14 @@ router.get('/whoami', (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     res.json({
       logged_in: true, email: decoded.email, role: decoded.role,
-      is_super: decoded.is_super, id: decoded.id,
-      is_env_admin: decoded.email === process.env.ADMIN_EMAIL
+      is_super: decoded.is_super, id: decoded.id
     });
   } catch (e) { res.json({ logged_in: false }); }
 });
 
 router.use(requireAdmin);
 
+// ==================== DASHBOARD ====================
 router.get('/dashboard', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
@@ -136,6 +216,7 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
+// ==================== KEYS ====================
 router.get('/keys', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
@@ -196,11 +277,7 @@ router.post('/keys/create', async (req, res) => {
 router.post('/keys/toggle/:id', async (req, res) => {
   try {
     const key = await Key.findByPk(req.params.id);
-    if (key) {
-      key.is_active = !key.is_active;
-      await key.save();
-      await Log.create({ action: key.is_active ? 'key_unlocked' : 'key_locked', details: `Key ${key.key}`, ip_address: req.ip, key_id: key.id });
-    }
+    if (key) { key.is_active = !key.is_active; await key.save(); }
     res.redirect('/admin/keys?toggled=1');
   } catch (err) { res.redirect('/admin/keys'); }
 });
@@ -208,10 +285,7 @@ router.post('/keys/toggle/:id', async (req, res) => {
 router.post('/keys/kick-all/:id', async (req, res) => {
   try {
     const key = await Key.findByPk(req.params.id);
-    if (key) {
-      await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } });
-      await Log.create({ action: 'kick_all', details: `Khóa all TB ${key.key}`, ip_address: req.ip, key_id: key.id });
-    }
+    if (key) { await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } }); }
     res.redirect('/admin/keys?kicked=1');
   } catch (err) { res.redirect('/admin/keys'); }
 });
@@ -219,10 +293,7 @@ router.post('/keys/kick-all/:id', async (req, res) => {
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
   try {
     const key = await Key.findByPk(req.params.id);
-    if (key) {
-      await KeyDevice.destroy({ where: { key_id: key.id } });
-      await Log.create({ action: 'delete_all_devices', details: `Xóa all TB ${key.key}`, ip_address: req.ip, key_id: key.id });
-    }
+    if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); }
     res.redirect('/admin/keys?deleted_all_devices=1');
   } catch (err) { res.redirect('/admin/keys'); }
 });
@@ -247,11 +318,7 @@ router.post('/keys/extend/:id', async (req, res) => {
   try {
     const { new_expiry } = req.body;
     const key = await Key.findByPk(req.params.id);
-    if (key && new_expiry) {
-      key.expires_at = new Date(new_expiry);
-      await key.save();
-      await Log.create({ action: 'key_extended', details: `Gia hạn ${key.key}`, ip_address: req.ip, key_id: key.id });
-    }
+    if (key && new_expiry) { key.expires_at = new Date(new_expiry); await key.save(); }
     res.redirect('/admin/keys?extended=1');
   } catch (err) { res.redirect('/admin/keys'); }
 });
@@ -259,11 +326,7 @@ router.post('/keys/extend/:id', async (req, res) => {
 router.post('/keys/delete/:id', async (req, res) => {
   try {
     const key = await Key.findByPk(req.params.id);
-    if (key) {
-      await KeyDevice.destroy({ where: { key_id: key.id } });
-      await key.destroy();
-      await Log.create({ action: 'key_deleted', details: `Xoá ${key.key}`, ip_address: req.ip });
-    }
+    if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); await key.destroy(); }
     res.redirect('/admin/keys?deleted=1');
   } catch (err) { res.redirect('/admin/keys'); }
 });
@@ -276,6 +339,7 @@ router.get('/keys/devices/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
+// ==================== ADMINS ====================
 router.get('/admins', requireSuperAdmin, async (req, res) => {
   try {
     const admins = await Admin.findAll({ order: [['createdAt', 'DESC']] });
@@ -340,6 +404,16 @@ router.post('/admins/change-role/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.redirect('/admin/admins'); }
 });
 
+router.post('/admins/reset-password/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password || new_password.length < 6) return res.redirect('/admin/admins?error=short');
+    const target = await Admin.findByPk(req.params.id);
+    if (target) { target.password_hash = bcrypt.hashSync(new_password, 10); await target.save(); }
+    res.redirect('/admin/admins?password_reset=1');
+  } catch (err) { res.redirect('/admin/admins'); }
+});
+
 router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
   try {
     const target = await Admin.findByPk(req.params.id);
@@ -351,6 +425,7 @@ router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.redirect('/admin/admins'); }
 });
 
+// ==================== SELLERS ====================
 router.get('/sellers', requireSuperAdmin, async (req, res) => {
   try {
     const sellers = await Seller.findAll({ order: [['createdAt', 'DESC']] });
@@ -406,6 +481,16 @@ router.post('/sellers/reset-quota/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.redirect('/admin/sellers'); }
 });
 
+router.post('/sellers/reset-password/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password || new_password.length < 6) return res.redirect('/admin/sellers?error=short');
+    const seller = await Seller.findByPk(req.params.id);
+    if (seller) { seller.password_hash = bcrypt.hashSync(new_password, 10); await seller.save(); }
+    res.redirect('/admin/sellers?password_reset=1');
+  } catch (err) { res.redirect('/admin/sellers'); }
+});
+
 router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
   try {
     const seller = await Seller.findByPk(req.params.id);
@@ -417,6 +502,7 @@ router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.redirect('/admin/sellers'); }
 });
 
+// ==================== VERSIONS ====================
 router.get('/versions', async (req, res) => {
   try {
     const versions = await AppVersion.findAll({ order: [['version_code', 'DESC']] });
@@ -470,6 +556,7 @@ router.post('/versions/delete/:id', async (req, res) => {
   } catch (err) { res.redirect('/admin/versions'); }
 });
 
+// ==================== ANNOUNCEMENTS ====================
 router.get('/announcements', async (req, res) => {
   try {
     const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
@@ -506,219 +593,35 @@ router.post('/announcements/delete/:id', async (req, res) => {
   } catch (err) { res.redirect('/admin/announcements'); }
 });
 
-
-// ==================== QUẢN LÝ TÀI KHOẢN CÁ NHÂN ====================
-
+// ==================== PROFILE ====================
 router.get('/profile', async (req, res) => {
   try {
     let adminInfo = null;
-    if (req.admin.id) {
-      adminInfo = await Admin.findByPk(req.admin.id);
-    }
-    res.render('admin/profile', { 
-      user: req.admin, 
-      adminInfo,
+    if (req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+    res.render('admin/profile', {
+      user: req.admin, adminInfo,
       isSuper: req.admin.role === 'super' || req.admin.is_super === true,
-      success: req.query.success,
-      error: req.query.error
+      success: req.query.success, error: req.query.error
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Lỗi');
-  }
+  } catch (err) { console.error(err); res.status(500).send('Lỗi'); }
 });
 
 router.post('/profile/change-password', async (req, res) => {
   try {
     const { old_password, new_password, confirm_password } = req.body;
-    
     if (!old_password || !new_password) return res.redirect('/admin/profile?error=missing');
-    if (new_password !== confirm_password) return res.redirect('/admin/profile?error=password_mismatch');
-    if (new_password.length < 6) return res.redirect('/admin/profile?error=too_short');
-    
-    // Super admin ENV: chỉ đổi được qua biến môi trường, không đổi ở đây
-    if (!req.admin.id) {
-      return res.redirect('/admin/profile?error=env_admin');
-    }
+    if (new_password !== confirm_password) return res.redirect('/admin/profile?error=mismatch');
+    if (new_password.length < 6) return res.redirect('/admin/profile?error=short');
+    if (!req.admin.id) return res.redirect('/admin/profile?error=env_admin');
     
     const admin = await Admin.findByPk(req.admin.id);
-    if (!admin) return res.redirect('/admin/profile?error=not_found');
-    
-    // Check mật khẩu cũ
-    if (!bcrypt.compareSync(old_password, admin.password_hash)) {
-      return res.redirect('/admin/profile?error=wrong_password');
+    if (!admin || !bcrypt.compareSync(old_password, admin.password_hash)) {
+      return res.redirect('/admin/profile?error=wrong');
     }
-    
-    // Update mật khẩu mới
     admin.password_hash = bcrypt.hashSync(new_password, 10);
     await admin.save();
-    
-    await Log.create({
-      action: 'password_changed',
-      details: `${admin.email} đổi mật khẩu`,
-      ip_address: req.ip
-    });
-    
     res.redirect('/admin/profile?success=password_changed');
-  } catch (err) {
-    console.error(err);
-    res.redirect('/admin/profile?error=system');
-  }
-});
-
-// Super admin reset mật khẩu của admin khác
-router.post('/admins/reset-password/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { new_password } = req.body;
-    if (!new_password || new_password.length < 6) {
-      return res.redirect('/admin/admins?error=password_too_short');
-    }
-    
-    const target = await Admin.findByPk(req.params.id);
-    if (target) {
-      target.password_hash = bcrypt.hashSync(new_password, 10);
-      await target.save();
-      
-      await Log.create({
-        action: 'password_reset_by_super',
-        details: `Super admin reset mật khẩu cho ${target.email}`,
-        ip_address: req.ip
-      });
-    }
-    res.redirect('/admin/admins?password_reset=1');
-  } catch (err) {
-    console.error(err);
-    res.redirect('/admin/admins?error=reset_failed');
-  }
-});
-
-// Super admin reset mật khẩu seller
-router.post('/sellers/reset-password/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { new_password } = req.body;
-    if (!new_password || new_password.length < 6) {
-      return res.redirect('/admin/sellers?error=password_too_short');
-    }
-    
-    const seller = await Seller.findByPk(req.params.id);
-    if (seller) {
-      seller.password_hash = bcrypt.hashSync(new_password, 10);
-      await seller.save();
-      
-      await Log.create({
-        action: 'seller_password_reset',
-        details: `Admin reset mật khẩu seller ${seller.email}`,
-        ip_address: req.ip
-      });
-    }
-    res.redirect('/admin/sellers?password_reset=1');
-  } catch (err) {
-    console.error(err);
-    res.redirect('/admin/sellers?error=reset_failed');
-  }
-});
-
-// Debug: reset toàn bộ login - xóa cookie
-router.get('/debug-reset', (req, res) => {
-  res.clearCookie('admin_token');
-  res.clearCookie('seller_token');
-  res.send(`
-    <html><body style="font-family:system-ui;background:#0a1e3f;color:#ffd700;padding:40px;text-align:center">
-      <h1>✅ Đã xóa cookie</h1>
-      <p style="color:#8ba3c7">Bây giờ quay lại login và đăng nhập.</p>
-      <p style="margin-top:20px">
-        <a href="/admin/login" style="color:#4fc3f7;padding:12px 24px;border:1px solid #4fc3f7;border-radius:8px;text-decoration:none">→ Login</a>
-      </p>
-      <div style="margin-top:40px;text-align:left;background:rgba(255,255,255,0.05);padding:20px;border-radius:12px;max-width:600px;margin-left:auto;margin-right:auto">
-        <h3 style="color:#ffd700">📋 Thông tin debug:</h3>
-        <p style="color:#8ba3c7;font-size:0.9rem">
-          ADMIN_EMAIL (ENV): <code style="color:#4fc3f7">${process.env.ADMIN_EMAIL || 'NOT SET'}</code><br>
-          ADMIN_PASSWORD_HASH: <code style="color:#4fc3f7">${process.env.ADMIN_PASSWORD_HASH ? 'CÓ (' + process.env.ADMIN_PASSWORD_HASH.length + ' ký tự)' : 'KHÔNG CÓ'}</code><br>
-          JWT_SECRET: <code style="color:#4fc3f7">${process.env.JWT_SECRET ? 'CÓ' : 'KHÔNG CÓ'}</code>
-        </p>
-      </div>
-    </body></html>
-  `);
-});
-
-
-// Test login - chỉ để debug
-router.post('/debug-test-login', async (req, res) => {
-  const { email, password } = req.body;
-  const bcrypt = require('bcryptjs');
-  
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-  const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
-  
-  const emailMatch = email === ADMIN_EMAIL;
-  let passMatch = false;
-  let bcryptError = null;
-  
-  try {
-    passMatch = bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
-  } catch (e) {
-    bcryptError = e.message;
-  }
-  
-  res.json({
-    input: { email, password: password.substring(0, 3) + '***' },
-    env: {
-      admin_email: ADMIN_EMAIL,
-      hash_length: ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.length : 0,
-      hash_start: ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.substring(0, 10) : 'N/A',
-      hash_end: ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.substring(ADMIN_PASSWORD_HASH.length - 5) : 'N/A'
-    },
-    result: {
-      email_match: emailMatch,
-      password_match: passMatch,
-      bcrypt_error: bcryptError
-    }
-  });
-});
-
-router.get('/debug-test-login', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head><title>Test Login</title>
-    <style>
-      body { font-family: monospace; padding: 40px; background: #0a1e3f; color: #fff; }
-      input { padding: 10px; margin: 5px; width: 300px; background: #050d1f; border: 1px solid #ffd700; color: #fff; border-radius: 6px; }
-      button { padding: 10px 20px; background: #ffd700; color: #0a1e3f; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-      pre { background: #050d1f; padding: 20px; border-radius: 8px; color: #4fc3f7; margin-top: 20px; }
-    </style>
-    </head>
-    <body>
-      <h1 style="color: #ffd700">🔍 Test Login Debug</h1>
-      <form id="form">
-        <div><input type="email" id="email" placeholder="Email" required></div>
-        <div><input type="text" id="password" placeholder="Mật khẩu" required></div>
-        <button type="button" onclick="test()">Test</button>
-      </form>
-      <pre id="result">Kết quả sẽ hiện ở đây...</pre>
-      <script>
-        async function test() {
-          const email = document.getElementById('email').value;
-          const password = document.getElementById('password').value;
-          const result = document.getElementById('result');
-          result.textContent = 'Đang test...';
-          
-          try {
-            const res = await fetch('/admin/debug-test-login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            result.textContent = JSON.stringify(data, null, 2);
-          } catch (e) {
-            result.textContent = 'Lỗi: ' + e.message;
-          }
-        }
-      </script>
-    </body>
-    </html>
-  `);
+  } catch (err) { res.redirect('/admin/profile?error=system'); }
 });
 
 module.exports = router;
