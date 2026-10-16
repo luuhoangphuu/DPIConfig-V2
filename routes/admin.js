@@ -641,4 +641,84 @@ router.get('/debug-reset', (req, res) => {
   `);
 });
 
+
+// Test login - chỉ để debug
+router.post('/debug-test-login', async (req, res) => {
+  const { email, password } = req.body;
+  const bcrypt = require('bcryptjs');
+  
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+  const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+  
+  const emailMatch = email === ADMIN_EMAIL;
+  let passMatch = false;
+  let bcryptError = null;
+  
+  try {
+    passMatch = bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
+  } catch (e) {
+    bcryptError = e.message;
+  }
+  
+  res.json({
+    input: { email, password: password.substring(0, 3) + '***' },
+    env: {
+      admin_email: ADMIN_EMAIL,
+      hash_length: ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.length : 0,
+      hash_start: ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.substring(0, 10) : 'N/A',
+      hash_end: ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.substring(ADMIN_PASSWORD_HASH.length - 5) : 'N/A'
+    },
+    result: {
+      email_match: emailMatch,
+      password_match: passMatch,
+      bcrypt_error: bcryptError
+    }
+  });
+});
+
+router.get('/debug-test-login', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>Test Login</title>
+    <style>
+      body { font-family: monospace; padding: 40px; background: #0a1e3f; color: #fff; }
+      input { padding: 10px; margin: 5px; width: 300px; background: #050d1f; border: 1px solid #ffd700; color: #fff; border-radius: 6px; }
+      button { padding: 10px 20px; background: #ffd700; color: #0a1e3f; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+      pre { background: #050d1f; padding: 20px; border-radius: 8px; color: #4fc3f7; margin-top: 20px; }
+    </style>
+    </head>
+    <body>
+      <h1 style="color: #ffd700">🔍 Test Login Debug</h1>
+      <form id="form">
+        <div><input type="email" id="email" placeholder="Email" required></div>
+        <div><input type="text" id="password" placeholder="Mật khẩu" required></div>
+        <button type="button" onclick="test()">Test</button>
+      </form>
+      <pre id="result">Kết quả sẽ hiện ở đây...</pre>
+      <script>
+        async function test() {
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          const result = document.getElementById('result');
+          result.textContent = 'Đang test...';
+          
+          try {
+            const res = await fetch('/admin/debug-test-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            result.textContent = JSON.stringify(data, null, 2);
+          } catch (e) {
+            result.textContent = 'Lỗi: ' + e.message;
+          }
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
 module.exports = router;
