@@ -5,7 +5,7 @@ const path = require('path');
 const sequelize = require('../config/database');
 const apiRoutes = require('../routes/api');
 const adminRoutes = require('../routes/admin');
-// Import models để đảm bảo sequelize biết về chúng
+const sellerRoutes = require('../routes/seller');
 require('../models');
 
 const app = express();
@@ -19,63 +19,44 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/api', apiRoutes);
 app.use('/admin', adminRoutes);
+app.use('/seller', sellerRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
-
-// ============ KHỞI TẠO DATABASE ============
-let dbReady = false;
-const dbInitPromise = (async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('DB connected.');
-    await sequelize.sync({ alter: true });
-    console.log('Models synced - all tables created.');
-    dbReady = true;
-  } catch (err) {
-    console.error('DB init error:', err);
-  }
-})();
-
-// Middleware chờ DB sẵn sàng trước khi xử lý request
-app.use(async (req, res, next) => {
-  if (!dbReady) {
-    try {
-      await dbInitPromise;
-    } catch (e) {
-      console.error('DB wait error:', e);
-    }
-  }
-  next();
-});
-
 
 // ============ ERROR HANDLER ============
 app.use((err, req, res, next) => {
-  console.error('=== ERROR ===');
-  console.error('Path:', req.path);
-  console.error('Message:', err.message);
-  console.error('Stack:', err.stack);
-  
+  console.error('=== ERROR ===', err.message);
   res.status(500).send(`
-    <html>
-      <head>
-        <title>Lỗi - Chi tiết</title>
-        <style>
-          body { font-family: monospace; padding: 30px; background: #0a1e3f; color: #fff; }
-          h1 { color: #ef5350; }
-          pre { background: #050d1f; padding: 20px; border-radius: 8px; overflow: auto; color: #81d4fa; }
-          .path { color: #ffd700; }
-          a { color: #4fc3f7; }
-        </style>
-      </head>
-      <body>
-        <h1>⚠️ Lỗi máy chủ</h1>
-        <p>Path: <span class="path">${req.path}</span></p>
-        <p>Message: <strong style="color: #ef5350;">${err.message}</strong></p>
-        <pre>${err.stack || 'No stack trace'}</pre>
-        <p><a href="/admin/dashboard">← Về Dashboard</a></p>
-      </body>
-    </html>
+    <html><body style="font-family:monospace;padding:30px;background:#0a1e3f;color:#fff">
+    <h1 style="color:#ef5350">⚠️ Lỗi</h1>
+    <p>Path: <b style="color:#ffd700">${req.path}</b></p>
+    <p>Message: <b style="color:#ef5350">${err.message}</b></p>
+    <pre style="background:#050d1f;padding:20px;border-radius:8px;overflow:auto;color:#81d4fa">${err.stack || ''}</pre>
+    <p><a href="/admin/force-logout" style="color:#4fc3f7">Force logout</a></p>
+    </body></html>
   `);
 });
+
+// ============ INIT DB + SERVER ============
+async function initApp() {
+  try {
+    await sequelize.authenticate();
+    console.log('DB connected.');
+
+    // ALTER TABLE thủ công trước khi sync
+    await sequelize.query(`ALTER TABLE "keys" ADD COLUMN IF NOT EXISTS "admin_id" INTEGER;`);
+    await sequelize.query(`ALTER TABLE "keys" ADD COLUMN IF NOT EXISTS "seller_id" INTEGER;`);
+    console.log('Columns ensured.');
+
+    await sequelize.sync({ alter: true });
+    console.log('Models synced.');
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log('Server on port', PORT));
+  } catch (err) {
+    console.error('Init error:', err);
+    // Vẫn export app để Vercel không crash — lỗi sẽ hiện khi có request
+  }
+}
+initApp();
 
 module.exports = app;
