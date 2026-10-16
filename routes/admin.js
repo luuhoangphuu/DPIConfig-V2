@@ -557,4 +557,61 @@ router.post('/profile/change-password', async (req, res) => {
   } catch (err) { res.redirect('/admin/profile?error=system'); }
 });
 
+
+// ============================================
+// 🔍 DEBUG SELLER (xóa sau khi fix xong)
+// ============================================
+router.get('/debug-seller', requireSuperAdmin, async (req, res) => {
+  try {
+    const { email, password } = req.query;
+    if (!email) {
+      // Liệt kê tất cả seller
+      const sellers = await Seller.findAll({ 
+        order: [['id', 'DESC']], limit: 10,
+        attributes: ['id','email','name','is_active','password_hash','createdAt']
+      });
+      let html = '<html><body style="font-family:monospace;padding:20px;background:#0a1e3f;color:#fff">';
+      html += '<h2 style="color:#ffd700">🔍 Danh sách Seller (10 mới nhất)</h2>';
+      html += '<table border="1" cellpadding="8" style="border-collapse:collapse;color:#fff">';
+      html += '<tr style="background:#1a4275"><th>ID</th><th>Email</th><th>Name</th><th>Active</th><th>Hash Length</th><th>Hash Prefix</th><th>Test Login</th></tr>';
+      sellers.forEach(s => {
+        html += '<tr>';
+        html += '<td>' + s.id + '</td>';
+        html += '<td>' + s.email + '</td>';
+        html += '<td>' + (s.name || '') + '</td>';
+        html += '<td>' + (s.is_active ? '✅' : '❌') + '</td>';
+        html += '<td>' + (s.password_hash ? s.password_hash.length : 0) + '</td>';
+        html += '<td>' + (s.password_hash ? s.password_hash.substring(0, 15) + '...' : 'NULL') + '</td>';
+        html += '<td><a style="color:#4fc3f7" href="?email=' + encodeURIComponent(s.email) + '&password=123456">Test 123456</a></td>';
+        html += '</tr>';
+      });
+      html += '</table>';
+      html += '<p style="margin-top:20px;color:#b8c5d9">💡 Thêm <code>?email=...&password=...</code> vào URL để test login</p>';
+      html += '</body></html>';
+      return res.send(html);
+    }
+    
+    const seller = await Seller.findOne({ where: { email } });
+    if (!seller) return res.send('<pre style="color:#fff;background:#0a1e3f;padding:20px">❌ Không tìm thấy seller: ' + email + '</pre>');
+    
+    const bcrypt = require('bcryptjs');
+    const ok = password ? bcrypt.compareSync(password, seller.password_hash) : null;
+    
+    const info = {
+      id: seller.id,
+      email: seller.email,
+      name: seller.name,
+      is_active: seller.is_active,
+      hash_length: seller.password_hash ? seller.password_hash.length : 0,
+      hash_sample: seller.password_hash ? seller.password_hash.substring(0, 30) + '...' : null,
+      test_password: password,
+      login_result: ok === null ? 'Chưa test' : (ok ? '✅ PASS' : '❌ FAIL')
+    };
+    
+    res.send('<pre style="color:#fff;background:#0a1e3f;padding:20px;font-size:14px">' + JSON.stringify(info, null, 2) + '</pre>');
+  } catch (err) {
+    res.status(500).send('Lỗi: ' + err.message);
+  }
+});
+
 module.exports = router;
