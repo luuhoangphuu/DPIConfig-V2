@@ -3,6 +3,31 @@
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
   <div class="vg-main flex-grow-1">
 
+    <% if (!isSuper && adminInfo) { %>
+    <div class="vg-card anim d1" style="padding: 20px 24px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(79,195,247,0.08));">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-family: 'Caveat'; font-size: 1.8rem; color: var(--gold); margin-bottom: 6px;">
+            Quota của bạn
+          </div>
+          <div style="color: var(--text-muted); font-size: 0.9rem;">
+            Bạn còn <strong style="color: #81c784;"><%= Math.max(0, adminInfo.quota - adminInfo.quota_used) %></strong> key có thể tạo
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: 'Caveat'; font-size: 2.5rem; color: var(--cyan); line-height: 1;">
+            <%= adminInfo.quota_used %> / <%= adminInfo.quota %>
+          </div>
+        </div>
+      </div>
+      <% if (adminInfo.quota_used >= adminInfo.quota) { %>
+        <div style="margin-top: 12px; padding: 10px; background: rgba(239,83,80,0.15); border-left: 3px solid #ef5350; border-radius: 6px; color: #ff8a80; font-size: 0.9rem;">
+          <i class="fas fa-exclamation-triangle"></i> Bạn đã hết quota. Liên hệ Super Admin để nạp thêm.
+        </div>
+      <% } %>
+    </div>
+    <% } %>
+
     <div class="vg-page-head anim">
       <div>
         <h1 class="vg-page-title">Đêm đầy sao</h1>
