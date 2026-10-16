@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const ExpressBrute = require('express-brute');
-const { Key, Log, KeyDevice } = require('../models');
+const { Key, Log, KeyDevice, AppVersion, Announcement } = require('../models');
 const {
   notifyKeyCreated, notifyKeyToggled, notifyKeyDeleted,
   notifyKickAll, notifyDeleteAllDevices,
