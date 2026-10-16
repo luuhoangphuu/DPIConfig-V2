@@ -15,10 +15,6 @@ function requireAdmin(req, res, next) {
   if (!token) return res.redirect('/admin/login');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email === process.env.ADMIN_EMAIL) {
-      decoded.role = 'super';
-      decoded.is_super = true;
-    }
     if (!decoded.role) decoded.role = 'admin';
     req.admin = decoded;
     next();
