@@ -831,9 +831,76 @@
       const vsSource = `
         attribute vec2 aPos;
         varying vec2 vUv;
+        // Hàm tạo xoáy tại 1 điểm
+        vec2 swirlAt(vec2 uv, vec2 center, float radius, float strength, float timeOffset) {
+          vec2 d = uv - center;
+          float dist = length(d);
+          if (dist > radius) return uv;
+          
+          // Giảm dần theo khoảng cách từ tâm
+          float falloff = 1.0 - smoothstep(0.0, radius, dist);
+          float angle = atan(d.y, d.x);
+          
+          // Xoáy mạnh dần theo thời gian
+          float rotation = strength * falloff * (1.0 + sin(uTime * 0.3 + timeOffset) * 0.5);
+          float newAngle = angle + rotation;
+          
+          return center + vec2(cos(newAngle), sin(newAngle)) * dist;
+        }
+
         void main() {
-          vUv = (aPos + 1.0) * 0.5;
-          gl_Position = vec4(aPos, 0.0, 1.0);
+          // Aspect ratio - hiện full ảnh
+          vec2 ratio = vec2(
+            min((uResolution.x / uResolution.y) / (uTexResolution.x / uTexResolution.y), 1.0),
+            min((uResolution.y / uResolution.x) / (uTexResolution.x / uTexResolution.y), 1.0)
+          );
+          vec2 uv = vec2(
+            vUv.x * ratio.x + (1.0 - ratio.x) * 0.5,
+            vUv.y * ratio.y + (1.0 - ratio.y) * 0.5
+          );
+
+          float t = uTime * 0.1;
+
+          // Zoom rất nhẹ
+          float zoom = 1.0 + (sin(uTime * 0.15) * 0.5 + 0.5) * 0.04;
+          vec2 centeredUv = uv - 0.5;
+          centeredUv /= zoom;
+          uv = centeredUv + 0.5;
+
+          // Noise nền
+          float n1 = noise(uv * 3.0 + vec2(t, t * 0.7));
+          float n2 = noise(uv * 6.0 + vec2(-t * 0.8, t * 1.1));
+          vec2 flow = vec2(n1 * 0.005, n2 * 0.005);
+          uv += flow;
+
+          // ===== NHIỀU ĐIỂM XOÁY TẠI CÁC NGÔI SAO TRONG TRANH =====
+          // Vị trí dựa trên bố cục Starry Night gốc (UV 0-1)
+          
+          // Xoáy lớn trung tâm (giữa tranh)
+          uv = swirlAt(uv, vec2(0.50, 0.42), 0.18, 0.15, 0.0);
+          
+          // Xoáy sao trái trên
+          uv = swirlAt(uv, vec2(0.13, 0.22), 0.12, 0.22, 1.5);
+          
+          // Xoáy sao giữa trên  
+          uv = swirlAt(uv, vec2(0.42, 0.18), 0.10, -0.18, 3.0);
+          
+          // Xoáy sao phải
+          uv = swirlAt(uv, vec2(0.78, 0.28), 0.11, 0.20, 4.5);
+          
+          // Mặt trăng (xoáy mạnh)
+          uv = swirlAt(uv, vec2(0.88, 0.38), 0.09, -0.25, 2.0);
+          
+          // Xoáy nhỏ rải rác
+          uv = swirlAt(uv, vec2(0.25, 0.55), 0.08, 0.12, 5.0);
+          uv = swirlAt(uv, vec2(0.65, 0.60), 0.08, -0.12, 1.0);
+          uv = swirlAt(uv, vec2(0.35, 0.75), 0.10, 0.10, 6.0);
+          uv = swirlAt(uv, vec2(0.55, 0.85), 0.08, -0.10, 2.5);
+
+          // Clamp và sample
+          uv = clamp(uv, 0.001, 0.999);
+          vec3 color = texture2D(uTex, uv).rgb;
+          gl_FragColor = vec4(color, 1.0);
         }
       `;
 
