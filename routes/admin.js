@@ -219,8 +219,20 @@ router.post('/versions/toggle-update/:id', async (req, res) => {
 
 // ==================== QUẢN LÝ THÔNG BÁO CHUNG ====================
 router.get('/announcements', async (req, res) => {
-  const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
-  res.render('admin/announcements', { user: req.admin, announcements });
+  try {
+    const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
+    res.render('admin/announcements', { user: req.admin, announcements });
+  } catch (err) {
+    console.error('Announcements page error:', err);
+    res.status(500).send(`
+      <div style="font-family: monospace; padding: 40px; background: #0a1e3f; color: #ffd700; min-height: 100vh;">
+        <h2>⚠️ Lỗi tải trang Thông báo</h2>
+        <p style="color: #ef5350;">${err.message}</p>
+        <pre style="background: #050d1f; padding: 20px; border-radius: 8px; overflow: auto; color: #81d4fa;">${err.stack}</pre>
+        <p><a href="/admin/dashboard" style="color: #4fc3f7;">← Về Dashboard</a></p>
+      </div>
+    `);
+  }
 });
 
 router.post('/announcements/create', async (req, res) => {

@@ -3,6 +3,15 @@ const pg = require('pg');
 require('dotenv').config();
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 10000,   // Timeout lấy connection: 10s
+    idle: 10000
+  },
+  retry: {
+    max: 3
+  },
   dialect: 'postgres',
   logging: false,
   dialectModule: pg,
