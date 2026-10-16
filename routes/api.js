@@ -77,6 +77,122 @@ router.post('/gen-key', async (req, res) => {
 });
 
 // ==================== CÁC ROUTE CẦN X-API-KEY ====================
+// ==================== CHECK APP VERSION (không cần X-API-Key) ====================
+router.get('/version', async (req, res) => {
+  try {
+    const latest = await AppVersion.findOne({
+      where: { is_active: true },
+      order: [['version_code', 'DESC']]
+    });
+
+    if (!latest) {
+      return res.json({
+        success: true,
+        data: {
+          has_update: false,
+          update_enabled: false,
+          server_time: new Date().toISOString()
+        }
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        has_update: true,
+        update_enabled: latest.update_enabled,  // Admin có thể tắt thông báo
+        version_code: latest.version_code,
+        version_name: latest.version_name,
+        download_url: latest.download_url,
+        changelog: latest.changelog || '',
+        is_required: latest.is_required,
+        updated_at: latest.updatedAt.toISOString(),
+        server_time: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('Version check error:', err);
+    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
+  }
+});
+
+// ==================== THÔNG BÁO CHUNG (không cần X-API-Key) ====================
+router.get('/announcement', async (req, res) => {
+  try {
+    const now = new Date();
+    const announcements = await Announcement.findAll({
+      where: {
+        is_enabled: true,
+        [Op.or]: [
+          { expires_at: null },
+          { expires_at: { [Op.gt]: now } }
+        ]
+      },
+      order: [['priority', 'DESC'], ['createdAt', 'DESC']],
+      limit: 5
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        announcements: announcements.map(a => ({
+          id: a.id,
+          title: a.title,
+          message: a.message,
+          type: a.type,
+          is_dismissible: a.is_dismissible,
+          priority: a.priority,
+          expires_at: a.expires_at ? a.expires_at.toISOString() : null,
+          created_at: a.createdAt.toISOString()
+        })),
+        server_time: now.toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('Announcement error:', err);
+    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
+  }
+});
+
+
+// ==================== THÔNG BÁO CHUNG (không cần X-API-Key) ====================
+router.get('/announcement', async (req, res) => {
+  try {
+    const now = new Date();
+    const announcements = await Announcement.findAll({
+      where: {
+        is_enabled: true,
+        [Op.or]: [
+          { expires_at: null },
+          { expires_at: { [Op.gt]: now } }
+        ]
+      },
+      order: [['priority', 'DESC'], ['createdAt', 'DESC']],
+      limit: 5
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        announcements: announcements.map(a => ({
+          id: a.id,
+          title: a.title,
+          message: a.message,
+          type: a.type,
+          is_dismissible: a.is_dismissible,
+          priority: a.priority,
+          expires_at: a.expires_at ? a.expires_at.toISOString() : null,
+          created_at: a.createdAt.toISOString()
+        })),
+        server_time: now.toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('Announcement error:', err);
+    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
+  }
+});
+
 router.use(apiLimiter);
 router.use(apiAuth);
 

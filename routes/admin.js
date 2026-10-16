@@ -196,4 +196,77 @@ router.get('/keys/devices/:id', async (req, res) => {
   res.json({ success: true, devices: key.devices || [] });
 });
 
+
+// Toggle bật/tắt thông báo update cho app
+router.post('/versions/toggle-update/:id', async (req, res) => {
+  try {
+    const v = await AppVersion.findByPk(req.params.id);
+    if (v) {
+      v.update_enabled = !v.update_enabled;
+      await v.save();
+      await Log.create({
+        action: v.update_enabled ? 'version_update_enabled' : 'version_update_disabled',
+        details: `${v.update_enabled ? 'Bật' : 'Tắt'} thông báo update cho ${v.version_name}`,
+        ip_address: req.ip
+      });
+    }
+    res.redirect('/admin/versions?toggled=1');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/admin/versions?error=toggle_failed');
+  }
+});
+
+// ==================== QUẢN LÝ THÔNG BÁO CHUNG ====================
+router.get('/announcements', async (req, res) => {
+  const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
+  res.render('admin/announcements', { user: req.admin, announcements });
+});
+
+router.post('/announcements/create', async (req, res) => {
+  try {
+    const { title, message, type, priority, expires_at, is_dismissible } = req.body;
+    if (!title || !message) return res.redirect('/admin/announcements?error=missing_fields');
+
+    await Announcement.create({
+      title,
+      message,
+      type: type || 'info',
+      priority: parseInt(priority) || 5,
+      expires_at: expires_at ? new Date(expires_at) : null,
+      is_dismissible: is_dismissible === 'on',
+      created_by: req.admin.email
+    });
+    await Log.create({ action: 'announcement_created', details: `Tạo thông báo: ${title}`, ip_address: req.ip });
+    res.redirect('/admin/announcements?created=1');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/admin/announcements?error=create_failed');
+  }
+});
+
+router.post('/announcements/toggle/:id', async (req, res) => {
+  const a = await Announcement.findByPk(req.params.id);
+  if (a) {
+    a.is_enabled = !a.is_enabled;
+    await a.save();
+    await Log.create({
+      action: a.is_enabled ? 'announcement_enabled' : 'announcement_disabled',
+      details: `${a.is_enabled ? 'Bật' : 'Tắt'} thông báo: ${a.title}`,
+      ip_address: req.ip
+    });
+  }
+  res.redirect('/admin/announcements?toggled=1');
+});
+
+router.post('/announcements/delete/:id', async (req, res) => {
+  const a = await Announcement.findByPk(req.params.id);
+  if (a) {
+    const title = a.title;
+    await a.destroy();
+    await Log.create({ action: 'announcement_deleted', details: `Xóa thông báo: ${title}`, ip_address: req.ip });
+  }
+  res.redirect('/admin/announcements?deleted=1');
+});
+
 module.exports = router;
