@@ -1,4 +1,5 @@
 <%- include('../partials/header', { title: 'Quản lý Admin' }) %>
+<% const adminEmail = typeof envAdminEmail !== "undefined" ? envAdminEmail : (user && user.email) || "admin@dpiconfig.com"; %>
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'admins' }) %>
   <div class="vg-main flex-grow-1">
@@ -21,7 +22,7 @@
         </div>
         <div style="flex: 1;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-weight: 800; color: var(--gold); font-size: 1.1rem;"><%= envAdminEmail %></strong></span>
+            <span style="font-weight: 800; color: var(--gold); font-size: 1.1rem;"><%= adminEmail %></span></span>
             <span style="padding: 3px 10px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border-radius: 10px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.5px;">
               SUPER ADMIN TỐI CAO
             </span>

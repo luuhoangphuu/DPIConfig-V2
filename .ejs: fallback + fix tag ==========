@@ -1,0 +1,5 @@
+[33m8cf1e9b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m 🐛 Fix envAdminEmail + inject env vars cho views
+[33m56a8576[m 🔧 Fix dead links: thêm 24 routes thiếu (admins, sellers, versions, announcements, profile)
+[33md1beed0[m 🔒 Fix auto-super: role chỉ lấy từ DB
+[33m8de78a5[m 🎨 Upgrade admin UI: sidebar sections, dashboard hero, stat cards animation, quota progress bar, action badges
+[33m521f773[m Add /admin/reset-admin - create admin without old password
