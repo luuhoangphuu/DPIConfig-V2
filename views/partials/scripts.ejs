@@ -63,6 +63,33 @@
       if (!isOff) location.reload();
     });
   }
+
+  // ===== MOBILE MENU =====
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+  const sidebar = document.querySelector('.vg-sidebar');
+  
+  if (mobileMenuBtn && sidebar) {
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      mobileOverlay.classList.toggle('active');
+    });
+    
+    mobileOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      mobileOverlay.classList.remove('active');
+    });
+    
+    // Click vào menu thì đóng sidebar
+    sidebar.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('open');
+          mobileOverlay.classList.remove('active');
+        }
+      });
+    });
+  }
 </script>
 </body>
 </html>

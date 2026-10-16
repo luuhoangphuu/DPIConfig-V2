@@ -506,4 +506,139 @@ router.post('/announcements/delete/:id', async (req, res) => {
   } catch (err) { res.redirect('/admin/announcements'); }
 });
 
+
+// ==================== QUẢN LÝ TÀI KHOẢN CÁ NHÂN ====================
+
+router.get('/profile', async (req, res) => {
+  try {
+    let adminInfo = null;
+    if (req.admin.id) {
+      adminInfo = await Admin.findByPk(req.admin.id);
+    }
+    res.render('admin/profile', { 
+      user: req.admin, 
+      adminInfo,
+      isSuper: req.admin.role === 'super' || req.admin.is_super === true,
+      success: req.query.success,
+      error: req.query.error
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi');
+  }
+});
+
+router.post('/profile/change-password', async (req, res) => {
+  try {
+    const { old_password, new_password, confirm_password } = req.body;
+    
+    if (!old_password || !new_password) return res.redirect('/admin/profile?error=missing');
+    if (new_password !== confirm_password) return res.redirect('/admin/profile?error=password_mismatch');
+    if (new_password.length < 6) return res.redirect('/admin/profile?error=too_short');
+    
+    // Super admin ENV: chỉ đổi được qua biến môi trường, không đổi ở đây
+    if (!req.admin.id) {
+      return res.redirect('/admin/profile?error=env_admin');
+    }
+    
+    const admin = await Admin.findByPk(req.admin.id);
+    if (!admin) return res.redirect('/admin/profile?error=not_found');
+    
+    // Check mật khẩu cũ
+    if (!bcrypt.compareSync(old_password, admin.password_hash)) {
+      return res.redirect('/admin/profile?error=wrong_password');
+    }
+    
+    // Update mật khẩu mới
+    admin.password_hash = bcrypt.hashSync(new_password, 10);
+    await admin.save();
+    
+    await Log.create({
+      action: 'password_changed',
+      details: `${admin.email} đổi mật khẩu`,
+      ip_address: req.ip
+    });
+    
+    res.redirect('/admin/profile?success=password_changed');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/admin/profile?error=system');
+  }
+});
+
+// Super admin reset mật khẩu của admin khác
+router.post('/admins/reset-password/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password || new_password.length < 6) {
+      return res.redirect('/admin/admins?error=password_too_short');
+    }
+    
+    const target = await Admin.findByPk(req.params.id);
+    if (target) {
+      target.password_hash = bcrypt.hashSync(new_password, 10);
+      await target.save();
+      
+      await Log.create({
+        action: 'password_reset_by_super',
+        details: `Super admin reset mật khẩu cho ${target.email}`,
+        ip_address: req.ip
+      });
+    }
+    res.redirect('/admin/admins?password_reset=1');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/admin/admins?error=reset_failed');
+  }
+});
+
+// Super admin reset mật khẩu seller
+router.post('/sellers/reset-password/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password || new_password.length < 6) {
+      return res.redirect('/admin/sellers?error=password_too_short');
+    }
+    
+    const seller = await Seller.findByPk(req.params.id);
+    if (seller) {
+      seller.password_hash = bcrypt.hashSync(new_password, 10);
+      await seller.save();
+      
+      await Log.create({
+        action: 'seller_password_reset',
+        details: `Admin reset mật khẩu seller ${seller.email}`,
+        ip_address: req.ip
+      });
+    }
+    res.redirect('/admin/sellers?password_reset=1');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/admin/sellers?error=reset_failed');
+  }
+});
+
+// Debug: reset toàn bộ login - xóa cookie
+router.get('/debug-reset', (req, res) => {
+  res.clearCookie('admin_token');
+  res.clearCookie('seller_token');
+  res.send(`
+    <html><body style="font-family:system-ui;background:#0a1e3f;color:#ffd700;padding:40px;text-align:center">
+      <h1>✅ Đã xóa cookie</h1>
+      <p style="color:#8ba3c7">Bây giờ quay lại login và đăng nhập.</p>
+      <p style="margin-top:20px">
+        <a href="/admin/login" style="color:#4fc3f7;padding:12px 24px;border:1px solid #4fc3f7;border-radius:8px;text-decoration:none">→ Login</a>
+      </p>
+      <div style="margin-top:40px;text-align:left;background:rgba(255,255,255,0.05);padding:20px;border-radius:12px;max-width:600px;margin-left:auto;margin-right:auto">
+        <h3 style="color:#ffd700">📋 Thông tin debug:</h3>
+        <p style="color:#8ba3c7;font-size:0.9rem">
+          ADMIN_EMAIL (ENV): <code style="color:#4fc3f7">${process.env.ADMIN_EMAIL || 'NOT SET'}</code><br>
+          ADMIN_PASSWORD_HASH: <code style="color:#4fc3f7">${process.env.ADMIN_PASSWORD_HASH ? 'CÓ (' + process.env.ADMIN_PASSWORD_HASH.length + ' ký tự)' : 'KHÔNG CÓ'}</code><br>
+          JWT_SECRET: <code style="color:#4fc3f7">${process.env.JWT_SECRET ? 'CÓ' : 'KHÔNG CÓ'}</code>
+        </p>
+      </div>
+    </body></html>
+  `);
+});
+
 module.exports = router;

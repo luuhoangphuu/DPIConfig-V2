@@ -1,0 +1,128 @@
+<%- include('../partials/header', { title: 'Tài khoản' }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'profile' }) %>
+  <div class="vg-main flex-grow-1">
+
+    <div class="vg-page-head anim">
+      <div>
+        <h1 class="vg-page-title">Tài khoản</h1>
+        <p class="vg-page-sub">Thông tin và bảo mật tài khoản của bạn</p>
+      </div>
+    </div>
+
+    <% if (success === 'password_changed') { %>
+      <div class="vg-card anim d1" style="padding: 16px 24px; margin-bottom: 20px; background: rgba(129,199,132,0.15); border-color: rgba(129,199,132,0.4);">
+        <i class="fas fa-check-circle" style="color: #81c784;"></i>
+        <strong style="color: #81c784;">Đổi mật khẩu thành công!</strong>
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="vg-card anim d1" style="padding: 16px 24px; margin-bottom: 20px; background: rgba(239,83,80,0.15); border-color: rgba(239,83,80,0.4);">
+        <i class="fas fa-exclamation-circle" style="color: #ef5350;"></i>
+        <strong style="color: #ef5350;">
+          <% 
+            const errors = {
+              'missing': 'Thiếu thông tin',
+              'password_mismatch': 'Mật khẩu xác nhận không khớp',
+              'too_short': 'Mật khẩu phải dài ít nhất 6 ký tự',
+              'wrong_password': 'Mật khẩu cũ không đúng',
+              'env_admin': 'Tài khoản gốc không đổi mật khẩu ở đây (đổi qua ENV)',
+              'not_found': 'Không tìm thấy tài khoản',
+              'system': 'Lỗi hệ thống'
+            };
+          %>
+          <%= errors[error] || error %>
+        </strong>
+      </div>
+    <% } %>
+
+    <!-- Thông tin tài khoản -->
+    <div class="vg-card anim d2" style="padding: 24px; margin-bottom: 24px;">
+      <h2 class="vg-section-title" style="margin-bottom: 20px;">
+        <i class="fas fa-id-card"></i> Thông tin
+      </h2>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Email</div>
+          <div style="font-family: 'Caveat'; font-size: 1.4rem; color: var(--gold);"><%= user.email %></div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Role</div>
+          <div>
+            <% if (isSuper) { %>
+              <span style="padding: 4px 14px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border-radius: 12px; font-weight: 800; font-size: 0.8rem;">⭐ SUPER ADMIN</span>
+            <% } else { %>
+              <span style="padding: 4px 14px; background: rgba(79,195,247,0.2); color: #4fc3f7; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">ADMIN</span>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <% if (adminInfo) { %>
+        <div class="row mt-3">
+          <div class="col-md-4">
+            <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Quota đã dùng</div>
+            <div style="font-family: 'Caveat'; font-size: 1.6rem; color: var(--cyan);">
+              <%= adminInfo.quota_used %> / <%= adminInfo.quota %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Còn lại</div>
+            <div style="font-family: 'Caveat'; font-size: 1.6rem; color: #81c784;">
+              <%= Math.max(0, adminInfo.quota - adminInfo.quota_used) %> key
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Lần đăng nhập cuối</div>
+            <div style="font-size: 0.9rem;">
+              <%= adminInfo.last_login ? new Date(adminInfo.last_login).toLocaleString('vi-VN') : 'Chưa có' %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Đổi mật khẩu -->
+    <% if (adminInfo) { %>
+      <div class="vg-card anim d3" style="padding: 24px;">
+        <h2 class="vg-section-title" style="margin-bottom: 20px;">
+          <i class="fas fa-lock"></i> Đổi mật khẩu
+        </h2>
+
+        <form method="POST" action="/admin/profile/change-password">
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Mật khẩu hiện tại</label>
+              <input type="password" name="old_password" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Mật khẩu mới</label>
+              <input type="password" name="new_password" class="form-control" required minlength="6">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Xác nhận mật khẩu mới</label>
+              <input type="password" name="confirm_password" class="form-control" required minlength="6">
+            </div>
+          </div>
+          <button type="submit" class="vg-btn">
+            <i class="fas fa-save"></i> Lưu mật khẩu
+          </button>
+        </form>
+      </div>
+    <% } else { %>
+      <div class="vg-card anim d3" style="padding: 24px;">
+        <h2 class="vg-section-title" style="margin-bottom: 20px;">
+          <i class="fas fa-lock"></i> Đổi mật khẩu
+        </h2>
+        <p style="color: var(--text-muted);">
+          Bạn đang dùng tài khoản gốc (SUPER ADMIN từ biến môi trường).
+          Đổi mật khẩu bằng cách vào <b style="color: var(--gold);">Vercel → Settings → Environment Variables → ADMIN_PASSWORD_HASH</b>.
+        </p>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+<%- include('../partials/scripts') %>

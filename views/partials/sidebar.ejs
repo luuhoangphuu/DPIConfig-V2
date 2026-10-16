@@ -25,8 +25,8 @@
         <i class="fas fa-key"></i> <span>Quản lý Key</span>
       </a>
     </li>
-    
-    <% if (user && (user.role === 'super' || user.is_super === true)) { %>
+
+    <% const isSuper = user && (user.role === 'super' || user.is_super === true); if (isSuper) { %>
       <li>
         <a href="/admin/admins" class="nav-link <%= currentPage == 'admins' ? 'active' : '' %>">
           <i class="fas fa-user-shield"></i> <span>Quản lý Admin</span>
@@ -48,6 +48,12 @@
         </a>
       </li>
     <% } %>
+
+    <li>
+      <a href="/admin/profile" class="nav-link <%= currentPage == 'profile' ? 'active' : '' %>">
+        <i class="fas fa-user-cog"></i> <span>Tài khoản</span>
+      </a>
+    </li>
   </ul>
 
   <div class="vg-footer">
@@ -56,7 +62,7 @@
       <i class="fas fa-user-circle"></i>
       <span><%= user.email.charAt(0) %>***@gmail.com</span>
     </div>
-    
+
     <% if (user && (user.role === 'super' || user.is_super === true)) { %>
       <div style="display: inline-block; padding: 3px 12px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border-radius: 12px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px;">
         ⭐ SUPER ADMIN
@@ -66,7 +72,7 @@
         ADMIN
       </div>
     <% } %>
-    
+
     <a href="/admin/logout" class="vg-btn-logout">
       <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
     </a>

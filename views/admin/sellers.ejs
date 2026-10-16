@@ -37,6 +37,7 @@
               <td style="text-align:right;">
                 <div class="d-flex gap-1 justify-content-end">
                   <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#quotaModal<%= s.id %>" title="Thêm quota"><i class="fas fa-plus-circle"></i></button>
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#passwordModal<%= s.id %>" title="Reset mật khẩu"><i class="fas fa-key"></i></button>
                   <form method="POST" action="/admin/sellers/reset-quota/<%= s.id %>" onsubmit="return confirm('Reset quota?')" style="display:inline;margin:0;"><button class="vg-btn-icon warn" title="Reset"><i class="fas fa-redo"></i></button></form>
                   <form method="POST" action="/admin/sellers/delete/<%= s.id %>" onsubmit="return confirm('Xóa seller?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button></form>
                 </div>
@@ -87,6 +88,20 @@
         <label class="form-label">Số thêm</label><input type="number" name="amount" class="form-control" value="10" min="1" required>
       </div>
       <div class="modal-footer"><button type="submit" class="vg-btn">Thêm</button></div>
+    </form>
+  </div></div>
+</div>
+
+<div class="modal fade" id="passwordModal<%= s.id %>" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content vg-modal">
+    <div class="modal-header"><h5 class="modal-title"><i class="fas fa-key"></i> Reset mật khẩu</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form method="POST" action="/admin/sellers/reset-password/<%= s.id %>">
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Seller: <strong style="color: var(--gold);"><%= s.email %></strong></p>
+        <label class="form-label">Mật khẩu mới</label>
+        <input type="text" name="new_password" class="form-control" required minlength="6">
+      </div>
+      <div class="modal-footer"><button type="submit" class="vg-btn">Reset</button></div>
     </form>
   </div></div>
 </div>
