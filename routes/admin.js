@@ -378,8 +378,61 @@ router.get('/sellers', requireSuperAdmin, async (req, res) => {
 
 router.post('/sellers/create', requireSuperAdmin, async (req, res) => {
   try {
-    const { email, password, name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default } = req.body;
+    // 🔒 TRIM tất cả input để tránh khoảng trắng thừa
+    const email = (req.body.email || '').trim().toLowerCase();
+    const password = (req.body.password || '').trim();
+    const name = (req.body.name || '').trim();
+    const phone = (req.body.phone || '').trim();
+    const { quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default } = req.body;
+    
+    // 🔍 LOG để debug
+    console.log('🎬 CREATE SELLER:', { 
+      email, 
+      password_len: password.length, 
+      name,
+      has_leading_space: req.body.password !== password  // true nếu có space bị cắt
+    });
+    
+    // ✅ VALIDATE
+    if (!email) return res.redirect('/admin/sellers?error=' + encodeURIComponent('Thiếu email'));
+    if (!password || password.length < 6) {
+      return res.redirect('/admin/sellers?error=' + encodeURIComponent('Mật khẩu phải >= 6 ký tự'));
+    }
+    
+    // Check trùng
     const dup = await Seller.findOne({ where: { email } });
+    if (dup) {
+      return res.redirect('/admin/sellers?error=' + encodeURIComponent('Email đã tồn tại: ' + email));
+    }
+    
+    // Tạo seller
+    const hash = bcrypt.hashSync(password, 10);
+    const seller = await Seller.create({
+      email, 
+      password_hash: hash,
+      name: name || 'Seller', 
+      phone: phone || null,
+      quota: parseInt(quota) || 0, 
+      quota_used: 0,
+      can_choose_tier: can_choose_tier === 'on',
+      can_choose_duration: can_choose_duration === 'on',
+      default_tier: default_tier || 'Normal',
+      max_devices_default: parseInt(max_devices_default) || 1,
+      is_active: true, 
+      created_by: req.admin.email
+    });
+    
+    // 🧪 VERIFY ngay sau khi tạo
+    const verify = bcrypt.compareSync(password, seller.password_hash);
+    console.log('🧪 Verify login:', verify ? '✅ PASS' : '❌ FAIL');
+    console.log('✅ Seller created ID:', seller.id);
+    
+    res.redirect('/admin/sellers?success=created');
+  } catch (err) {
+    console.error('❌ CREATE SELLER ERROR:', err);
+    res.redirect('/admin/sellers?error=' + encodeURIComponent(err.message));
+  }
+});
     if (dup) return res.redirect('/admin/sellers?error=email_exists');
     await Seller.create({
       email, password_hash: bcrypt.hashSync(password, 10),

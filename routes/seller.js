@@ -15,7 +15,9 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
+  const password = (req.body.password || '').trim();
+  console.log('🔐 SELLER LOGIN:', { email, password_len: password.length });
   try {
     const seller = await Seller.findOne({ where: { email, is_active: true } });
     if (!seller || !bcrypt.compareSync(password, seller.password_hash)) {

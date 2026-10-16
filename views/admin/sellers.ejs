@@ -59,11 +59,11 @@
     <form method="POST" action="/admin/sellers/create">
       <div class="modal-body">
         <div class="row">
-          <div class="col-md-6 mb-3"><label class="form-label">Tên</label><input type="text" name="name" class="form-control" required></div>
+          <div class="col-md-6 mb-3"><label class="form-label">Tên</label><input type="text" name="name" class="form-control" required autocomplete="off"></div>
           <div class="col-md-6 mb-3"><label class="form-label">SĐT/Zalo</label><input type="text" name="phone" class="form-control"></div>
         </div>
-        <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required></div>
-        <div class="mb-3"><label class="form-label">Mật khẩu</label><input type="text" name="password" class="form-control" required minlength="6"></div>
+        <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required autocomplete="off"></div>
+        <div class="mb-3"><label class="form-label">Mật khẩu</label><input type="password" name="password" class="form-control" required minlength="6" autocomplete="new-password"></div>
         <div class="row">
           <div class="col-md-6 mb-3"><label class="form-label">Quota</label><input type="number" name="quota" class="form-control" value="10" min="0"></div>
           <div class="col-md-6 mb-3"><label class="form-label">Số TB mặc định</label><input type="number" name="max_devices_default" class="form-control" value="1" min="1"></div>
@@ -99,7 +99,7 @@
       <div class="modal-body">
         <p style="color: var(--text-muted); font-size: 0.9rem;">Seller: <strong style="color: var(--gold);"><%= s.email %></strong></p>
         <label class="form-label">Mật khẩu mới</label>
-        <input type="text" name="new_password" class="form-control" required minlength="6">
+        <input type="password" name="new_password" class="form-control" required minlength="6" autocomplete="new-password">
       </div>
       <div class="modal-footer"><button type="submit" class="vg-btn">Reset</button></div>
     </form>
