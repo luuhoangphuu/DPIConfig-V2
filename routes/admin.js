@@ -163,8 +163,6 @@ router.get('/dashboard', async (req, res) => {
     `);
   }
 });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi máy chủ'); }
-});
 
 // ============ KEYS ============
 router.get('/keys', async (req, res) => {
