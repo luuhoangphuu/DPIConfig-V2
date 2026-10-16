@@ -132,18 +132,37 @@ router.get('/dashboard', async (req, res) => {
     if (!isSuper && req.admin.id) keyWhere.admin_id = req.admin.id;
     const where = { createdAt: { [Op.gte]: oneDayAgo } };
     if (!showAll) where.action = { [Op.ne]: 'check' };
+    
     const totalKeys = await Key.count({ where: keyWhere });
     const activeKeys = await Key.count({ where: { ...keyWhere, is_active: true } });
     const expiredKeys = await Key.count({ where: { ...keyWhere, expires_at: { [Op.lt]: new Date() } } });
     const vipKeys = await Key.count({ where: { ...keyWhere, tier: 'VIP' } });
     const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
     const recentLogs = await Log.findAll({ where, limit: 20, order: [['createdAt', 'DESC']], include: Key });
+    
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+    
     res.render('admin/dashboard', {
       user: req.admin, isSuper, adminInfo,
       totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs, showAll
     });
+  } catch (err) {
+    console.error('=== DASHBOARD ERROR ===');
+    console.error('Message:', err.message);
+    console.error('Stack:', err.stack);
+    res.status(500).send(`
+      <html><head><title>Dashboard Error</title>
+      <style>body{font-family:monospace;padding:30px;background:#0a1e3f;color:#fff}h1{color:#ef5350}pre{background:#050d1f;padding:20px;border-radius:8px;overflow:auto;color:#81d4fa;max-height:60vh}</style>
+      </head><body>
+      <h1>⚠️ Lỗi tải Dashboard</h1>
+      <p><strong style="color:#ef5350">${err.message}</strong></p>
+      <pre>${err.stack}</pre>
+      <p><a href="/admin/force-logout" style="color:#4fc3f7">Force logout</a> | <a href="/admin/login" style="color:#4fc3f7">Login lại</a></p>
+      </body></html>
+    `);
+  }
+});
   } catch (err) { console.error(err); res.status(500).send('Lỗi máy chủ'); }
 });
 

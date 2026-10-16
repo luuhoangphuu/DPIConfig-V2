@@ -47,4 +47,35 @@ app.use(async (req, res, next) => {
   next();
 });
 
+
+// ============ ERROR HANDLER ============
+app.use((err, req, res, next) => {
+  console.error('=== ERROR ===');
+  console.error('Path:', req.path);
+  console.error('Message:', err.message);
+  console.error('Stack:', err.stack);
+  
+  res.status(500).send(`
+    <html>
+      <head>
+        <title>Lỗi - Chi tiết</title>
+        <style>
+          body { font-family: monospace; padding: 30px; background: #0a1e3f; color: #fff; }
+          h1 { color: #ef5350; }
+          pre { background: #050d1f; padding: 20px; border-radius: 8px; overflow: auto; color: #81d4fa; }
+          .path { color: #ffd700; }
+          a { color: #4fc3f7; }
+        </style>
+      </head>
+      <body>
+        <h1>⚠️ Lỗi máy chủ</h1>
+        <p>Path: <span class="path">${req.path}</span></p>
+        <p>Message: <strong style="color: #ef5350;">${err.message}</strong></p>
+        <pre>${err.stack || 'No stack trace'}</pre>
+        <p><a href="/admin/dashboard">← Về Dashboard</a></p>
+      </body>
+    </html>
+  `);
+});
+
 module.exports = app;
