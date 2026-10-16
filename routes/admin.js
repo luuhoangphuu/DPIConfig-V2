@@ -304,4 +304,219 @@ router.get('/keys/devices/:id', async (req, res) => {
   try { const k = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] }); if (!k) return res.json({ success: false }); res.json({ success: true, devices: k.devices || [] }); } catch (err) { res.status(500).json({ success: false }); }
 });
 
+
+// ============================================
+// QUẢN TRỊ VIÊN (chỉ Super Admin)
+// ============================================
+router.get('/admins', requireSuperAdmin, async (req, res) => {
+  try {
+    const admins = await Admin.findAll({ order: [['createdAt', 'DESC']] });
+    res.render('admin/admins', {
+      user: req.admin, isSuper: true, admins, currentPage: 'admins',
+      success: req.query.success || null, error: req.query.error || null
+    });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
+
+router.post('/admins/create', requireSuperAdmin, async (req, res) => {
+  try {
+    const { email, password, name, role, quota, can_choose_tier, can_choose_duration, max_devices_default } = req.body;
+    if (!email || !password) return res.redirect('/admin/admins?error=missing');
+    const dup = await Admin.findOne({ where: { email } });
+    if (dup) return res.redirect('/admin/admins?error=email_exists');
+    await Admin.create({
+      email, password_hash: bcrypt.hashSync(password, 10),
+      name: name || 'Admin', role: role || 'admin',
+      quota: parseInt(quota) || 0, quota_used: 0,
+      can_choose_tier: can_choose_tier === 'on',
+      can_choose_duration: can_choose_duration === 'on',
+      max_devices_default: parseInt(max_devices_default) || 1,
+      is_active: true, created_by: req.admin.email
+    });
+    await Log.create({ action: 'admin_created', details: `${req.admin.email} tạo admin ${email}`, ip_address: req.ip });
+    res.redirect('/admin/admins?success=created');
+  } catch (err) { res.redirect('/admin/admins?error=' + encodeURIComponent(err.message)); }
+});
+
+router.post('/admins/update/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const a = await Admin.findByPk(req.params.id);
+    if (!a) return res.redirect('/admin/admins?error=not_found');
+    const { name, role, quota, can_choose_tier, can_choose_duration, max_devices_default, is_active, new_password } = req.body;
+    a.name = name; a.role = role;
+    a.quota = parseInt(quota) || 0;
+    a.can_choose_tier = can_choose_tier === 'on';
+    a.can_choose_duration = can_choose_duration === 'on';
+    a.max_devices_default = parseInt(max_devices_default) || 1;
+    a.is_active = is_active === 'on';
+    if (new_password) a.password_hash = bcrypt.hashSync(new_password, 10);
+    await a.save();
+    res.redirect('/admin/admins?success=updated');
+  } catch (err) { res.redirect('/admin/admins?error=1'); }
+});
+
+router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const a = await Admin.findByPk(req.params.id);
+    if (a && a.email !== process.env.ADMIN_EMAIL) await a.destroy();
+    res.redirect('/admin/admins?success=deleted');
+  } catch (err) { res.redirect('/admin/admins?error=1'); }
+});
+
+// ============================================
+// NGƯỜI BÁN - SELLERS (chỉ Super Admin)
+// ============================================
+router.get('/sellers', requireSuperAdmin, async (req, res) => {
+  try {
+    const sellers = await Seller.findAll({ order: [['createdAt', 'DESC']] });
+    res.render('admin/sellers', {
+      user: req.admin, isSuper: true, sellers, currentPage: 'sellers',
+      success: req.query.success || null, error: req.query.error || null
+    });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
+
+router.post('/sellers/create', requireSuperAdmin, async (req, res) => {
+  try {
+    const { email, password, name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default } = req.body;
+    const dup = await Seller.findOne({ where: { email } });
+    if (dup) return res.redirect('/admin/sellers?error=email_exists');
+    await Seller.create({
+      email, password_hash: bcrypt.hashSync(password, 10),
+      name: name || 'Seller', phone,
+      quota: parseInt(quota) || 0, quota_used: 0,
+      can_choose_tier: can_choose_tier === 'on',
+      can_choose_duration: can_choose_duration === 'on',
+      default_tier: default_tier || 'Normal',
+      max_devices_default: parseInt(max_devices_default) || 1,
+      is_active: true, created_by: req.admin.email
+    });
+    res.redirect('/admin/sellers?success=created');
+  } catch (err) { res.redirect('/admin/sellers?error=1'); }
+});
+
+router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const s = await Seller.findByPk(req.params.id);
+    if (!s) return res.redirect('/admin/sellers');
+    const { name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default, is_active, new_password } = req.body;
+    s.name = name; s.phone = phone;
+    s.quota = parseInt(quota) || 0;
+    s.can_choose_tier = can_choose_tier === 'on';
+    s.can_choose_duration = can_choose_duration === 'on';
+    s.default_tier = default_tier; s.max_devices_default = parseInt(max_devices_default) || 1;
+    s.is_active = is_active === 'on';
+    if (new_password) s.password_hash = bcrypt.hashSync(new_password, 10);
+    await s.save();
+    res.redirect('/admin/sellers?success=updated');
+  } catch (err) { res.redirect('/admin/sellers?error=1'); }
+});
+
+router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
+  try { await Seller.destroy({ where: { id: req.params.id } }); res.redirect('/admin/sellers?success=deleted'); }
+  catch (err) { res.redirect('/admin/sellers?error=1'); }
+});
+
+// ============================================
+// PHIÊN BẢN APP - VERSIONS (chỉ Super Admin)
+// ============================================
+router.get('/versions', requireSuperAdmin, async (req, res) => {
+  try {
+    const versions = await AppVersion.findAll({ order: [['version_code', 'DESC']] });
+    res.render('admin/versions', {
+      user: req.admin, isSuper: true, versions, currentPage: 'versions',
+      success: req.query.success || null, error: req.query.error || null
+    });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
+
+router.post('/versions/create', requireSuperAdmin, async (req, res) => {
+  try {
+    const { version_code, version_name, download_url, changelog, is_required, min_supported_version, release_channel } = req.body;
+    await AppVersion.create({
+      version_code: parseInt(version_code), version_name, download_url, changelog,
+      is_required: is_required === 'on',
+      min_supported_version: parseInt(min_supported_version) || 0,
+      release_channel: release_channel || 'stable',
+      is_active: true, update_enabled: true
+    });
+    res.redirect('/admin/versions?success=created');
+  } catch (err) { res.redirect('/admin/versions?error=1'); }
+});
+
+router.post('/versions/delete/:id', requireSuperAdmin, async (req, res) => {
+  try { await AppVersion.destroy({ where: { id: req.params.id } }); res.redirect('/admin/versions?success=deleted'); }
+  catch (err) { res.redirect('/admin/versions?error=1'); }
+});
+
+// ============================================
+// THÔNG BÁO - ANNOUNCEMENTS (API cho app)
+// ============================================
+router.get('/announcements', requireSuperAdmin, async (req, res) => {
+  try {
+    const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
+    res.render('admin/announcements', {
+      user: req.admin, isSuper: true, announcements, currentPage: 'announcements',
+      success: req.query.success || null, error: req.query.error || null
+    });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
+
+router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
+  try {
+    const { title, message, type, priority, is_dismissible } = req.body;
+    await Announcement.create({
+      title, message, type: type || 'info',
+      priority: parseInt(priority) || 5,
+      is_dismissible: is_dismissible === 'on',
+      is_enabled: true, created_by: req.admin.email
+    });
+    await Log.create({ action: 'announcement_created', details: `${req.admin.email} tạo thông báo: ${title}`, ip_address: req.ip });
+    res.redirect('/admin/announcements?success=created');
+  } catch (err) { res.redirect('/admin/announcements?error=1'); }
+});
+
+router.post('/announcements/toggle/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const a = await Announcement.findByPk(req.params.id);
+    if (a) { a.is_enabled = !a.is_enabled; await a.save(); }
+    res.redirect('/admin/announcements?success=toggled');
+  } catch (err) { res.redirect('/admin/announcements?error=1'); }
+});
+
+router.post('/announcements/delete/:id', requireSuperAdmin, async (req, res) => {
+  try { await Announcement.destroy({ where: { id: req.params.id } }); res.redirect('/admin/announcements?success=deleted'); }
+  catch (err) { res.redirect('/admin/announcements?error=1'); }
+});
+
+// ============================================
+// TÀI KHOẢN - PROFILE (mọi admin)
+// ============================================
+router.get('/profile', async (req, res) => {
+  try {
+    const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
+    let adminInfo = null;
+    if (req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+    res.render('admin/profile', {
+      user: req.admin, isSuper, adminInfo, currentPage: 'profile',
+      success: req.query.success || null, error: req.query.error || null
+    });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
+
+router.post('/profile/change-password', async (req, res) => {
+  try {
+    const { old_password, new_password, confirm_password } = req.body;
+    if (!old_password || !new_password || !confirm_password) return res.redirect('/admin/profile?error=missing');
+    if (new_password !== confirm_password) return res.redirect('/admin/profile?error=password_mismatch');
+    if (new_password.length < 6) return res.redirect('/admin/profile?error=too_short');
+    const admin = await Admin.findByPk(req.admin.id);
+    if (!admin) return res.redirect('/admin/profile?error=not_found');
+    if (!bcrypt.compareSync(old_password, admin.password_hash)) return res.redirect('/admin/profile?error=wrong_password');
+    admin.password_hash = bcrypt.hashSync(new_password, 10);
+    await admin.save();
+    res.redirect('/admin/profile?success=password_changed');
+  } catch (err) { res.redirect('/admin/profile?error=system'); }
+});
+
 module.exports = router;
