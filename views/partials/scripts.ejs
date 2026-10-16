@@ -46,6 +46,23 @@
   for (const [key, val] of Object.entries(messages)) {
     if (urlParams.get(key) === '1') Toast.fire(val);
   }
+
+  // Toggle hiệu ứng động
+  const effectToggle = document.getElementById('effectToggle');
+  if (effectToggle) {
+    const savedEffect = localStorage.getItem('effectOff') === 'true';
+    if (savedEffect) {
+      document.body.classList.add('effect-off');
+      effectToggle.querySelector('i').className = 'fas fa-play';
+    }
+    effectToggle.addEventListener('click', function() {
+      const isOff = document.body.classList.toggle('effect-off');
+      this.querySelector('i').className = isOff ? 'fas fa-play' : 'fas fa-pause';
+      localStorage.setItem('effectOff', isOff);
+      // Reload để WebGL khởi động lại đúng
+      if (!isOff) location.reload();
+    });
+  }
 </script>
 </body>
 </html>
