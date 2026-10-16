@@ -18,6 +18,13 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/api', apiRoutes);
+// Inject env vars cho tất cả EJS views
+app.use((req, res, next) => {
+  res.locals.envAdminEmail = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
+  res.locals.envJwtSecret = process.env.JWT_SECRET || '';
+  next();
+});
+
 app.use('/admin', adminRoutes);
 app.use('/seller', sellerRoutes);
 app.get('/', (req, res) => res.redirect('/admin/dashboard'));
