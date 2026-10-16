@@ -4,18 +4,11 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
-const ExpressBrute = require('express-brute');
 const { Key, Log, KeyDevice, AppVersion, Announcement, Admin, Seller } = require('../models');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
-
-const store = new ExpressBrute.MemoryStore();
-const bruteforce = new ExpressBrute(store, {
-  freeRetries: 5, minWait: 15 * 60 * 1000, maxWait: 15 * 60 * 1000,
-  failCallback: (req, res) => res.status(429).send('Quá nhiều lần thử.')
-});
 
 function requireAdmin(req, res, next) {
   const token = req.cookies.admin_token;
@@ -43,96 +36,118 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-// ==================== FORCE LOGIN (TEST) ====================
-router.get('/force-login', async (req, res) => {
+// ============================================
+// RESET ADMIN - TẠO / ĐỔI MẬT KHẨU NGAY
+// ============================================
+router.get('/reset-admin', async (req, res) => {
   const { email, password } = req.query;
   
+  // Không có tham số → hiện form
   if (!email || !password) {
     return res.send(`
-      <html><head><title>Force Login</title>
+      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reset Admin</title>
       <style>
-        body{font-family:monospace;padding:40px;background:#0a1e3f;color:#fff;max-width:700px;margin:auto}
-        input{display:block;padding:12px;margin:10px 0;width:100%;background:#050d1f;border:1px solid #ffd700;color:#fff;border-radius:8px;font-size:16px}
-        button{padding:14px 24px;background:#ffd700;color:#0a1e3f;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:16px}
-        .info{background:rgba(255,215,0,0.1);padding:20px;border-radius:12px;margin-bottom:20px}
-        code{color:#4fc3f7;background:#050d1f;padding:2px 8px;border-radius:4px}
-        .result{background:#050d1f;padding:20px;border-radius:12px;margin-top:20px;white-space:pre-wrap;font-size:14px}
+        *{box-sizing:border-box}
+        body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;
+          background:url('/images/starry-night.jpg') center/cover fixed;
+          display:flex;align-items:center;justify-content:center;padding:20px;color:#fff}
+        body::before{content:'';position:fixed;inset:0;background:rgba(5,13,31,0.75);z-index:-1}
+        .card{max-width:480px;width:100%;background:rgba(10,30,63,0.9);
+          backdrop-filter:blur(30px);border:2px solid rgba(255,215,0,0.4);
+          border-radius:24px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+        h1{font-size:1.8rem;color:#ffd700;text-align:center;margin:0 0 8px}
+        p.sub{text-align:center;color:#81d4fa;margin:0 0 24px;font-size:0.9rem}
+        label{color:#ffd700;font-weight:700;font-size:0.8rem;letter-spacing:1px;
+          text-transform:uppercase;display:block;margin-bottom:8px}
+        input{width:100%;padding:14px;margin-bottom:16px;background:rgba(5,13,31,0.7);
+          border:1.5px solid rgba(79,195,247,0.3);color:#fff;border-radius:12px;font-size:1rem}
+        input:focus{outline:none;border-color:#ffd700}
+        button{width:100%;padding:16px;background:linear-gradient(135deg,#ffd700,#f59e0b);
+          color:#0a1e3f;border:none;border-radius:12px;font-weight:800;font-size:1.1rem;
+          cursor:pointer}
+        .info{background:rgba(255,215,0,0.1);border-left:3px solid #ffd700;
+          padding:14px;border-radius:8px;font-size:0.85rem;color:#8ba3c7;margin-top:20px}
       </style></head><body>
-      <h1 style="color:#ffd700">🔐 Force Login Test</h1>
-      <div class="info">
-        <p>ENV ADMIN_EMAIL: <code>${ADMIN_EMAIL}</code></p>
-        <p>ENV HASH: <code>${ADMIN_PASSWORD_HASH ? ADMIN_PASSWORD_HASH.substring(0, 15) + '...' + ADMIN_PASSWORD_HASH.substring(ADMIN_PASSWORD_HASH.length - 5) : 'KHÔNG CÓ'}</code></p>
-        <p>Hash length: <code>${ADMIN_PASSWORD_HASH.length} ký tự</code></p>
-      </div>
-      <form action="/admin/force-login" method="GET">
-        <input type="email" name="email" placeholder="Email" value="${ADMIN_EMAIL}" required>
-        <input type="text" name="password" placeholder="Mật khẩu" required>
-        <button type="submit">🚀 Force Login</button>
-      </form>
-      </body></html>
+      <div class="card">
+        <h1>🔑 Reset Admin</h1>
+        <p class="sub">Tạo hoặc đổi mật khẩu tài khoản admin</p>
+        <form method="GET" action="/admin/reset-admin">
+          <label>Email admin</label>
+          <input type="email" name="email" value="${ADMIN_EMAIL}" required>
+          <label>Mật khẩu mới</label>
+          <input type="text" name="password" value="duy123456" required minlength="6">
+          <button type="submit">✅ Tạo / Đổi mật khẩu</button>
+        </form>
+        <div class="info">
+          Bấm nút → tài khoản được tạo (hoặc đổi mật khẩu).<br>
+          Sau đó vào <b>/admin/login</b> đăng nhập bằng email + mật khẩu vừa nhập.
+        </div>
+      </div></body></html>
     `);
   }
   
-  // Kiểm tra
-  const emailMatch = email === ADMIN_EMAIL;
-  let passMatch = false;
-  let bcryptErr = null;
-  
+  // Có đủ email + password → tạo/update admin
   try {
-    passMatch = bcrypt.compareSync(password, ADMIN_PASSWORD_HASH);
-  } catch (e) {
-    bcryptErr = e.message;
-  }
-  
-  // Nếu đúng cả 2 → set cookie và login luôn
-  if (emailMatch && passMatch) {
-    const token = jwt.sign({
-      email, role: 'super', name: 'Owner', is_super: true
-    }, JWT_SECRET, { expiresIn: '7d' });
+    const hash = bcrypt.hashSync(password, 10);
+    const existing = await Admin.findOne({ where: { email } });
     
-    res.cookie('admin_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    if (existing) {
+      existing.password_hash = hash;
+      existing.role = 'super';
+      existing.is_active = true;
+      await existing.save();
+    } else {
+      await Admin.create({
+        email,
+        password_hash: hash,
+        name: 'Super Admin',
+        role: 'super',
+        quota: 999999,
+        quota_used: 0,
+        can_choose_tier: true,
+        can_choose_duration: true,
+        max_devices_default: 999,
+        is_active: true,
+        created_by: 'reset-admin'
+      });
+    }
     
-    return res.redirect('/admin/dashboard');
+    res.send(`
+      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Thành công</title>
+      <style>
+        body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;
+          background:url('/images/starry-night.jpg') center/cover fixed;
+          display:flex;align-items:center;justify-content:center;padding:20px;color:#fff}
+        body::before{content:'';position:fixed;inset:0;background:rgba(5,13,31,0.75);z-index:-1}
+        .card{max-width:480px;width:100%;background:rgba(10,30,63,0.9);
+          backdrop-filter:blur(30px);border:2px solid #81c784;
+          border-radius:24px;padding:40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+        h1{color:#81c784;font-size:1.8rem;margin:0 0 20px}
+        .creds{background:#050d1f;padding:20px;border-radius:12px;
+          margin:20px 0;text-align:left;font-family:monospace;color:#4fc3f7;font-size:0.95rem;line-height:1.8}
+        .creds b{color:#ffd700}
+        a{display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#ffd700,#f59e0b);
+          color:#0a1e3f;text-decoration:none;border-radius:12px;font-weight:800}
+      </style></head><body>
+      <div class="card">
+        <h1>🎉 Thành công!</h1>
+        <div class="creds">
+          📧 Email: <b>${email}</b><br>
+          🔑 Password: <b>${password}</b><br>
+          👑 Role: <b>SUPER ADMIN</b>
+        </div>
+        <a href="/admin/login">→ Đăng nhập ngay</a>
+      </div></body></html>
+    `);
+  } catch (err) {
+    res.status(500).send('Lỗi: ' + err.message);
   }
-  
-  // Nếu sai → hiện kết quả debug
-  res.send(`
-    <html><head><title>Force Login Result</title>
-    <style>
-      body{font-family:monospace;padding:40px;background:#0a1e3f;color:#fff;max-width:700px;margin:auto}
-      .result{background:#050d1f;padding:20px;border-radius:12px;margin-top:20px;white-space:pre-wrap;font-size:14px;color:#4fc3f7}
-      .bad{color:#ef5350}
-      .good{color:#81c784}
-      a{color:#ffd700;display:inline-block;margin-top:20px;padding:10px 20px;background:#ffd700;color:#0a1e3f;text-decoration:none;border-radius:8px;font-weight:bold}
-    </style></head><body>
-    <h1 class="bad">❌ Login thất bại</h1>
-    <div class="result">Email match: <span class="${emailMatch ? 'good' : 'bad'}">${emailMatch}</span>
-Password match: <span class="${passMatch ? 'good' : 'bad'}">${passMatch}</span>
-${bcryptErr ? 'Bcrypt error: ' + bcryptErr : ''}
-
-=== CHI TIẾT ===
-Bạn nhập email: ${email}
-ENV email: ${ADMIN_EMAIL}
-${emailMatch ? '✅ Email khớp' : '❌ Email không khớp'}
-
-Bạn nhập password: ${password}
-Hash trong ENV: ${ADMIN_PASSWORD_HASH.substring(0, 20)}...${ADMIN_PASSWORD_HASH.substring(ADMIN_PASSWORD_HASH.length - 10)}
-${passMatch ? '✅ Mật khẩu khớp hash' : '❌ Mật khẩu KHÔNG khớp hash trong ENV'}
-</div>
-    <a href="/admin/force-login">← Thử lại</a>
-    </body></html>
-  `);
 });
 
-// ==================== LOGIN THƯỜNG ====================
+// ==================== LOGIN ====================
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
-router.post('/login', bruteforce.prevent, async (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const dbAdmin = await Admin.findOne({ where: { email, is_active: true } });
@@ -171,19 +186,7 @@ router.get('/logout', (req, res) => {
 
 router.get('/force-logout', (req, res) => {
   res.clearCookie('admin_token');
-  res.redirect('/admin/force-login');
-});
-
-router.get('/whoami', (req, res) => {
-  const token = req.cookies.admin_token;
-  if (!token) return res.json({ logged_in: false });
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({
-      logged_in: true, email: decoded.email, role: decoded.role,
-      is_super: decoded.is_super, id: decoded.id
-    });
-  } catch (e) { res.json({ logged_in: false }); }
+  res.redirect('/admin/login');
 });
 
 router.use(requireAdmin);
@@ -211,7 +214,7 @@ router.get('/dashboard', async (req, res) => {
       totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs, showAll
     });
   } catch (err) {
-    console.error('Dashboard error:', err);
+    console.error(err);
     res.status(500).send('Lỗi: ' + err.message);
   }
 });
@@ -256,11 +259,10 @@ router.post('/keys/create', async (req, res) => {
       if (maxDev > 999) maxDev = 999;
     }
     let expires_at;
-    if (duration === 'forever') {
-      expires_at = new Date('2099-12-31T23:59:59');
-    } else {
+    if (duration === 'forever') expires_at = new Date('2099-12-31T23:59:59');
+    else {
       const dur = parseFloat(duration) || 30;
-      let days = dur <= 0 ? 30 : dur;
+      const days = dur <= 0 ? 30 : dur;
       const hours = Math.round(days * 24);
       expires_at = new Date();
       expires_at.setHours(expires_at.getHours() + hours);
@@ -275,353 +277,35 @@ router.post('/keys/create', async (req, res) => {
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
-  try {
-    const key = await Key.findByPk(req.params.id);
-    if (key) { key.is_active = !key.is_active; await key.save(); }
-    res.redirect('/admin/keys?toggled=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) { k.is_active = !k.is_active; await k.save(); } res.redirect('/admin/keys?toggled=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.post('/keys/kick-all/:id', async (req, res) => {
-  try {
-    const key = await Key.findByPk(req.params.id);
-    if (key) { await KeyDevice.update({ is_active: false }, { where: { key_id: key.id } }); }
-    res.redirect('/admin/keys?kicked=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) await KeyDevice.update({ is_active: false }, { where: { key_id: k.id } }); res.redirect('/admin/keys?kicked=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
-  try {
-    const key = await Key.findByPk(req.params.id);
-    if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); }
-    res.redirect('/admin/keys?deleted_all_devices=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) await KeyDevice.destroy({ where: { key_id: k.id } }); res.redirect('/admin/keys?deleted_all_devices=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
-  try {
-    const device = await KeyDevice.findByPk(req.params.deviceId);
-    if (device) { device.is_active = !device.is_active; await device.save(); }
-    res.redirect('/admin/keys?device_toggled=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const d = await KeyDevice.findByPk(req.params.deviceId); if (d) { d.is_active = !d.is_active; await d.save(); } res.redirect('/admin/keys?device_toggled=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
-  try {
-    const device = await KeyDevice.findByPk(req.params.deviceId);
-    if (device) await device.destroy();
-    res.redirect('/admin/keys?device_deleted=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const d = await KeyDevice.findByPk(req.params.deviceId); if (d) await d.destroy(); res.redirect('/admin/keys?device_deleted=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.post('/keys/extend/:id', async (req, res) => {
-  try {
-    const { new_expiry } = req.body;
-    const key = await Key.findByPk(req.params.id);
-    if (key && new_expiry) { key.expires_at = new Date(new_expiry); await key.save(); }
-    res.redirect('/admin/keys?extended=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const { new_expiry } = req.body; const k = await Key.findByPk(req.params.id); if (k && new_expiry) { k.expires_at = new Date(new_expiry); await k.save(); } res.redirect('/admin/keys?extended=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.post('/keys/delete/:id', async (req, res) => {
-  try {
-    const key = await Key.findByPk(req.params.id);
-    if (key) { await KeyDevice.destroy({ where: { key_id: key.id } }); await key.destroy(); }
-    res.redirect('/admin/keys?deleted=1');
-  } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) { await KeyDevice.destroy({ where: { key_id: k.id } }); await k.destroy(); } res.redirect('/admin/keys?deleted=1'); } catch (err) { res.redirect('/admin/keys'); }
 });
 
 router.get('/keys/devices/:id', async (req, res) => {
-  try {
-    const key = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] });
-    if (!key) return res.json({ success: false });
-    res.json({ success: true, devices: key.devices || [] });
-  } catch (err) { res.status(500).json({ success: false }); }
-});
-
-// ==================== ADMINS ====================
-router.get('/admins', requireSuperAdmin, async (req, res) => {
-  try {
-    const admins = await Admin.findAll({ order: [['createdAt', 'DESC']] });
-    const adminsWithStats = await Promise.all(admins.map(async (a) => {
-      const keyCount = await Key.count({ where: { admin_id: a.id } });
-      return { ...a.toJSON(), keyCount };
-    }));
-    res.render('admin/admins', { user: req.admin, admins: adminsWithStats, envAdminEmail: process.env.ADMIN_EMAIL });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi'); }
-});
-
-router.post('/admins/create', requireSuperAdmin, async (req, res) => {
-  try {
-    const { email, password, name, role, quota, can_choose_tier, can_choose_duration, max_devices_default, notes } = req.body;
-    if (!email || !password) return res.redirect('/admin/admins?error=missing');
-    const existing = await Admin.findOne({ where: { email } });
-    if (existing) return res.redirect('/admin/admins?error=email_exists');
-    const hash = bcrypt.hashSync(password, 10);
-    await Admin.create({
-      email, password_hash: hash, name: name || email,
-      role: role || 'admin', quota: parseInt(quota) || 0,
-      can_choose_tier: can_choose_tier === 'on',
-      can_choose_duration: can_choose_duration === 'on',
-      max_devices_default: parseInt(max_devices_default) || 1,
-      notes: notes || null, created_by: req.admin.email
-    });
-    res.redirect('/admin/admins?created=1');
-  } catch (err) { console.error(err); res.redirect('/admin/admins?error=create_failed'); }
-});
-
-router.post('/admins/toggle/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const target = await Admin.findByPk(req.params.id);
-    if (target && target.email !== req.admin.email) { target.is_active = !target.is_active; await target.save(); }
-    res.redirect('/admin/admins?toggled=1');
-  } catch (err) { res.redirect('/admin/admins'); }
-});
-
-router.post('/admins/add-quota/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { amount } = req.body;
-    const target = await Admin.findByPk(req.params.id);
-    if (target && amount) { target.quota = (target.quota || 0) + parseInt(amount); await target.save(); }
-    res.redirect('/admin/admins?quota_added=1');
-  } catch (err) { res.redirect('/admin/admins'); }
-});
-
-router.post('/admins/reset-quota/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const target = await Admin.findByPk(req.params.id);
-    if (target) { target.quota_used = 0; await target.save(); }
-    res.redirect('/admin/admins?quota_reset=1');
-  } catch (err) { res.redirect('/admin/admins'); }
-});
-
-router.post('/admins/change-role/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { role } = req.body;
-    const target = await Admin.findByPk(req.params.id);
-    if (target && ['super', 'admin'].includes(role) && target.email !== req.admin.email) { target.role = role; await target.save(); }
-    res.redirect('/admin/admins?role_changed=1');
-  } catch (err) { res.redirect('/admin/admins'); }
-});
-
-router.post('/admins/reset-password/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { new_password } = req.body;
-    if (!new_password || new_password.length < 6) return res.redirect('/admin/admins?error=short');
-    const target = await Admin.findByPk(req.params.id);
-    if (target) { target.password_hash = bcrypt.hashSync(new_password, 10); await target.save(); }
-    res.redirect('/admin/admins?password_reset=1');
-  } catch (err) { res.redirect('/admin/admins'); }
-});
-
-router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const target = await Admin.findByPk(req.params.id);
-    if (target && target.email !== req.admin.email) {
-      await Key.update({ admin_id: null }, { where: { admin_id: target.id } });
-      await target.destroy();
-    }
-    res.redirect('/admin/admins?deleted=1');
-  } catch (err) { res.redirect('/admin/admins'); }
-});
-
-// ==================== SELLERS ====================
-router.get('/sellers', requireSuperAdmin, async (req, res) => {
-  try {
-    const sellers = await Seller.findAll({ order: [['createdAt', 'DESC']] });
-    const sellerStats = await Promise.all(sellers.map(async (s) => {
-      const keyCount = await Key.count({ where: { seller_id: s.id } });
-      return { ...s.toJSON(), keyCount };
-    }));
-    res.render('admin/sellers', { user: req.admin, sellers: sellerStats });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi'); }
-});
-
-router.post('/sellers/create', requireSuperAdmin, async (req, res) => {
-  try {
-    const { email, password, name, phone, quota, can_choose_tier, can_choose_duration, max_devices_default, notes } = req.body;
-    if (!email || !password || !name) return res.redirect('/admin/sellers?error=missing');
-    const existing = await Seller.findOne({ where: { email } });
-    if (existing) return res.redirect('/admin/sellers?error=email_exists');
-    const hash = bcrypt.hashSync(password, 10);
-    await Seller.create({
-      email, password_hash: hash, name, phone: phone || null,
-      quota: parseInt(quota) || 0,
-      can_choose_tier: can_choose_tier === 'on',
-      can_choose_duration: can_choose_duration === 'on',
-      max_devices_default: parseInt(max_devices_default) || 1,
-      notes: notes || null, created_by: req.admin.email
-    });
-    res.redirect('/admin/sellers?created=1');
-  } catch (err) { console.error(err); res.redirect('/admin/sellers?error=create_failed'); }
-});
-
-router.post('/sellers/toggle/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const seller = await Seller.findByPk(req.params.id);
-    if (seller) { seller.is_active = !seller.is_active; await seller.save(); }
-    res.redirect('/admin/sellers?toggled=1');
-  } catch (err) { res.redirect('/admin/sellers'); }
-});
-
-router.post('/sellers/add-quota/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { amount } = req.body;
-    const seller = await Seller.findByPk(req.params.id);
-    if (seller && amount) { seller.quota = (seller.quota || 0) + parseInt(amount); await seller.save(); }
-    res.redirect('/admin/sellers?quota_added=1');
-  } catch (err) { res.redirect('/admin/sellers'); }
-});
-
-router.post('/sellers/reset-quota/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const seller = await Seller.findByPk(req.params.id);
-    if (seller) { seller.quota_used = 0; await seller.save(); }
-    res.redirect('/admin/sellers?quota_reset=1');
-  } catch (err) { res.redirect('/admin/sellers'); }
-});
-
-router.post('/sellers/reset-password/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const { new_password } = req.body;
-    if (!new_password || new_password.length < 6) return res.redirect('/admin/sellers?error=short');
-    const seller = await Seller.findByPk(req.params.id);
-    if (seller) { seller.password_hash = bcrypt.hashSync(new_password, 10); await seller.save(); }
-    res.redirect('/admin/sellers?password_reset=1');
-  } catch (err) { res.redirect('/admin/sellers'); }
-});
-
-router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const seller = await Seller.findByPk(req.params.id);
-    if (seller) {
-      await Key.update({ seller_id: null }, { where: { seller_id: seller.id } });
-      await seller.destroy();
-    }
-    res.redirect('/admin/sellers?deleted=1');
-  } catch (err) { res.redirect('/admin/sellers'); }
-});
-
-// ==================== VERSIONS ====================
-router.get('/versions', async (req, res) => {
-  try {
-    const versions = await AppVersion.findAll({ order: [['version_code', 'DESC']] });
-    res.render('admin/versions', { user: req.admin, versions });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi'); }
-});
-
-router.post('/versions/create', async (req, res) => {
-  try {
-    const { version_code, version_name, download_url, changelog, is_required } = req.body;
-    if (!version_code || !version_name || !download_url) return res.redirect('/admin/versions?error=missing');
-    await AppVersion.update({ is_active: false }, { where: {} });
-    await AppVersion.create({
-      version_code: parseInt(version_code), version_name, download_url,
-      changelog: changelog || '', is_required: is_required === 'on', is_active: true
-    });
-    res.redirect('/admin/versions?created=1');
-  } catch (err) { console.error(err); res.redirect('/admin/versions?error=create_failed'); }
-});
-
-router.post('/versions/activate/:id', async (req, res) => {
-  try {
-    await AppVersion.update({ is_active: false }, { where: {} });
-    const v = await AppVersion.findByPk(req.params.id);
-    if (v) { v.is_active = true; await v.save(); }
-    res.redirect('/admin/versions?activated=1');
-  } catch (err) { res.redirect('/admin/versions'); }
-});
-
-router.post('/versions/toggle-required/:id', async (req, res) => {
-  try {
-    const v = await AppVersion.findByPk(req.params.id);
-    if (v) { v.is_required = !v.is_required; await v.save(); }
-    res.redirect('/admin/versions?toggled=1');
-  } catch (err) { res.redirect('/admin/versions'); }
-});
-
-router.post('/versions/toggle-update/:id', async (req, res) => {
-  try {
-    const v = await AppVersion.findByPk(req.params.id);
-    if (v) { v.update_enabled = !v.update_enabled; await v.save(); }
-    res.redirect('/admin/versions?toggled=1');
-  } catch (err) { res.redirect('/admin/versions'); }
-});
-
-router.post('/versions/delete/:id', async (req, res) => {
-  try {
-    const v = await AppVersion.findByPk(req.params.id);
-    if (v) await v.destroy();
-    res.redirect('/admin/versions?deleted=1');
-  } catch (err) { res.redirect('/admin/versions'); }
-});
-
-// ==================== ANNOUNCEMENTS ====================
-router.get('/announcements', async (req, res) => {
-  try {
-    const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
-    res.render('admin/announcements', { user: req.admin, announcements });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi'); }
-});
-
-router.post('/announcements/create', async (req, res) => {
-  try {
-    const { title, message, type, priority, expires_at, is_dismissible } = req.body;
-    if (!title || !message) return res.redirect('/admin/announcements?error=missing');
-    await Announcement.create({
-      title, message, type: type || 'info', priority: parseInt(priority) || 5,
-      expires_at: expires_at ? new Date(expires_at) : null,
-      is_dismissible: is_dismissible === 'on', created_by: req.admin.email
-    });
-    res.redirect('/admin/announcements?created=1');
-  } catch (err) { console.error(err); res.redirect('/admin/announcements?error=create_failed'); }
-});
-
-router.post('/announcements/toggle/:id', async (req, res) => {
-  try {
-    const a = await Announcement.findByPk(req.params.id);
-    if (a) { a.is_enabled = !a.is_enabled; await a.save(); }
-    res.redirect('/admin/announcements?toggled=1');
-  } catch (err) { res.redirect('/admin/announcements'); }
-});
-
-router.post('/announcements/delete/:id', async (req, res) => {
-  try {
-    const a = await Announcement.findByPk(req.params.id);
-    if (a) await a.destroy();
-    res.redirect('/admin/announcements?deleted=1');
-  } catch (err) { res.redirect('/admin/announcements'); }
-});
-
-// ==================== PROFILE ====================
-router.get('/profile', async (req, res) => {
-  try {
-    let adminInfo = null;
-    if (req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
-    res.render('admin/profile', {
-      user: req.admin, adminInfo,
-      isSuper: req.admin.role === 'super' || req.admin.is_super === true,
-      success: req.query.success, error: req.query.error
-    });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi'); }
-});
-
-router.post('/profile/change-password', async (req, res) => {
-  try {
-    const { old_password, new_password, confirm_password } = req.body;
-    if (!old_password || !new_password) return res.redirect('/admin/profile?error=missing');
-    if (new_password !== confirm_password) return res.redirect('/admin/profile?error=mismatch');
-    if (new_password.length < 6) return res.redirect('/admin/profile?error=short');
-    if (!req.admin.id) return res.redirect('/admin/profile?error=env_admin');
-    
-    const admin = await Admin.findByPk(req.admin.id);
-    if (!admin || !bcrypt.compareSync(old_password, admin.password_hash)) {
-      return res.redirect('/admin/profile?error=wrong');
-    }
-    admin.password_hash = bcrypt.hashSync(new_password, 10);
-    await admin.save();
-    res.redirect('/admin/profile?success=password_changed');
-  } catch (err) { res.redirect('/admin/profile?error=system'); }
+  try { const k = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] }); if (!k) return res.json({ success: false }); res.json({ success: true, devices: k.devices || [] }); } catch (err) { res.status(500).json({ success: false }); }
 });
 
 module.exports = router;
