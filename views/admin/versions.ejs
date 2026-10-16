@@ -1,0 +1,73 @@
+<%- include('../partials/header', { title: 'Phiên bản App' }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'versions' }) %>
+  <div class="vg-main flex-grow-1">
+    <div class="vg-page-head anim">
+      <div>
+        <h1 class="vg-page-title">Phiên bản App</h1>
+        <p class="vg-page-sub">Quản lý bản cập nhật</p>
+      </div>
+      <button class="vg-btn anim d2" data-bs-toggle="modal" data-bs-target="#createVersionModal">
+        <i class="fas fa-plus"></i> Thêm phiên bản
+      </button>
+    </div>
+
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr><th>Code</th><th>Phiên bản</th><th>Bắt buộc</th><th>Thông báo</th><th>Trạng thái</th><th style="text-align:right;">Thao tác</th></tr>
+        </thead>
+        <tbody>
+          <% versions.forEach(v => { %>
+            <tr>
+              <td><code>#<%= v.version_code %></code></td>
+              <td style="font-weight: 700; color: var(--gold); font-family: 'Caveat'; font-size: 1.3rem;"><%= v.version_name %></td>
+              <td>
+                <form method="POST" action="/admin/versions/toggle-required/<%= v.id %>" style="margin:0;">
+                  <label class="vg-toggle"><input type="checkbox" <%= v.is_required ? 'checked' : '' %> onchange="this.form.submit()"><span class="vg-slider"></span></label>
+                </form>
+              </td>
+              <td>
+                <form method="POST" action="/admin/versions/toggle-update/<%= v.id %>" style="margin:0;">
+                  <label class="vg-toggle"><input type="checkbox" <%= v.update_enabled ? 'checked' : '' %> onchange="this.form.submit()"><span class="vg-slider"></span></label>
+                </form>
+              </td>
+              <td><%= v.is_active ? '<span style="color:#81c784;font-weight:700;">● Dùng</span>' : '<span style="color: var(--text-muted);">○ Cũ</span>' %></td>
+              <td style="text-align:right;">
+                <div class="d-flex gap-1 justify-content-end">
+                  <% if (!v.is_active) { %>
+                    <form method="POST" action="/admin/versions/activate/<%= v.id %>" style="display:inline;margin:0;"><button class="vg-btn-icon" title="Kích hoạt"><i class="fas fa-check"></i></button></form>
+                  <% } %>
+                  <form method="POST" action="/admin/versions/delete/<%= v.id %>" onsubmit="return confirm('Xóa?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger"><i class="fas fa-trash"></i></button></form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (versions.length === 0) { %>
+            <tr><td colspan="6"><div class="vg-empty"><i class="fas fa-cloud-download-alt"></i><p>Chưa có phiên bản nào</p></div></td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="createVersionModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content vg-modal">
+    <div class="modal-header"><h5 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> Thêm phiên bản</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form method="POST" action="/admin/versions/create">
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 mb-3"><label class="form-label">Version code</label><input type="number" name="version_code" class="form-control" required min="1"></div>
+          <div class="col-md-6 mb-3"><label class="form-label">Tên</label><input type="text" name="version_name" class="form-control" required></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Link tải APK</label><input type="url" name="download_url" class="form-control" required></div>
+        <div class="mb-3"><label class="form-label">Changelog</label><textarea name="changelog" class="form-control" rows="3"></textarea></div>
+        <div class="form-check"><input type="checkbox" name="is_required" class="form-check-input" id="reqCheck"><label class="form-check-label" for="reqCheck" style="color: var(--gold);">Bắt buộc cập nhật</label></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button><button type="submit" class="vg-btn"><i class="fas fa-check"></i> Đăng</button></div>
+    </form>
+  </div></div>
+</div>
+
+<%- include('../partials/scripts') %>

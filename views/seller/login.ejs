@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Seller Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { margin: 0; min-height: 100vh; font-family: 'Inter', sans-serif;
+      background: url('/images/starry-night.jpg') center/cover fixed;
+      display: flex; align-items: center; justify-content: center; padding: 20px; }
+    body::before { content: ''; position: fixed; inset: 0; background: rgba(5,13,31,0.6); z-index: -1; }
+    .login-card { max-width: 420px; width: 100%; background: rgba(10,30,63,0.85);
+      backdrop-filter: blur(30px); border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 24px; padding: 40px 36px; color: #fff;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    h1 { font-family: 'Caveat', cursive; font-size: 2.4rem; color: #ffd700; text-align: center; margin: 0; }
+    .sub { text-align: center; color: #81d4fa; margin: 6px 0 26px; }
+    .form-label { color: #ffd700; font-weight: 700; font-size: 0.78rem; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .form-control { background: rgba(5,13,31,0.7); border: 1.5px solid rgba(79,195,247,0.3); color: #fff; padding: 13px 16px; border-radius: 12px; }
+    .form-control:focus { background: rgba(5,13,31,0.9); border-color: #ffd700; color: #fff; box-shadow: 0 0 0 4px rgba(255,215,0,0.1); }
+    .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border: none; border-radius: 12px; font-weight: 800; font-size: 1.05rem; cursor: pointer; }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,215,0,0.5); }
+    .alert-danger { background: rgba(239,83,80,0.15); border: 1px solid rgba(239,83,80,0.4); color: #ff8a80; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; }
+    .icon-logo { width: 70px; height: 70px; margin: 0 auto 16px; border-radius: 20px; background: linear-gradient(135deg, #4fc3f7, #2563eb); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="icon-logo"><i class="fas fa-store"></i></div>
+    <h1>Seller Panel</h1>
+    <p class="sub">Đăng nhập cửa hàng</p>
+    <% if (error) { %><div class="alert-danger"><i class="fas fa-exclamation-circle me-2"></i><%= error %></div><% } %>
+    <form method="POST" action="/seller/login">
+      <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required autofocus></div>
+      <div class="mb-4"><label class="form-label">Mật khẩu</label><input type="password" name="password" class="form-control" required></div>
+      <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</button>
+    </form>
+    <p style="text-align:center; margin-top: 20px;"><a href="/admin/login" style="color: #4fc3f7; text-decoration: none; font-size: 0.85rem;">← Về Admin</a></p>
+  </div>
+</body>
+</html>
