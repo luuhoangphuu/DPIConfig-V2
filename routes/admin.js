@@ -340,22 +340,18 @@ router.get('/announcements', requireSuperAdmin, async (req, res) => {
 
 router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
   try {
-    const { title, message, type, priority, is_dismissible, start_days, start_hours, end_days, end_hours } = req.body;
+    const { title, message, type, priority, is_dismissible, end_days, end_hours } = req.body;
     
-    // Hàm tính ngày: Tổng = (Số Ngày * 24) + Số Giờ
+    // Chỉ tính thời gian kết thúc
     const calcDate = (days, hours) => {
       const dDays = parseInt(days) || 0;
       const dHours = parseInt(hours) || 0;
-      if (dDays === 0 && dHours === 0) return null; // Nếu bằng 0 hết thì không có hạn
-      
+      if (dDays === 0 && dHours === 0) return null; 
       const d = new Date();
       d.setDate(d.getDate() + dDays);
       d.setHours(d.getHours() + dHours);
       return d;
     };
-
-    const startDate = calcDate(start_days, start_hours);
-    const endDate = calcDate(end_days, end_hours);
 
     await Announcement.create({ 
       title, 
@@ -364,8 +360,8 @@ router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
       priority: parseInt(priority) || 5, 
       is_dismissible: is_dismissible === 'on', 
       is_enabled: true, 
-      starts_at: startDate,
-      expires_at: endDate,
+      starts_at: new Date(), // 🔥 Hiệu lực NGAY LẬP TỨC
+      expires_at: calcDate(end_days, end_hours),
       created_by: req.admin.email 
     });
     res.redirect('/yncuti/announcements?success=created');

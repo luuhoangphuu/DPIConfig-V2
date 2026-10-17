@@ -107,82 +107,57 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="POST" action="/yncuti/announcements/create">
-
-  
-  
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Bắt đầu sau</label>
-      <div class="d-flex gap-2">
-        <div class="input-group">
-          <input type="number" name="start_days" class="form-control" placeholder="Ngày" value="0" min="0">
-          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Ngày</span>
-        </div>
-        <div class="input-group">
-          <input type="number" name="start_hours" class="form-control" placeholder="Giờ" value="0" min="0" max="23">
-          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Giờ</span>
-        </div>
-      </div>
-      <small style="color:#b8c5d9;">* Để 0 Ngày 0 Giờ = Hiện ngay</small>
+  <div class="modal-body" style="padding: 24px;">
+    <div class="mb-3">
+      <label class="form-label" style="color:var(--gold); font-weight:700;">Tiêu đề</label>
+      <input type="text" name="title" class="form-control" placeholder="VD: Bảo trì hệ thống" required>
     </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Kéo dài trong</label>
-      <div class="d-flex gap-2">
+    
+    <div class="mb-3">
+      <label class="form-label" style="color:var(--gold); font-weight:700;">Nội dung</label>
+      <textarea name="message" class="form-control" rows="4" placeholder="Nhập nội dung thông báo..." required></textarea>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label class="form-label" style="color:var(--gold); font-weight:700;">Loại</label>
+        <select name="type" class="form-select">
+          <option value="info">ℹ️ Thông tin</option>
+          <option value="warning">⚠️ Cảnh báo</option>
+          <option value="success">✅ Thành công</option>
+          <option value="error">🚫 Lỗi</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" style="color:var(--gold); font-weight:700;">Ưu tiên (1-10)</label>
+        <input type="number" name="priority" class="form-control" value="5" min="1" max="10">
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label" style="color:var(--gold); font-weight:700;">Tự động xóa sau (Để trống = Vĩnh viễn)</label>
+      <div class="d-flex gap-3 align-items-center">
         <div class="input-group">
-          <input type="number" name="end_days" class="form-control" placeholder="Ngày" value="0" min="0">
-          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Ngày</span>
+          <input type="number" name="end_days" class="form-control" placeholder="0" value="0" min="0">
+          <span class="input-group-text" style="background:rgba(5,13,31,0.8); color:#ffd700; border:1px solid rgba(79,195,247,0.3);">Ngày</span>
         </div>
         <div class="input-group">
-          <input type="number" name="end_hours" class="form-control" placeholder="Giờ" value="0" min="0" max="23">
-          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Giờ</span>
+          <input type="number" name="end_hours" class="form-control" placeholder="0" value="0" min="0" max="23">
+          <span class="input-group-text" style="background:rgba(5,13,31,0.8); color:#ffd700; border:1px solid rgba(79,195,247,0.3);">Giờ</span>
         </div>
       </div>
-      <small style="color:#b8c5d9;">* Để 0 Ngày 0 Giờ = Hiện mãi mãi</small>
+    </div>
+
+    <div class="form-check mb-2">
+      <input type="checkbox" name="is_dismissible" class="form-check-input" id="is_dismissible" checked>
+      <label class="form-check-label" for="is_dismissible" style="color:var(--text-muted);">Cho phép người dùng đóng thông báo</label>
     </div>
   </div>
-
-
-  
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Tiêu đề</label>
-            <input type="text" name="title" class="form-control" placeholder="VD: Bảo trì hệ thống" required maxlength="200">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Nội dung</label>
-            <textarea name="message" class="form-control" rows="4" placeholder="VD: Hệ thống sẽ bảo trì lúc 22h tối nay..." required></textarea>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Loại</label>
-              <select name="type" class="form-select">
-                <option value="info">ℹ️ Thông tin</option>
-                <option value="success">✅ Thành công</option>
-                <option value="warning">⚠️ Cảnh báo</option>
-                <option value="error">❌ Lỗi</option>
-              </select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Ưu tiên (1-10)</label>
-              <input type="number" name="priority" class="form-control" value="5" min="1" max="10">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Ngày hết hạn (không bắt buộc)</label>
-            <input type="datetime-local" name="expires_at" class="form-control">
-          </div>
-          <div class="form-check">
-            <input type="checkbox" name="is_dismissible" class="form-check-input" id="dismissibleCheck" checked>
-            <label class="form-check-label" for="dismissibleCheck" style="color: var(--gold); font-weight: 600;">
-              Cho phép user đóng thông báo
-            </label>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="vg-btn"><i class="fas fa-paper-plane"></i> Gửi</button>
-        </div>
-      </form>
+  <div class="modal-footer" style="border-top: 1px solid rgba(255,215,0,0.1); padding: 16px 24px;">
+    <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+    <button type="submit" class="vg-btn"><i class="fas fa-paper-plane"></i> Đăng ngay</button>
+  </div>
+</form>
     </div>
   </div>
 </div>
