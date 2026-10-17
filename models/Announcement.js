@@ -13,6 +13,7 @@ const Announcement = sequelize.define('Announcement', {
   // Ưu tiên 1-10, cao hơn = hiện trước
   priority: { type: DataTypes.INTEGER, defaultValue: 5 },
   // Ngày hết hạn (null = không hết hạn)
+  starts_at: { type: DataTypes.DATE, allowNull: true },
   expires_at: { type: DataTypes.DATE, allowNull: true },
   created_by: { type: DataTypes.STRING, allowNull: true }
 }, { timestamps: true, tableName: 'announcements' });

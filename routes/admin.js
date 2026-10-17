@@ -340,8 +340,23 @@ router.get('/announcements', requireSuperAdmin, async (req, res) => {
 
 router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
   try {
-    const { title, message, type, priority, is_dismissible } = req.body;
-    await Announcement.create({ title, message, type: type || 'info', priority: parseInt(priority) || 5, is_dismissible: is_dismissible === 'on', is_enabled: true, created_by: req.admin.email });
+    const { title, message, type, priority, is_dismissible, starts_at, expires_at } = req.body;
+    
+    // Xử lý ngày tháng (nếu để trống thì lưu null)
+    const startDate = starts_at ? new Date(starts_at) : null;
+    const endDate = expires_at ? new Date(expires_at) : null;
+
+    await Announcement.create({ 
+      title, 
+      message, 
+      type: type || 'info', 
+      priority: parseInt(priority) || 5, 
+      is_dismissible: is_dismissible === 'on', 
+      is_enabled: true, 
+      starts_at: startDate,
+      expires_at: endDate,
+      created_by: req.admin.email 
+    });
     res.redirect('/yncuti/announcements?success=created');
   } catch (err) { res.redirect('/yncuti/announcements?error=1'); }
 });

@@ -182,16 +182,28 @@ function hashString(str) {
 router.get('/announcement', async (req, res) => {
   try {
     const now = new Date();
+    const { Op } = require('sequelize');
+    const { Announcement } = require('../models');
+
+    // Lấy thông báo ĐANG TRONG THỜI GIAN HIỆU LỰC
     const announcements = await Announcement.findAll({
       where: {
         is_enabled: true,
-        [Op.or]: [
-          { expires_at: null },
-          { expires_at: { [Op.gt]: now } }
+        [Op.and]: [
+          // 1. Chưa có starts_at (hiện ngay) HOẶC đã đến giờ bắt đầu
+          { [Op.or]: [
+              { starts_at: null }, 
+              { starts_at: { [Op.lte]: now } }
+          ]},
+          // 2. Chưa có expires_at (vĩnh viễn) HOẶC chưa hết hạn
+          { [Op.or]: [
+              { expires_at: null }, 
+              { expires_at: { [Op.gte]: now } }
+          ]}
         ]
       },
       order: [['priority', 'DESC'], ['createdAt', 'DESC']],
-      limit: 5
+      limit: 10
     });
 
     return res.json({
@@ -204,6 +216,7 @@ router.get('/announcement', async (req, res) => {
           type: a.type,
           is_dismissible: a.is_dismissible,
           priority: a.priority,
+          starts_at: a.starts_at ? a.starts_at.toISOString() : null,
           expires_at: a.expires_at ? a.expires_at.toISOString() : null,
           created_at: a.createdAt.toISOString()
         })),

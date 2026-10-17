@@ -107,6 +107,18 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="POST" action="/yncuti/announcements/create">
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Thời gian BẮT ĐẦU hiển thị</label>
+      <input type="datetime-local" name="starts_at" class="form-control" title="Để trống nếu muốn hiện ngay">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Thời gian KẾT THÚC (Hết hạn)</label>
+      <input type="datetime-local" name="expires_at" class="form-control" title="Để trống nếu muốn hiện mãi mãi">
+    </div>
+  </div>
+  
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Tiêu đề</label>
