@@ -109,30 +109,38 @@
       <form method="POST" action="/yncuti/announcements/create">
 
   
+  
   <div class="row">
     <div class="col-md-6 mb-3">
-      <label class="form-label">Hiển thị sau (Bắt đầu)</label>
+      <label class="form-label">Bắt đầu sau</label>
       <div class="d-flex gap-2">
-        <input type="number" name="start_val" class="form-control" placeholder="VD: 0" value="0" min="0">
-        <select name="start_unit" class="form-select" style="width: 100px;">
-          <option value="hours">Giờ</option>
-          <option value="days">Ngày</option>
-        </select>
+        <div class="input-group">
+          <input type="number" name="start_days" class="form-control" placeholder="Ngày" value="0" min="0">
+          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Ngày</span>
+        </div>
+        <div class="input-group">
+          <input type="number" name="start_hours" class="form-control" placeholder="Giờ" value="0" min="0" max="23">
+          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Giờ</span>
+        </div>
       </div>
-      <small style="color:#b8c5d9;">* Nhập 0 để hiện ngay lập tức</small>
+      <small style="color:#b8c5d9;">* Để 0 Ngày 0 Giờ = Hiện ngay</small>
     </div>
     <div class="col-md-6 mb-3">
-      <label class="form-label">Kéo dài trong (Kết thúc)</label>
+      <label class="form-label">Kéo dài trong</label>
       <div class="d-flex gap-2">
-        <input type="number" name="end_val" class="form-control" placeholder="VD: 3" value="3" min="1">
-        <select name="end_unit" class="form-select" style="width: 100px;">
-          <option value="hours">Giờ</option>
-          <option value="days" selected>Ngày</option>
-        </select>
+        <div class="input-group">
+          <input type="number" name="end_days" class="form-control" placeholder="Ngày" value="0" min="0">
+          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Ngày</span>
+        </div>
+        <div class="input-group">
+          <input type="number" name="end_hours" class="form-control" placeholder="Giờ" value="0" min="0" max="23">
+          <span class="input-group-text" style="background:rgba(255,255,255,0.1); color:#fff;">Giờ</span>
+        </div>
       </div>
-      <small style="color:#b8c5d9;">* Thông báo sẽ tự ẩn sau thời gian này</small>
+      <small style="color:#b8c5d9;">* Để 0 Ngày 0 Giờ = Hiện mãi mãi</small>
     </div>
   </div>
+
 
   
         <div class="modal-body">

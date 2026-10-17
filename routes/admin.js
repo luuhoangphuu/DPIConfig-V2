@@ -340,20 +340,22 @@ router.get('/announcements', requireSuperAdmin, async (req, res) => {
 
 router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
   try {
-    const { title, message, type, priority, is_dismissible, start_val, start_unit, end_val, end_unit } = req.body;
+    const { title, message, type, priority, is_dismissible, start_days, start_hours, end_days, end_hours } = req.body;
     
-    // Hàm tính ngày
-    const calcDate = (val, unit) => {
-      let d = new Date();
-      let num = parseFloat(val);
-      if (isNaN(num) || num <= 0) return null;
-      if (unit === 'days') d.setDate(d.getDate() + num);
-      else d.setHours(d.getHours() + num);
+    // Hàm tính ngày: Tổng = (Số Ngày * 24) + Số Giờ
+    const calcDate = (days, hours) => {
+      const dDays = parseInt(days) || 0;
+      const dHours = parseInt(hours) || 0;
+      if (dDays === 0 && dHours === 0) return null; // Nếu bằng 0 hết thì không có hạn
+      
+      const d = new Date();
+      d.setDate(d.getDate() + dDays);
+      d.setHours(d.getHours() + dHours);
       return d;
     };
 
-    const startDate = calcDate(start_val, start_unit);
-    const endDate = calcDate(end_val, end_unit);
+    const startDate = calcDate(start_days, start_hours);
+    const endDate = calcDate(end_days, end_hours);
 
     await Announcement.create({ 
       title, 
