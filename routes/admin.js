@@ -227,6 +227,40 @@ router.post('/admins/update/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.redirect('/yncuti/admins?error=1'); }
 });
 
+router.post('/admins/toggle/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const a = await Admin.findByPk(req.params.id);
+    if (a && a.email !== process.env.ADMIN_EMAIL) {
+      a.is_active = !a.is_active;
+      await a.save();
+    }
+    res.redirect('/yncuti/admins?success=updated');
+  } catch (err) { res.redirect('/yncuti/admins?error=1'); }
+});
+
+router.post('/admins/reset-password/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    const a = await Admin.findByPk(req.params.id);
+    if (a && new_password) {
+      a.password_hash = bcrypt.hashSync(new_password, 10);
+      await a.save();
+    }
+    res.redirect('/yncuti/admins?success=updated');
+  } catch (err) { res.redirect('/yncuti/admins?error=1'); }
+});
+
+router.post('/admins/toggle-role/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const a = await Admin.findByPk(req.params.id);
+    if (a && a.email !== process.env.ADMIN_EMAIL) {
+      a.role = a.role === 'super' ? 'admin' : 'super';
+      await a.save();
+    }
+    res.redirect('/yncuti/admins?success=updated');
+  } catch (err) { res.redirect('/yncuti/admins?error=1'); }
+});
+
 router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
   try { const a = await Admin.findByPk(req.params.id); if (a && a.email !== process.env.ADMIN_EMAIL) await a.destroy(); res.redirect('/yncuti/admins?success=deleted'); } catch (err) { res.redirect('/yncuti/admins?error=1'); }
 });

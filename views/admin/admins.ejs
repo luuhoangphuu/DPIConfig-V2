@@ -48,7 +48,8 @@
           </tr>
         </thead>
         <tbody>
-          <% admins.forEach(a => { %>
+          <% admins.forEach(a => {
+      if (a.email === envAdminEmail) return; // Ẩn tài khoản ENV khỏi danh sách %>
             <tr>
               <td>
                 <div style="font-weight: 700; color: var(--gold); font-size: 1rem;"><%= a.name || a.email %></div>
