@@ -340,11 +340,20 @@ router.get('/announcements', requireSuperAdmin, async (req, res) => {
 
 router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
   try {
-    const { title, message, type, priority, is_dismissible, starts_at, expires_at } = req.body;
+    const { title, message, type, priority, is_dismissible, start_val, start_unit, end_val, end_unit } = req.body;
     
-    // Xử lý ngày tháng (nếu để trống thì lưu null)
-    const startDate = starts_at ? new Date(starts_at) : null;
-    const endDate = expires_at ? new Date(expires_at) : null;
+    // Hàm tính ngày
+    const calcDate = (val, unit) => {
+      let d = new Date();
+      let num = parseFloat(val);
+      if (isNaN(num) || num <= 0) return null;
+      if (unit === 'days') d.setDate(d.getDate() + num);
+      else d.setHours(d.getHours() + num);
+      return d;
+    };
+
+    const startDate = calcDate(start_val, start_unit);
+    const endDate = calcDate(end_val, end_unit);
 
     await Announcement.create({ 
       title, 

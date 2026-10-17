@@ -108,16 +108,32 @@
       </div>
       <form method="POST" action="/yncuti/announcements/create">
 
+  
   <div class="row">
     <div class="col-md-6 mb-3">
-      <label class="form-label">Thời gian BẮT ĐẦU hiển thị</label>
-      <input type="datetime-local" name="starts_at" class="form-control" title="Để trống nếu muốn hiện ngay">
+      <label class="form-label">Hiển thị sau (Bắt đầu)</label>
+      <div class="d-flex gap-2">
+        <input type="number" name="start_val" class="form-control" placeholder="VD: 0" value="0" min="0">
+        <select name="start_unit" class="form-select" style="width: 100px;">
+          <option value="hours">Giờ</option>
+          <option value="days">Ngày</option>
+        </select>
+      </div>
+      <small style="color:#b8c5d9;">* Nhập 0 để hiện ngay lập tức</small>
     </div>
     <div class="col-md-6 mb-3">
-      <label class="form-label">Thời gian KẾT THÚC (Hết hạn)</label>
-      <input type="datetime-local" name="expires_at" class="form-control" title="Để trống nếu muốn hiện mãi mãi">
+      <label class="form-label">Kéo dài trong (Kết thúc)</label>
+      <div class="d-flex gap-2">
+        <input type="number" name="end_val" class="form-control" placeholder="VD: 3" value="3" min="1">
+        <select name="end_unit" class="form-select" style="width: 100px;">
+          <option value="hours">Giờ</option>
+          <option value="days" selected>Ngày</option>
+        </select>
+      </div>
+      <small style="color:#b8c5d9;">* Thông báo sẽ tự ẩn sau thời gian này</small>
     </div>
   </div>
+
   
         <div class="modal-body">
           <div class="mb-3">
