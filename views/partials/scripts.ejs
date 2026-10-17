@@ -296,3 +296,16 @@
   });
 })();
 </script>
+
+<script>
+/* urlErrorParams: Bắt lỗi từ URL */
+(function() {
+  const urlErrorParams = new URLSearchParams(window.location.search);
+  const errMsg = urlErrorParams.get('error');
+  if (errMsg && window.showToast) {
+    // Xóa các từ khóa rườm rà
+    let cleanMsg = decodeURIComponent(errMsg).replace('Lỗi: ', '');
+    window.showToast('error', 'Tạo thất bại!', cleanMsg);
+  }
+})();
+</script>
