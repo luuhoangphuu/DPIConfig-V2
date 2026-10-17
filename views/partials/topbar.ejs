@@ -1,0 +1,50 @@
+<%
+  var isSuperTop = user && (user.role === 'super' || user.is_super === true);
+  var initialTop = user && user.email ? user.email.charAt(0).toUpperCase() : '?';
+  var pageTitle = typeof pageName !== 'undefined' ? pageName : (typeof title !== 'undefined' ? title : 'Admin');
+%>
+<header class="sn-topbar">
+  <div class="sn-topbar-left">
+    <button class="sn-mobile-toggle" id="mobileToggle" type="button"><i class="fas fa-bars"></i></button>
+    <nav class="sn-breadcrumb">
+      <a href="/admin/dashboard" class="sn-crumb-link"><i class="fas fa-home"></i> Admin</a>
+      <i class="fas fa-chevron-right sn-crumb-sep"></i>
+      <span class="sn-crumb-current"><%= pageTitle %></span>
+    </nav>
+  </div>
+  <button class="sn-search-trigger" id="openCmdK" type="button">
+    <i class="fas fa-search"></i>
+    <span>Tìm kiếm hoặc nhập lệnh...</span>
+    <kbd class="sn-kbd">Ctrl K</kbd>
+  </button>
+  <div class="sn-topbar-right">
+    <button class="sn-icon-btn" id="notifBtn" type="button" title="Thông báo">
+      <i class="fas fa-bell"></i>
+      <span class="sn-notif-badge" id="notifBadge" style="display:none;">0</span>
+    </button>
+    <div class="sn-user-dropdown">
+      <button class="sn-user-trigger" id="userTrigger" type="button">
+        <div class="sn-user-avatar <%= isSuperTop ? 'super' : '' %>"><%= initialTop %></div>
+        <div class="sn-user-meta">
+          <div class="sn-user-name"><%= user.name || user.email.split('@')[0] %></div>
+          <div class="sn-user-role"><% if (isSuperTop) { %><i class="fas fa-crown"></i> Super<% } else { %>Admin<% } %></div>
+        </div>
+        <i class="fas fa-chevron-down sn-user-chev"></i>
+      </button>
+      <div class="sn-user-menu" id="userMenu">
+        <div class="sn-user-menu-header">
+          <div class="sn-user-avatar-large <%= isSuperTop ? 'super' : '' %>"><%= initialTop %></div>
+          <div>
+            <div class="sn-user-menu-name"><%= user.name || user.email.split('@')[0] %></div>
+            <div class="sn-user-menu-email"><%= user.email %></div>
+          </div>
+        </div>
+        <div class="sn-user-menu-divider"></div>
+        <a href="/admin/profile" class="sn-user-menu-item"><i class="fas fa-user-cog"></i> Tài khoản</a>
+        <a href="/admin/keys" class="sn-user-menu-item"><i class="fas fa-key"></i> Quản lý Key</a>
+        <div class="sn-user-menu-divider"></div>
+        <a href="/admin/logout" class="sn-user-menu-item danger"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+      </div>
+    </div>
+  </div>
+</header>
