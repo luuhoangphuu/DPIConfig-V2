@@ -143,10 +143,6 @@ router.get('/reset-admin', async (req, res) => {
 // ==================== LOGIN ====================
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const dbAdmin = await Admin.findOne({ where: { email, is_active: true } });
     if (dbAdmin && bcrypt.compareSync(password, dbAdmin.password_hash)) {
       dbAdmin.last_login = new Date();
       await dbAdmin.save();
@@ -183,6 +179,47 @@ router.get('/logout', (req, res) => {
 router.get('/force-logout', (req, res) => {
   res.clearCookie('admin_token');
   res.redirect('/admin/login');
+});
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const dbAdmin = await Admin.findOne({ where: { email, is_active: true } });
+    const isEnvAdmin = email === process.env.ADMIN_EMAIL;
+
+    // 1. Check DB
+    if (dbAdmin && bcrypt.compareSync(password, dbAdmin.password_hash)) {
+      dbAdmin.last_login = new Date();
+      await dbAdmin.save();
+      const token = jwt.sign({
+        id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role,
+        name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super'
+      }, JWT_SECRET, { expiresIn: '7d' });
+      res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      return res.redirect('/admin/dashboard');
+    }
+
+    // 2. Check ENV (Fallback) - Tự động tạo trong DB để lấy ID
+    if (isEnvAdmin && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+      let envAdmin = dbAdmin;
+      if (!envAdmin) {
+        envAdmin = await Admin.create({
+          email, password_hash: ADMIN_PASSWORD_HASH, name: 'Super Admin',
+          role: 'super', quota: 999999, is_active: true
+        });
+      }
+      const token = jwt.sign({
+        id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true
+      }, JWT_SECRET, { expiresIn: '7d' });
+      res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      return res.redirect('/admin/dashboard');
+    }
+
+    res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.render('admin/login', { error: 'Lỗi hệ thống' });
+  }
 });
 
 router.use(requireAdmin);
@@ -580,11 +617,17 @@ router.get('/profile', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     let adminInfo = null;
-    if (req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+    if (req.admin.id) {
+      adminInfo = await Admin.findByPk(req.admin.id);
+    } else {
+      adminInfo = await Admin.findOne({ where: { email: req.admin.email } });
+    }
     res.render('admin/profile', {
       user: req.admin, isSuper, adminInfo, currentPage: 'profile',
       success: req.query.success || null, error: req.query.error || null
     });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
