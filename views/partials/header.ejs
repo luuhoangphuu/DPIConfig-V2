@@ -954,11 +954,11 @@
 <body>
   <!-- SN-TOPBAR -->
   <% if (typeof user !== 'undefined' && user) { %>
-    <%- include('partials/topbar', { user, pageName: typeof pageName !== 'undefined' ? pageName : (typeof title !== 'undefined' ? title : 'Admin') }) %>
+    <%- include('./topbar', { user, pageName: typeof pageName !== 'undefined' ? pageName : (typeof title !== 'undefined' ? title : 'Admin') }) %>
     <div class="sn-topbar-spacer"></div>
   <% } %>
-  <%- include('partials/command-palette') %>
-  <%- include('partials/toast') %>
+  <%- include('./command-palette') %>
+  <%- include('./toast') %>
   <canvas id="livingCanvas"></canvas>
   <div class="starry-overlay"></div>
   <div class="canvas-texture"></div>
