@@ -269,3 +269,30 @@
   });
 })();
 </script>
+
+<script>
+/* snMobileToggleJS */
+(function() {
+  var toggleBtn = document.getElementById('mobileToggle');
+  var overlay = document.getElementById('snMobileOverlay');
+  var sidebar = document.querySelector('.vg-sidebar') || document.querySelector('.sn-sidebar');
+  if (!toggleBtn || !sidebar) return;
+  function openSidebar() {
+    sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  toggleBtn.addEventListener('click', function() {
+    if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
+  });
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+  document.querySelectorAll('.vg-sidebar .nav-link').forEach(function(link) {
+    link.addEventListener('click', function() { if (window.innerWidth <= 768) closeSidebar(); });
+  });
+})();
+</script>

@@ -1,0 +1,28 @@
+<%
+  var navIsSuper = user && (user.role === 'super' || user.is_super === true);
+  var navActive = typeof currentPage !== 'undefined' ? currentPage : '';
+%>
+<nav class="sn-mobile-nav">
+  <a href="/admin/dashboard" class="sn-mnav-item <%= navActive === 'dashboard' ? 'active' : '' %>">
+    <i class="fas fa-chart-pie"></i>
+    <span>Dashboard</span>
+  </a>
+  <a href="/admin/keys" class="sn-mnav-item <%= navActive === 'keys' ? 'active' : '' %>">
+    <i class="fas fa-key"></i>
+    <span>Keys</span>
+  </a>
+  <% if (navIsSuper) { %>
+    <a href="/admin/sellers" class="sn-mnav-item <%= navActive === 'sellers' ? 'active' : '' %>">
+      <i class="fas fa-store"></i>
+      <span>Seller</span>
+    </a>
+    <a href="/admin/admins" class="sn-mnav-item <%= navActive === 'admins' ? 'active' : '' %>">
+      <i class="fas fa-user-shield"></i>
+      <span>Admin</span>
+    </a>
+  <% } %>
+  <a href="/admin/profile" class="sn-mnav-item <%= navActive === 'profile' ? 'active' : '' %>">
+    <i class="fas fa-user-cog"></i>
+    <span>Tài khoản</span>
+  </a>
+</nav>
