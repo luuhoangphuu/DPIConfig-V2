@@ -24,6 +24,8 @@ const Admin = sequelize.define('Admin', {
   
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_login: { type: DataTypes.DATE, allowNull: true },
+  session_token: { type: DataTypes.STRING(64), allowNull: true },
+  last_login_ip: { type: DataTypes.STRING(45), allowNull: true },
   notes: { type: DataTypes.TEXT, allowNull: true },
   created_by: { type: DataTypes.STRING, allowNull: true }
 }, { timestamps: true, tableName: 'admins' });

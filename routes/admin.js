@@ -11,22 +11,24 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
-function requireAdmin(req, res, next) {
+async function requireAdmin(req, res, next) {
   const token = req.cookies.admin_token;
   if (!token) return res.redirect('/yncuti/login');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email === process.env.ADMIN_EMAIL) {
-      decoded.role = 'super';
-      decoded.is_super = true;
+    const dbAdmin = await Admin.findByPk(decoded.id);
+    
+    // CHECK TOKEN PHIÊN ĐĂNG NHẬP
+    if (!dbAdmin || (dbAdmin.session_token && dbAdmin.session_token !== decoded.session_token)) {
+      res.clearCookie('admin_token');
+      return res.redirect('/yncuti/login?error=session_expired');
     }
+    
+    if (decoded.email === process.env.ADMIN_EMAIL) { decoded.role = 'super'; decoded.is_super = true; }
     if (!decoded.role) decoded.role = 'admin';
     req.admin = decoded;
     next();
-  } catch (err) {
-    res.clearCookie('admin_token');
-    res.redirect('/yncuti/login');
-  }
+  } catch (err) { res.clearCookie('admin_token'); res.redirect('/yncuti/login'); }
 }
 
 function requireSuperAdmin(req, res, next) {
@@ -65,8 +67,11 @@ router.post('/login', loginLimiter, async (req, res) => {
     const isEnvAdmin = email === process.env.ADMIN_EMAIL;
 
     if (dbAdmin && bcrypt.compareSync(password, dbAdmin.password_hash)) {
-      dbAdmin.last_login = new Date(); await dbAdmin.save();
-      const token = jwt.sign({ id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role, name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super' }, JWT_SECRET, { expiresIn: '7d' });
+      dbAdmin.last_login = new Date(); 
+      dbAdmin.session_token = crypto.randomBytes(16).toString('hex');
+      dbAdmin.last_login_ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
+      await dbAdmin.save();
+      const token = jwt.sign({ id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role, name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super', session_token: dbAdmin.session_token }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
       return res.redirect('/yncuti/dashboard');
     }
@@ -76,7 +81,10 @@ router.post('/login', loginLimiter, async (req, res) => {
       if (!envAdmin) {
         envAdmin = await Admin.create({ email, password_hash: ADMIN_PASSWORD_HASH, name: 'Super Admin', role: 'super', quota: 999999, is_active: true });
       }
-      const token = jwt.sign({ id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true }, JWT_SECRET, { expiresIn: '7d' });
+      envAdmin.session_token = crypto.randomBytes(16).toString('hex');
+      envAdmin.last_login_ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
+      await envAdmin.save();
+      const token = jwt.sign({ id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true, session_token: envAdmin.session_token }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
       return res.redirect('/yncuti/dashboard');
     }

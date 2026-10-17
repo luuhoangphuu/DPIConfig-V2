@@ -25,9 +25,11 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.render('seller/login', { error: 'Sai email hoặc mật khẩu' });
     }
     seller.last_login = new Date();
+    seller.session_token = crypto.randomBytes(16).toString('hex');
+    seller.last_login_ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
     await seller.save();
     const token = jwt.sign(
-      { id: seller.id, email: seller.email, name: seller.name },
+      { id: seller.id, email: seller.email, name: seller.name, session_token: seller.session_token },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
