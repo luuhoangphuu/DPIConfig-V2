@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 const { Key, Log, KeyDevice } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
 const apiLimiter = require('../middleware/rateLimiter');
+const genKeyLimiter = require('../middleware/genKeyLimiter');
 
 // Hàm xóa key hết hạn (chạy mỗi lần có request)
 async function cleanupExpiredKeys() {
@@ -24,56 +25,69 @@ async function cleanupExpiredKeys() {
 }
 
 // ==================== ROUTE TẠO KEY (GET & POST) ====================
-router.get('/gen-key', async (req, res) => {
-  try {
-    const { secret, tier, duration, prefix, max_devices } = req.query;
-    if (secret !== process.env.AUTO_KEY_SECRET) {
-      return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
-    }
-    const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let days = parseFloat(duration) || 1;
-    if (days <= 0) days = 1;
-    const hours = Math.round(days * 24);
-    const expires_at = new Date();
-    expires_at.setHours(expires_at.getHours() + hours);
-    let maxDev = 1;
-    if (max_devices) {
-      maxDev = parseInt(max_devices) || 1;
-      if (maxDev < 1) maxDev = 1;
-      if (maxDev > 999) maxDev = 999;
-    }
-    const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-    await Key.create({ key, tier: chosenTier, expires_at, max_devices: maxDev, created_by: 'auto-api-get' });
-    await Log.create({ action: 'auto_key_created', details: `API GET tạo key ${key}`, ip_address: req.ip });
-    return res.json({ success: true, key, tier: chosenTier, expires_at: expires_at.toISOString(), max_devices: maxDev });
-  } catch (err) { console.error(err); return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
+router.get('/gen-key', genKeyLimiter, async (req, res) => {
+  console.warn('[GEN-KEY] GET bị chặn, IP:', req.ip);
+  return res.status(405).json({
+    success: false,
+    error: 'Phương thức GET không được hỗ trợ. Vui lòng dùng POST.',
+    server_time: new Date().toISOString()
+  });
 });
 
-router.post('/gen-key', async (req, res) => {
+router.post('/gen-key', genKeyLimiter, async (req, res) => {
   try {
-    const { secret, tier, duration, prefix, max_devices } = req.body;
+    const { secret, tier, prefix, max_devices } = req.body;
+
     if (secret !== process.env.AUTO_KEY_SECRET) {
+      console.warn('[GEN-KEY] Secret sai từ IP:', req.ip);
       return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
     }
-    const chosenTier = (tier && tier.toLowerCase() === 'normal') ? 'Normal' : 'VIP';
-    let days = parseFloat(duration) || 1;
-    if (days <= 0) days = 1;
-    const hours = Math.round(days * 24);
+
+    const chosenTier = (tier && String(tier).toLowerCase() === 'normal') ? 'Normal' : 'VIP';
+    const FIXED_HOURS = chosenTier === 'VIP' ? 2 : 8;
     const expires_at = new Date();
-    expires_at.setHours(expires_at.getHours() + hours);
+    expires_at.setHours(expires_at.getHours() + FIXED_HOURS);
+
     let maxDev = 1;
     if (max_devices) {
       maxDev = parseInt(max_devices) || 1;
       if (maxDev < 1) maxDev = 1;
       if (maxDev > 999) maxDev = 999;
     }
+
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
     const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-    await Key.create({ key, tier: chosenTier, expires_at, max_devices: maxDev, created_by: 'auto-api-post' });
-    await Log.create({ action: 'auto_key_created', details: `API POST tạo key ${key}`, ip_address: req.ip });
-    return res.json({ success: true, key, tier: chosenTier, expires_at: expires_at.toISOString(), max_devices: maxDev });
-  } catch (err) { console.error(err); return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' }); }
+
+    await Key.create({
+      key,
+      tier: chosenTier,
+      expires_at,
+      max_devices: maxDev,
+      created_by: 'auto-api'
+    });
+
+    const ua = (req.headers['user-agent'] || 'unknown').substring(0, 200);
+    const referer = (req.headers['referer'] || req.headers['referrer'] || 'direct').substring(0, 200);
+    const realIp = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
+
+    await Log.create({
+      action: 'auto_key_created',
+      details: `API tạo key ${key} | tier=${chosenTier} | ${FIXED_HOURS}h | IP=${realIp} | UA=${ua} | Ref=${referer}`,
+      ip_address: realIp
+    });
+
+    return res.json({
+      success: true,
+      key,
+      tier: chosenTier,
+      expires_at: expires_at.toISOString(),
+      duration_hours: FIXED_HOURS,
+      max_devices: maxDev
+    });
+  } catch (err) {
+    console.error('[GEN-KEY] Error:', err);
+    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
+  }
 });
 
 // ==================== CÁC ROUTE CẦN X-API-KEY ====================
@@ -203,42 +217,6 @@ router.get('/announcement', async (req, res) => {
 
 
 // ==================== THÔNG BÁO CHUNG (không cần X-API-Key) ====================
-router.get('/announcement', async (req, res) => {
-  try {
-    const now = new Date();
-    const announcements = await Announcement.findAll({
-      where: {
-        is_enabled: true,
-        [Op.or]: [
-          { expires_at: null },
-          { expires_at: { [Op.gt]: now } }
-        ]
-      },
-      order: [['priority', 'DESC'], ['createdAt', 'DESC']],
-      limit: 5
-    });
-
-    return res.json({
-      success: true,
-      data: {
-        announcements: announcements.map(a => ({
-          id: a.id,
-          title: a.title,
-          message: a.message,
-          type: a.type,
-          is_dismissible: a.is_dismissible,
-          priority: a.priority,
-          expires_at: a.expires_at ? a.expires_at.toISOString() : null,
-          created_at: a.createdAt.toISOString()
-        })),
-        server_time: now.toISOString()
-      }
-    });
-  } catch (err) {
-    console.error('Announcement error:', err);
-    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
-  }
-});
 
 
 // ==================== APP BÁO CÁO ĐÃ UPDATE ====================
