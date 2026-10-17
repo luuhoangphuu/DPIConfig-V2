@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const { Key, Log, KeyDevice, AppVersion, Announcement, Admin, Seller } = require('../models');
+const loginLimiter = require('../middleware/loginLimiter');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -57,7 +58,7 @@ router.get('/reset-admin', async (req, res) => {
 // ==================== LOGIN / LOGOUT ====================
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   try {
     const dbAdmin = await Admin.findOne({ where: { email, is_active: true } });

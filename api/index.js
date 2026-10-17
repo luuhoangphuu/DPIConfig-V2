@@ -5,6 +5,7 @@ const path = require('path');
 const sequelize = require('../config/database');
 const apiRoutes = require('../routes/api');
 const adminRoutes = require('../routes/admin');
+const botBlocker = require('../middleware/botBlocker');
 const sellerRoutes = require('../routes/seller');
 require('../models');
 
@@ -23,6 +24,21 @@ app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+
+// ================= BẢO MẬT TOÀN DIỆN =================
+// 1. Chặn Bot dò quét
+app.use(botBlocker);
+
+// 2. Bảo vệ Header (Chống XSS, Clickjacking, MIME Sniffing)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.removeHeader('X-Powered-By'); // Giấu công nghệ
+  next();
+});
+// ======================================================
 
 app.use('/api', apiRoutes);
 // Inject env vars cho tất cả EJS views

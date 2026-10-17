@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const { Key, Log, KeyDevice, Seller } = require('../models');
 const sellerAuth = require('../middleware/sellerAuth');
+const loginLimiter = require('../middleware/loginLimiter');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
@@ -14,7 +15,7 @@ router.get('/login', (req, res) => {
   res.render('seller/login', { error: null });
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
   const password = (req.body.password || '').trim();
   console.log('🔐 SELLER LOGIN:', { email, password_len: password.length });
