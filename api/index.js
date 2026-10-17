@@ -84,6 +84,9 @@ async function initApp() {
     await sequelize.query(`ALTER TABLE "keys" ADD COLUMN IF NOT EXISTS "seller_id" INTEGER;`);
     console.log('Columns ensured.');
 
+    // Đảm bảo cột starts_at tồn tại trong DB
+    await sequelize.query('ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "starts_at" TIMESTAMP WITH TIME ZONE;');
+    
     await sequelize.sync({ alter: true });
 
     // SYNC ADMIN ENV VÀO DB (Để không bị lỗi foreign key)
