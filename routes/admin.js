@@ -72,7 +72,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       dbAdmin.last_login_ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
       await dbAdmin.save();
       const token = jwt.sign({ id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role, name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super', session_token: dbAdmin.session_token }, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 7 * 24 * 60 * 60 * 1000 });
       return res.redirect('/yncuti/dashboard');
     }
 
@@ -85,7 +85,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       envAdmin.last_login_ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
       await envAdmin.save();
       const token = jwt.sign({ id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true, session_token: envAdmin.session_token }, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 7 * 24 * 60 * 60 * 1000 });
       return res.redirect('/yncuti/dashboard');
     }
     res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
@@ -375,6 +375,7 @@ router.post('/profile/change-password', async (req, res) => {
     if (!admin) return res.redirect('/yncuti/profile?error=not_found');
     if (!bcrypt.compareSync(old_password, admin.password_hash)) return res.redirect('/yncuti/profile?error=wrong_password');
     admin.password_hash = bcrypt.hashSync(new_password, 10);
+    admin.session_token = null; // Bắt buộc đăng nhập lại trên mọi thiết bị
     await admin.save();
     res.redirect('/yncuti/profile?success=password_changed');
   } catch (err) { res.redirect('/yncuti/profile?error=system'); }

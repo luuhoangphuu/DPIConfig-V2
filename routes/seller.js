@@ -35,7 +35,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     );
     res.cookie('seller_token', token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000
+      sameSite: 'strict', maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.redirect('/seller/dashboard');
   } catch (err) {
