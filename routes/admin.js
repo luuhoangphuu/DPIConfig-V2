@@ -221,6 +221,9 @@ router.get('/keys', async (req, res) => {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const page = parseInt(req.query.page) || 1, limit = 15, offset = (page - 1) * limit;
     const search = req.query.search || '';
+    const tier = req.query.tier || '';
+    const status = req.query.status || '';
+
     let where = {};
     if (!isSuper && req.admin.id) where.admin_id = req.admin.id;
     if (search) {
@@ -229,11 +232,29 @@ router.get('/keys', async (req, res) => {
         { hwid: { [Op.iLike]: `%${search}%` } }
       ];
     }
+    if (tier) where.tier = tier;
+    if (status === 'active') where.is_active = true;
+    if (status === 'disabled') where.is_active = false;
+    if (status === 'expired') where.expires_at = { [Op.lt]: new Date() };
+
     const { count, rows: keys } = await Key.findAndCountAll({
       where, order: [['createdAt', 'DESC']],
       include: [{ model: KeyDevice, as: 'devices', required: false }],
       limit, offset
     });
+
+    // Lấy adminInfo + activeKeys cho sidebar badge
+    let adminInfo = null;
+    if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+    const activeKeys = await Key.count({ where: { ...(isSuper ? {} : { admin_id: req.admin.id }), is_active: true } });
+
+    res.render('admin/keys', {
+      user: req.admin, isSuper, adminInfo, activeKeys,
+      keys, currentPage: page, totalPages: Math.ceil(count / limit),
+      search, tier, status
+    });
+  } catch (err) { console.error(err); res.status(500).send('Lỗi: ' + err.message); }
+});
     res.render('admin/keys', { user: req.admin, isSuper, keys, currentPage: page, totalPages: Math.ceil(count / limit), search });
   } catch (err) { console.error(err); res.status(500).send('Lỗi: ' + err.message); }
 });
