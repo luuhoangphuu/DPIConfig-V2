@@ -15,6 +15,10 @@ function requireAdmin(req, res, next) {
   if (!token) return res.redirect('/admin/login');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.email === process.env.ADMIN_EMAIL) {
+      decoded.role = 'super';
+      decoded.is_super = true;
+    }
     if (!decoded.role) decoded.role = 'admin';
     req.admin = decoded;
     next();
@@ -32,154 +36,26 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-// ============================================
-// RESET ADMIN - TẠO / ĐỔI MẬT KHẨU NGAY
-// ============================================
+// ==================== RESET ADMIN ====================
 router.get('/reset-admin', async (req, res) => {
   const { email, password } = req.query;
-  
-  // Không có tham số → hiện form
   if (!email || !password) {
-    return res.send(`
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reset Admin</title>
-      <style>
-        *{box-sizing:border-box}
-        body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;
-          background:url('/images/starry-night.jpg') center/cover fixed;
-          display:flex;align-items:center;justify-content:center;padding:20px;color:#fff}
-        body::before{content:'';position:fixed;inset:0;background:rgba(5,13,31,0.75);z-index:-1}
-        .card{max-width:480px;width:100%;background:rgba(10,30,63,0.9);
-          backdrop-filter:blur(30px);border:2px solid rgba(255,215,0,0.4);
-          border-radius:24px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
-        h1{font-size:1.8rem;color:#ffd700;text-align:center;margin:0 0 8px}
-        p.sub{text-align:center;color:#81d4fa;margin:0 0 24px;font-size:0.9rem}
-        label{color:#ffd700;font-weight:700;font-size:0.8rem;letter-spacing:1px;
-          text-transform:uppercase;display:block;margin-bottom:8px}
-        input{width:100%;padding:14px;margin-bottom:16px;background:rgba(5,13,31,0.7);
-          border:1.5px solid rgba(79,195,247,0.3);color:#fff;border-radius:12px;font-size:1rem}
-        input:focus{outline:none;border-color:#ffd700}
-        button{width:100%;padding:16px;background:linear-gradient(135deg,#ffd700,#f59e0b);
-          color:#0a1e3f;border:none;border-radius:12px;font-weight:800;font-size:1.1rem;
-          cursor:pointer}
-        .info{background:rgba(255,215,0,0.1);border-left:3px solid #ffd700;
-          padding:14px;border-radius:8px;font-size:0.85rem;color:#8ba3c7;margin-top:20px}
-      </style></head><body>
-      <div class="card">
-        <h1>🔑 Reset Admin</h1>
-        <p class="sub">Tạo hoặc đổi mật khẩu tài khoản admin</p>
-        <form method="GET" action="/admin/reset-admin">
-          <label>Email admin</label>
-          <input type="email" name="email" value="${ADMIN_EMAIL}" required>
-          <label>Mật khẩu mới</label>
-          <input type="text" name="password" value="duy123456" required minlength="6">
-          <button type="submit">✅ Tạo / Đổi mật khẩu</button>
-        </form>
-        <div class="info">
-          Bấm nút → tài khoản được tạo (hoặc đổi mật khẩu).<br>
-          Sau đó vào <b>/admin/login</b> đăng nhập bằng email + mật khẩu vừa nhập.
-        </div>
-      </div></body></html>
-    `);
+    return res.send(`<html><body style="background:#0a1e3f;color:#fff;padding:50px;font-family:sans-serif"><h1>Reset Admin</h1><form method="GET"><input name="email" value="${ADMIN_EMAIL}" style="padding:10px"><input name="password" type="text" value="admin123" style="padding:10px"><button type="submit" style="padding:10px">Tạo/Đổi</button></form></body></html>`);
   }
-  
-  // Có đủ email + password → tạo/update admin
   try {
     const hash = bcrypt.hashSync(password, 10);
     const existing = await Admin.findOne({ where: { email } });
-    
     if (existing) {
-      existing.password_hash = hash;
-      existing.role = 'super';
-      existing.is_active = true;
-      await existing.save();
+      existing.password_hash = hash; existing.role = 'super'; existing.is_active = true; await existing.save();
     } else {
-      await Admin.create({
-        email,
-        password_hash: hash,
-        name: 'Super Admin',
-        role: 'super',
-        quota: 999999,
-        quota_used: 0,
-        can_choose_tier: true,
-        can_choose_duration: true,
-        max_devices_default: 999,
-        is_active: true,
-        created_by: 'reset-admin'
-      });
+      await Admin.create({ email, password_hash: hash, name: 'Super Admin', role: 'super', quota: 999999, is_active: true });
     }
-    
-    res.send(`
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Thành công</title>
-      <style>
-        body{margin:0;min-height:100vh;font-family:'Segoe UI',sans-serif;
-          background:url('/images/starry-night.jpg') center/cover fixed;
-          display:flex;align-items:center;justify-content:center;padding:20px;color:#fff}
-        body::before{content:'';position:fixed;inset:0;background:rgba(5,13,31,0.75);z-index:-1}
-        .card{max-width:480px;width:100%;background:rgba(10,30,63,0.9);
-          backdrop-filter:blur(30px);border:2px solid #81c784;
-          border-radius:24px;padding:40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
-        h1{color:#81c784;font-size:1.8rem;margin:0 0 20px}
-        .creds{background:#050d1f;padding:20px;border-radius:12px;
-          margin:20px 0;text-align:left;font-family:monospace;color:#4fc3f7;font-size:0.95rem;line-height:1.8}
-        .creds b{color:#ffd700}
-        a{display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#ffd700,#f59e0b);
-          color:#0a1e3f;text-decoration:none;border-radius:12px;font-weight:800}
-      </style></head><body>
-      <div class="card">
-        <h1>🎉 Thành công!</h1>
-        <div class="creds">
-          📧 Email: <b>${email}</b><br>
-          🔑 Password: <b>${password}</b><br>
-          👑 Role: <b>SUPER ADMIN</b>
-        </div>
-        <a href="/admin/login">→ Đăng nhập ngay</a>
-      </div></body></html>
-    `);
-  } catch (err) {
-    res.status(500).send('Lỗi: ' + err.message);
-  }
+    res.send(`<h1 style="color:#0a1e3f">Thành công! <a href="/admin/login">Đăng nhập</a></h1>`);
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
-// ==================== LOGIN ====================
+// ==================== LOGIN / LOGOUT ====================
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
-
-    if (dbAdmin && bcrypt.compareSync(password, dbAdmin.password_hash)) {
-      dbAdmin.last_login = new Date();
-      await dbAdmin.save();
-      const token = jwt.sign({
-        id: dbAdmin.id, email, role: dbAdmin.role,
-        name: dbAdmin.name, is_super: dbAdmin.role === 'super'
-      }, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('admin_token', token, {
-        httpOnly: true, secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000
-      });
-      return res.redirect('/admin/dashboard');
-    }
-    if (email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
-      const token = jwt.sign({ email, role: 'super', name: 'Owner', is_super: true }, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('admin_token', token, {
-        httpOnly: true, secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000
-      });
-      return res.redirect('/admin/dashboard');
-    }
-    res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.render('admin/login', { error: 'Lỗi hệ thống' });
-  }
-});
-
-router.get('/logout', (req, res) => {
-  res.clearCookie('admin_token');
-  res.redirect('/admin/login');
-});
-
-router.get('/force-logout', (req, res) => {
-  res.clearCookie('admin_token');
-  res.redirect('/admin/login');
-});
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -187,40 +63,28 @@ router.post('/login', async (req, res) => {
     const dbAdmin = await Admin.findOne({ where: { email, is_active: true } });
     const isEnvAdmin = email === process.env.ADMIN_EMAIL;
 
-    // 1. Check DB
     if (dbAdmin && bcrypt.compareSync(password, dbAdmin.password_hash)) {
-      dbAdmin.last_login = new Date();
-      await dbAdmin.save();
-      const token = jwt.sign({
-        id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role,
-        name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super'
-      }, JWT_SECRET, { expiresIn: '7d' });
+      dbAdmin.last_login = new Date(); await dbAdmin.save();
+      const token = jwt.sign({ id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role, name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super' }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
       return res.redirect('/admin/dashboard');
     }
 
-    // 2. Check ENV (Fallback) - Tự động tạo trong DB để lấy ID
     if (isEnvAdmin && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
       let envAdmin = dbAdmin;
       if (!envAdmin) {
-        envAdmin = await Admin.create({
-          email, password_hash: ADMIN_PASSWORD_HASH, name: 'Super Admin',
-          role: 'super', quota: 999999, is_active: true
-        });
+        envAdmin = await Admin.create({ email, password_hash: ADMIN_PASSWORD_HASH, name: 'Super Admin', role: 'super', quota: 999999, is_active: true });
       }
-      const token = jwt.sign({
-        id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true
-      }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
       return res.redirect('/admin/dashboard');
     }
-
     res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.render('admin/login', { error: 'Lỗi hệ thống' });
-  }
+  } catch (err) { res.render('admin/login', { error: 'Lỗi hệ thống' }); }
 });
+
+router.get('/logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/admin/login'); });
+router.get('/force-logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/admin/login'); });
 
 router.use(requireAdmin);
 
@@ -237,19 +101,12 @@ router.get('/dashboard', async (req, res) => {
     const totalKeys = await Key.count({ where: keyWhere });
     const activeKeys = await Key.count({ where: { ...keyWhere, is_active: true } });
     const expiredKeys = await Key.count({ where: { ...keyWhere, expires_at: { [Op.lt]: new Date() } } });
-    const vipKeys = await Key.count({ where: { ...keyWhere, tier: 'VIP' } });
     const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
     const recentLogs = await Log.findAll({ where, limit: 20, order: [['createdAt', 'DESC']], include: Key });
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
-    res.render('admin/dashboard', {
-      user: req.admin, isSuper, adminInfo,
-      totalKeys, activeKeys, expiredKeys, vipKeys, devicesActivated, recentLogs, showAll
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Lỗi: ' + err.message);
-  }
+    res.render('admin/dashboard', { user: req.admin, isSuper, adminInfo, totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
 // ==================== KEYS ====================
@@ -257,102 +114,51 @@ router.get('/keys', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const page = parseInt(req.query.page) || 1, limit = 15, offset = (page - 1) * limit;
-    const search = req.query.search || '';
-    const tier = req.query.tier || '';
-    const status = req.query.status || '';
-
+    const search = req.query.search || '', tier = req.query.tier || '', status = req.query.status || '';
     let where = {};
     if (!isSuper && req.admin.id) where.admin_id = req.admin.id;
-    if (search) {
-      where[Op.or] = [
-        { key: { [Op.iLike]: `%${search}%` } },
-        { hwid: { [Op.iLike]: `%${search}%` } }
-      ];
-    }
+    if (search) where[Op.or] = [{ key: { [Op.iLike]: `%${search}%` } }, { hwid: { [Op.iLike]: `%${search}%` } }];
     if (tier) where.tier = tier;
     if (status === 'active') where.is_active = true;
     if (status === 'disabled') where.is_active = false;
     if (status === 'expired') where.expires_at = { [Op.lt]: new Date() };
-
+    
     const { count, rows: keys } = await Key.findAndCountAll({
-      where, order: [['createdAt', 'DESC']],
-      include: [{ model: KeyDevice, as: 'devices', required: false }],
-      limit, offset
+      where, order: [['createdAt', 'DESC']], include: [{ model: KeyDevice, as: 'devices', required: false }], limit, offset
     });
-
-    // Lấy adminInfo + activeKeys cho sidebar badge
-    let adminInfo = null;
-    if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
     const activeKeys = await Key.count({ where: { ...(isSuper ? {} : { admin_id: req.admin.id }), is_active: true } });
-
-    res.render('admin/keys', {
-      user: req.admin, isSuper, adminInfo, activeKeys,
-      keys, currentPage: page, totalPages: Math.ceil(count / limit),
-      search, tier, status
-    });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi: ' + err.message); }
+    res.render('admin/keys', { user: req.admin, isSuper, keys, currentPage: page, totalPages: Math.ceil(count / limit), search, tier, status, activeKeys });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
 router.post('/keys/create', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const { tier, duration, prefix, max_devices } = req.body;
-    
-    console.log('🎬 CREATE KEY:', { email: req.admin.email, tier, duration, prefix, max_devices });
-
     let adminRecord = null;
     if (!isSuper && req.admin.id) {
       adminRecord = await Admin.findByPk(req.admin.id);
       if (!adminRecord) return res.redirect('/admin/login');
-      if (adminRecord.quota_used >= adminRecord.quota) {
-        return res.redirect('/admin/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
-      }
+      if (adminRecord.quota_used >= adminRecord.quota) return res.redirect('/admin/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
     }
-    
     let maxDev = parseInt(max_devices) || 1;
-    if (maxDev < 1) maxDev = 1;
     if (maxDev > 999) maxDev = 999;
 
     let expires_at;
-    if (duration === 'forever') {
-      expires_at = new Date('2099-12-31T23:59:59');
-    } else {
-      const dur = parseFloat(duration) || 30;
-      const days = dur <= 0 ? 30 : dur;
-      const hours = Math.round(days * 24);
-      expires_at = new Date();
-      expires_at.setHours(expires_at.getHours() + hours);
+    if (duration === 'forever') expires_at = new Date('2099-12-31T23:59:59');
+    else {
+      const hours = Math.round((parseFloat(duration) || 30) * 24);
+      expires_at = new Date(); expires_at.setHours(expires_at.getHours() + hours);
     }
-
-    const crypto = require('crypto');
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
     const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-
-    await Key.create({ 
-      key, 
-      tier: tier || 'Normal', 
-      expires_at, 
-      max_devices: maxDev, 
-      created_by: req.admin.email, 
-      admin_id: (await Admin.findByPk(req.admin.id)) ? req.admin.id : null 
-    });
-
-    if (adminRecord) { 
-      adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; 
-      await adminRecord.save(); 
-    }
-
-    await Log.create({ 
-      action: 'key_created', 
-      details: `${req.admin.email} tạo key ${key}`, 
-      ip_address: req.ip 
-    });
-
+    
+    await Key.create({ key, tier: tier || 'Normal', expires_at, max_devices: maxDev, created_by: req.admin.email, admin_id: req.admin.id || null });
+    if (adminRecord) { adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; await adminRecord.save(); }
+    await Log.create({ action: 'key_created', details: `${req.admin.email} tạo key ${key}`, ip_address: req.ip });
+    
     res.redirect('/admin/keys?created=1');
-  } catch (err) {
-    console.error('❌ CREATE KEY ERROR:', err);
-    res.redirect('/admin/keys?error=' + encodeURIComponent(err.message));
-  }
+  } catch (err) { res.redirect('/admin/keys?error=' + encodeURIComponent(err.message)); }
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
@@ -387,17 +193,11 @@ router.get('/keys/devices/:id', async (req, res) => {
   try { const k = await Key.findByPk(req.params.id, { include: [{ model: KeyDevice, as: 'devices', required: false }] }); if (!k) return res.json({ success: false }); res.json({ success: true, devices: k.devices || [] }); } catch (err) { res.status(500).json({ success: false }); }
 });
 
-
-// ============================================
-// QUẢN TRỊ VIÊN (chỉ Super Admin)
-// ============================================
+// ==================== QUẢN TRỊ VIÊN ====================
 router.get('/admins', requireSuperAdmin, async (req, res) => {
   try {
     const admins = await Admin.findAll({ order: [['createdAt', 'DESC']] });
-    res.render('admin/admins', {
-      user: req.admin, isSuper: true, admins, currentPage: 'admins',
-      success: req.query.success || null, error: req.query.error || null
-    });
+    res.render('admin/admins', { user: req.admin, isSuper: true, admins, currentPage: 'admins', success: req.query.success || null, error: req.query.error || null });
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
@@ -407,16 +207,7 @@ router.post('/admins/create', requireSuperAdmin, async (req, res) => {
     if (!email || !password) return res.redirect('/admin/admins?error=missing');
     const dup = await Admin.findOne({ where: { email } });
     if (dup) return res.redirect('/admin/admins?error=email_exists');
-    await Admin.create({
-      email, password_hash: bcrypt.hashSync(password, 10),
-      name: name || 'Admin', role: role || 'admin',
-      quota: parseInt(quota) || 0, quota_used: 0,
-      can_choose_tier: can_choose_tier === 'on',
-      can_choose_duration: can_choose_duration === 'on',
-      max_devices_default: parseInt(max_devices_default) || 1,
-      is_active: true, created_by: req.admin.email
-    });
-    await Log.create({ action: 'admin_created', details: `${req.admin.email} tạo admin ${email}`, ip_address: req.ip });
+    await Admin.create({ email, password_hash: bcrypt.hashSync(password, 10), name: name || 'Admin', role: role || 'admin', quota: parseInt(quota) || 0, quota_used: 0, can_choose_tier: can_choose_tier === 'on', can_choose_duration: can_choose_duration === 'on', max_devices_default: parseInt(max_devices_default) || 1, is_active: true, created_by: req.admin.email });
     res.redirect('/admin/admins?success=created');
   } catch (err) { res.redirect('/admin/admins?error=' + encodeURIComponent(err.message)); }
 });
@@ -426,12 +217,9 @@ router.post('/admins/update/:id', requireSuperAdmin, async (req, res) => {
     const a = await Admin.findByPk(req.params.id);
     if (!a) return res.redirect('/admin/admins?error=not_found');
     const { name, role, quota, can_choose_tier, can_choose_duration, max_devices_default, is_active, new_password } = req.body;
-    a.name = name; a.role = role;
-    a.quota = parseInt(quota) || 0;
-    a.can_choose_tier = can_choose_tier === 'on';
-    a.can_choose_duration = can_choose_duration === 'on';
-    a.max_devices_default = parseInt(max_devices_default) || 1;
-    a.is_active = is_active === 'on';
+    a.name = name; a.role = role; a.quota = parseInt(quota) || 0;
+    a.can_choose_tier = can_choose_tier === 'on'; a.can_choose_duration = can_choose_duration === 'on';
+    a.max_devices_default = parseInt(max_devices_default) || 1; a.is_active = is_active === 'on';
     if (new_password) a.password_hash = bcrypt.hashSync(new_password, 10);
     await a.save();
     res.redirect('/admin/admins?success=updated');
@@ -439,92 +227,34 @@ router.post('/admins/update/:id', requireSuperAdmin, async (req, res) => {
 });
 
 router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const a = await Admin.findByPk(req.params.id);
-    if (a && a.email !== process.env.ADMIN_EMAIL) await a.destroy();
-    res.redirect('/admin/admins?success=deleted');
-  } catch (err) { res.redirect('/admin/admins?error=1'); }
+  try { const a = await Admin.findByPk(req.params.id); if (a && a.email !== process.env.ADMIN_EMAIL) await a.destroy(); res.redirect('/admin/admins?success=deleted'); } catch (err) { res.redirect('/admin/admins?error=1'); }
 });
 
-// ============================================
-// NGƯỜI BÁN - SELLERS (chỉ Super Admin)
-// ============================================
+// ==================== NGƯỜI BÁN ====================
 router.get('/sellers', requireSuperAdmin, async (req, res) => {
   try {
     const sellers = await Seller.findAll({ order: [['createdAt', 'DESC']] });
-    res.render('admin/sellers', {
-      user: req.admin, isSuper: true, sellers, currentPage: 'sellers',
-      success: req.query.success || null, error: req.query.error || null
-    });
+    res.render('admin/sellers', { user: req.admin, isSuper: true, sellers, currentPage: 'sellers', success: req.query.success || null, error: req.query.error || null });
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
 router.post('/sellers/create', requireSuperAdmin, async (req, res) => {
   try {
-    // 🔒 TRIM tất cả input để tránh khoảng trắng thừa
-    const email = (req.body.email || '').trim().toLowerCase();
-    const password = (req.body.password || '').trim();
-    const name = (req.body.name || '').trim();
-    const phone = (req.body.phone || '').trim();
-    const { quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default } = req.body;
-    
-    // 🔍 LOG để debug
-    console.log('🎬 CREATE SELLER:', { 
-      email, 
-      password_len: password.length, 
-      name,
-      has_leading_space: req.body.password !== password  // true nếu có space bị cắt
-    });
-    
-    // ✅ VALIDATE
-    if (!email) return res.redirect('/admin/sellers?error=' + encodeURIComponent('Thiếu email'));
-    if (!password || password.length < 6) {
-      return res.redirect('/admin/sellers?error=' + encodeURIComponent('Mật khẩu phải >= 6 ký tự'));
-    }
-    
-    // Check trùng
+    const { email, password, name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default } = req.body;
     const dup = await Seller.findOne({ where: { email } });
-    if (dup) {
-      return res.redirect('/admin/sellers?error=' + encodeURIComponent('Email đã tồn tại: ' + email));
-    }
-    
-    // Tạo seller
-    const hash = bcrypt.hashSync(password, 10);
-    const seller = await Seller.create({
-      email, 
-      password_hash: hash,
-      name: name || 'Seller', 
-      phone: phone || null,
-      quota: parseInt(quota) || 0, 
-      quota_used: 0,
-      can_choose_tier: can_choose_tier === 'on',
-      can_choose_duration: can_choose_duration === 'on',
-      default_tier: default_tier || 'Normal',
-      max_devices_default: parseInt(max_devices_default) || 1,
-      is_active: true, 
-      created_by: req.admin.email
-    });
-    
-    // 🧪 VERIFY ngay sau khi tạo
-    const verify = bcrypt.compareSync(password, seller.password_hash);
-    console.log('🧪 Verify login:', verify ? '✅ PASS' : '❌ FAIL');
-    console.log('✅ Seller created ID:', seller.id);
-    
+    if (dup) return res.redirect('/admin/sellers?error=email_exists');
+    await Seller.create({ email, password_hash: bcrypt.hashSync(password, 10), name: name || 'Seller', phone, quota: parseInt(quota) || 0, quota_used: 0, can_choose_tier: can_choose_tier === 'on', can_choose_duration: can_choose_duration === 'on', default_tier: default_tier || 'Normal', max_devices_default: parseInt(max_devices_default) || 1, is_active: true, created_by: req.admin.email });
     res.redirect('/admin/sellers?success=created');
-  } catch (err) {
-    console.error('❌ CREATE SELLER ERROR:', err);
-    res.redirect('/admin/sellers?error=' + encodeURIComponent(err.message));
-  }
+  } catch (err) { res.redirect('/admin/sellers?error=1'); }
 });
+
 router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
   try {
     const s = await Seller.findByPk(req.params.id);
     if (!s) return res.redirect('/admin/sellers');
     const { name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default, is_active, new_password } = req.body;
-    s.name = name; s.phone = phone;
-    s.quota = parseInt(quota) || 0;
-    s.can_choose_tier = can_choose_tier === 'on';
-    s.can_choose_duration = can_choose_duration === 'on';
+    s.name = name; s.phone = phone; s.quota = parseInt(quota) || 0;
+    s.can_choose_tier = can_choose_tier === 'on'; s.can_choose_duration = can_choose_duration === 'on';
     s.default_tier = default_tier; s.max_devices_default = parseInt(max_devices_default) || 1;
     s.is_active = is_active === 'on';
     if (new_password) s.password_hash = bcrypt.hashSync(new_password, 10);
@@ -534,100 +264,61 @@ router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
 });
 
 router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await Seller.destroy({ where: { id: req.params.id } }); res.redirect('/admin/sellers?success=deleted'); }
-  catch (err) { res.redirect('/admin/sellers?error=1'); }
+  try { await Seller.destroy({ where: { id: req.params.id } }); res.redirect('/admin/sellers?success=deleted'); } catch (err) { res.redirect('/admin/sellers?error=1'); }
 });
 
-// ============================================
-// PHIÊN BẢN APP - VERSIONS (chỉ Super Admin)
-// ============================================
+// ==================== PHIÊN BẢN APP ====================
 router.get('/versions', requireSuperAdmin, async (req, res) => {
   try {
     const versions = await AppVersion.findAll({ order: [['version_code', 'DESC']] });
-    res.render('admin/versions', {
-      user: req.admin, isSuper: true, versions, currentPage: 'versions',
-      success: req.query.success || null, error: req.query.error || null
-    });
+    res.render('admin/versions', { user: req.admin, isSuper: true, versions, currentPage: 'versions', success: req.query.success || null, error: req.query.error || null });
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
 router.post('/versions/create', requireSuperAdmin, async (req, res) => {
   try {
     const { version_code, version_name, download_url, changelog, is_required, min_supported_version, release_channel } = req.body;
-    await AppVersion.create({
-      version_code: parseInt(version_code), version_name, download_url, changelog,
-      is_required: is_required === 'on',
-      min_supported_version: parseInt(min_supported_version) || 0,
-      release_channel: release_channel || 'stable',
-      is_active: true, update_enabled: true
-    });
+    await AppVersion.create({ version_code: parseInt(version_code), version_name, download_url, changelog, is_required: is_required === 'on', min_supported_version: parseInt(min_supported_version) || 0, release_channel: release_channel || 'stable', is_active: true, update_enabled: true });
     res.redirect('/admin/versions?success=created');
   } catch (err) { res.redirect('/admin/versions?error=1'); }
 });
 
 router.post('/versions/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await AppVersion.destroy({ where: { id: req.params.id } }); res.redirect('/admin/versions?success=deleted'); }
-  catch (err) { res.redirect('/admin/versions?error=1'); }
+  try { await AppVersion.destroy({ where: { id: req.params.id } }); res.redirect('/admin/versions?success=deleted'); } catch (err) { res.redirect('/admin/versions?error=1'); }
 });
 
-// ============================================
-// THÔNG BÁO - ANNOUNCEMENTS (API cho app)
-// ============================================
+// ==================== THÔNG BÁO ====================
 router.get('/announcements', requireSuperAdmin, async (req, res) => {
   try {
     const announcements = await Announcement.findAll({ order: [['priority', 'DESC'], ['createdAt', 'DESC']] });
-    res.render('admin/announcements', {
-      user: req.admin, isSuper: true, announcements, currentPage: 'announcements',
-      success: req.query.success || null, error: req.query.error || null
-    });
+    res.render('admin/announcements', { user: req.admin, isSuper: true, announcements, currentPage: 'announcements', success: req.query.success || null, error: req.query.error || null });
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
 router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
   try {
     const { title, message, type, priority, is_dismissible } = req.body;
-    await Announcement.create({
-      title, message, type: type || 'info',
-      priority: parseInt(priority) || 5,
-      is_dismissible: is_dismissible === 'on',
-      is_enabled: true, created_by: req.admin.email
-    });
-    await Log.create({ action: 'announcement_created', details: `${req.admin.email} tạo thông báo: ${title}`, ip_address: req.ip });
+    await Announcement.create({ title, message, type: type || 'info', priority: parseInt(priority) || 5, is_dismissible: is_dismissible === 'on', is_enabled: true, created_by: req.admin.email });
     res.redirect('/admin/announcements?success=created');
   } catch (err) { res.redirect('/admin/announcements?error=1'); }
 });
 
 router.post('/announcements/toggle/:id', requireSuperAdmin, async (req, res) => {
-  try {
-    const a = await Announcement.findByPk(req.params.id);
-    if (a) { a.is_enabled = !a.is_enabled; await a.save(); }
-    res.redirect('/admin/announcements?success=toggled');
-  } catch (err) { res.redirect('/admin/announcements?error=1'); }
+  try { const a = await Announcement.findByPk(req.params.id); if (a) { a.is_enabled = !a.is_enabled; await a.save(); } res.redirect('/admin/announcements?success=toggled'); } catch (err) { res.redirect('/admin/announcements?error=1'); }
 });
 
 router.post('/announcements/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await Announcement.destroy({ where: { id: req.params.id } }); res.redirect('/admin/announcements?success=deleted'); }
-  catch (err) { res.redirect('/admin/announcements?error=1'); }
+  try { await Announcement.destroy({ where: { id: req.params.id } }); res.redirect('/admin/announcements?success=deleted'); } catch (err) { res.redirect('/admin/announcements?error=1'); }
 });
 
-// ============================================
-// TÀI KHOẢN - PROFILE (mọi admin)
-// ============================================
+// ==================== PROFILE ====================
 router.get('/profile', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     let adminInfo = null;
-    if (req.admin.id) {
-      adminInfo = await Admin.findByPk(req.admin.id);
-    } else {
-      adminInfo = await Admin.findOne({ where: { email: req.admin.email } });
-    }
-    res.render('admin/profile', {
-      user: req.admin, isSuper, adminInfo, currentPage: 'profile',
-      success: req.query.success || null, error: req.query.error || null
-    });
-  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
-});
+    if (req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+    else adminInfo = await Admin.findOne({ where: { email: req.admin.email } });
+    res.render('admin/profile', { user: req.admin, isSuper, adminInfo, currentPage: 'profile', success: req.query.success || null, error: req.query.error || null });
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
@@ -637,70 +328,13 @@ router.post('/profile/change-password', async (req, res) => {
     if (!old_password || !new_password || !confirm_password) return res.redirect('/admin/profile?error=missing');
     if (new_password !== confirm_password) return res.redirect('/admin/profile?error=password_mismatch');
     if (new_password.length < 6) return res.redirect('/admin/profile?error=too_short');
-    const admin = await Admin.findByPk(req.admin.id);
+    const admin = await Admin.findOne({ where: { email: req.admin.email } });
     if (!admin) return res.redirect('/admin/profile?error=not_found');
     if (!bcrypt.compareSync(old_password, admin.password_hash)) return res.redirect('/admin/profile?error=wrong_password');
     admin.password_hash = bcrypt.hashSync(new_password, 10);
     await admin.save();
     res.redirect('/admin/profile?success=password_changed');
   } catch (err) { res.redirect('/admin/profile?error=system'); }
-});
-
-
-// ============================================
-// 🔍 DEBUG SELLER (xóa sau khi fix xong)
-// ============================================
-router.get('/debug-seller', requireSuperAdmin, async (req, res) => {
-  try {
-    const { email, password } = req.query;
-    if (!email) {
-      // Liệt kê tất cả seller
-      const sellers = await Seller.findAll({ 
-        order: [['id', 'DESC']], limit: 10,
-        attributes: ['id','email','name','is_active','password_hash','createdAt']
-      });
-      let html = '<html><body style="font-family:monospace;padding:20px;background:#0a1e3f;color:#fff">';
-      html += '<h2 style="color:#ffd700">🔍 Danh sách Seller (10 mới nhất)</h2>';
-      html += '<table border="1" cellpadding="8" style="border-collapse:collapse;color:#fff">';
-      html += '<tr style="background:#1a4275"><th>ID</th><th>Email</th><th>Name</th><th>Active</th><th>Hash Length</th><th>Hash Prefix</th><th>Test Login</th></tr>';
-      sellers.forEach(s => {
-        html += '<tr>';
-        html += '<td>' + s.id + '</td>';
-        html += '<td>' + s.email + '</td>';
-        html += '<td>' + (s.name || '') + '</td>';
-        html += '<td>' + (s.is_active ? '✅' : '❌') + '</td>';
-        html += '<td>' + (s.password_hash ? s.password_hash.length : 0) + '</td>';
-        html += '<td>' + (s.password_hash ? s.password_hash.substring(0, 15) + '...' : 'NULL') + '</td>';
-        html += '<td><a style="color:#4fc3f7" href="?email=' + encodeURIComponent(s.email) + '&password=123456">Test 123456</a></td>';
-        html += '</tr>';
-      });
-      html += '</table>';
-      html += '<p style="margin-top:20px;color:#b8c5d9">💡 Thêm <code>?email=...&password=...</code> vào URL để test login</p>';
-      html += '</body></html>';
-      return res.send(html);
-    }
-    
-    const seller = await Seller.findOne({ where: { email } });
-    if (!seller) return res.send('<pre style="color:#fff;background:#0a1e3f;padding:20px">❌ Không tìm thấy seller: ' + email + '</pre>');
-    
-    const bcrypt = require('bcryptjs');
-    const ok = password ? bcrypt.compareSync(password, seller.password_hash) : null;
-    
-    const info = {
-      id: seller.id,
-      email: seller.email,
-      name: seller.name,
-      is_active: seller.is_active,
-      hash_length: seller.password_hash ? seller.password_hash.length : 0,
-      hash_sample: seller.password_hash ? seller.password_hash.substring(0, 30) + '...' : null,
-      test_password: password,
-      login_result: ok === null ? 'Chưa test' : (ok ? '✅ PASS' : '❌ FAIL')
-    };
-    
-    res.send('<pre style="color:#fff;background:#0a1e3f;padding:20px;font-size:14px">' + JSON.stringify(info, null, 2) + '</pre>');
-  } catch (err) {
-    res.status(500).send('Lỗi: ' + err.message);
-  }
 });
 
 module.exports = router;
