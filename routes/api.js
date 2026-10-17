@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { Op } = require('sequelize');
-const { Key, Log, KeyDevice } = require('../models');
+const { Key, Log, KeyDevice, AppVersion, Announcement } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
 const apiLimiter = require('../middleware/rateLimiter');
 const genKeyLimiter = require('../middleware/genKeyLimiter');
@@ -14,6 +14,7 @@ async function cleanupExpiredKeys() {
     const expiredKeys = await Key.findAll({ where: { expires_at: { [Op.lt]: now } } });
     for (const key of expiredKeys) {
       await KeyDevice.destroy({ where: { key_id: key.id } });
+      await Log.destroy({ where: { key_id: key.id } });
       await key.destroy();
       await Log.create({
         action: 'key_expired_deleted',
@@ -255,9 +256,9 @@ function calcDays(exp) { return Math.floor(calcHours(exp) / 24); }
 
 // Check
 router.post('/check', async (req, res) => {
-  await cleanupExpiredKeys();
   try {
-    const { hwid } = req.body;
+    await cleanupExpiredKeys();
+    const { hwid } = req.body || {};
     if (!hwid) return fail(res, 400, 'MISSING_PARAMETER', 'Thiếu hwid.');
     const device = await KeyDevice.findOne({ where: { hwid, is_active: true }, include: { model: Key } });
     if (!device || !device.Key) return fail(res, 404, 'LICENSE_NOT_FOUND', 'Không tìm thấy license.');
@@ -274,9 +275,9 @@ router.post('/check', async (req, res) => {
 
 // Activate
 router.post('/activate', async (req, res) => {
-  await cleanupExpiredKeys();
   try {
-    const { key, hwid, device_name } = req.body;
+    await cleanupExpiredKeys();
+    const { key, hwid, device_name } = req.body || {};
     if (!key || !hwid) return fail(res, 400, 'MISSING_PARAMETER', 'Thiếu key hoặc hwid.');
     const k = await Key.findOne({ where: { key } });
     if (!k) return fail(res, 404, 'KEY_NOT_FOUND', 'Key không tồn tại.');

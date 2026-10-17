@@ -8,6 +8,13 @@ const adminRoutes = require('../routes/admin');
 const sellerRoutes = require('../routes/seller');
 require('../models');
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
