@@ -271,6 +271,7 @@ router.post('/keys/create', async (req, res) => {
         return res.redirect('/admin/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
       }
     }
+    
     let maxDev = parseInt(max_devices) || 1;
     if (maxDev < 1) maxDev = 1;
     if (maxDev > 999) maxDev = 999;
@@ -313,14 +314,8 @@ router.post('/keys/create', async (req, res) => {
     res.redirect('/admin/keys?created=1');
   } catch (err) {
     console.error('❌ CREATE KEY ERROR:', err);
-    // Trả về lỗi chi tiết thay vì im lặng
     res.redirect('/admin/keys?error=' + encodeURIComponent(err.message));
   }
-});
-    if (adminRecord) { adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; await adminRecord.save(); }
-    await Log.create({ action: 'key_created', details: `${req.admin.email} tạo key ${key}`, ip_address: req.ip });
-    res.redirect('/admin/keys?created=1');
-  } catch (err) { console.error(err); res.redirect('/admin/keys?error=create_failed'); }
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
