@@ -55,6 +55,20 @@ async function initApp() {
     console.log('Columns ensured.');
 
     await sequelize.sync({ alter: true });
+
+    // SYNC ADMIN ENV VÀO DB (Để không bị lỗi foreign key)
+    const bcrypt = require('bcryptjs');
+    const { Admin } = require('../models');
+    const envEmail = process.env.ADMIN_EMAIL || 'admin@dpiconfig.com';
+    const envPassHash = process.env.ADMIN_PASSWORD_HASH || bcrypt.hashSync('admin123', 10);
+    const existing = await Admin.findOne({ where: { email: envEmail } });
+    if (!existing) {
+      await Admin.create({ email: envEmail, password_hash: envPassHash, name: 'Super Owner', role: 'super', quota: 999999, is_active: true });
+      console.log('✅ Đã đồng bộ tài khoản ENV vào DB');
+    } else if (existing.role !== 'super') {
+      existing.role = 'super'; await existing.save();
+    }
+  
     console.log('Models synced.');
 
     const PORT = process.env.PORT || 3000;

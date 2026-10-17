@@ -297,7 +297,7 @@ router.post('/keys/create', async (req, res) => {
       expires_at, 
       max_devices: maxDev, 
       created_by: req.admin.email, 
-      admin_id: req.admin.id || null 
+      admin_id: (await Admin.findByPk(req.admin.id)) ? req.admin.id : null 
     });
 
     if (adminRecord) { 
