@@ -260,30 +260,63 @@ router.post('/keys/create', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const { tier, duration, prefix, max_devices } = req.body;
+    
+    console.log('🎬 CREATE KEY:', { email: req.admin.email, tier, duration, prefix, max_devices });
+
     let adminRecord = null;
     if (!isSuper && req.admin.id) {
       adminRecord = await Admin.findByPk(req.admin.id);
       if (!adminRecord) return res.redirect('/admin/login');
-      if (adminRecord.quota_used >= adminRecord.quota) return res.redirect('/admin/keys?error=quota_exceeded');
+      if (adminRecord.quota_used >= adminRecord.quota) {
+        return res.redirect('/admin/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
+      }
     }
-    let maxDev = 1;
-    if (max_devices) {
-      maxDev = parseInt(max_devices) || 1;
-      if (maxDev < 1) maxDev = 1;
-      if (maxDev > 999) maxDev = 999;
-    }
+    let maxDev = parseInt(max_devices) || 1;
+    if (maxDev < 1) maxDev = 1;
+    if (maxDev > 999) maxDev = 999;
+
     let expires_at;
-    if (duration === 'forever') expires_at = new Date('2099-12-31T23:59:59');
-    else {
+    if (duration === 'forever') {
+      expires_at = new Date('2099-12-31T23:59:59');
+    } else {
       const dur = parseFloat(duration) || 30;
       const days = dur <= 0 ? 30 : dur;
       const hours = Math.round(days * 24);
       expires_at = new Date();
       expires_at.setHours(expires_at.getHours() + hours);
     }
+
+    const crypto = require('crypto');
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
     const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-    await Key.create({ key, tier, expires_at, max_devices: maxDev, created_by: req.admin.email, admin_id: req.admin.id || null });
+
+    await Key.create({ 
+      key, 
+      tier: tier || 'Normal', 
+      expires_at, 
+      max_devices: maxDev, 
+      created_by: req.admin.email, 
+      admin_id: req.admin.id || null 
+    });
+
+    if (adminRecord) { 
+      adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; 
+      await adminRecord.save(); 
+    }
+
+    await Log.create({ 
+      action: 'key_created', 
+      details: `${req.admin.email} tạo key ${key}`, 
+      ip_address: req.ip 
+    });
+
+    res.redirect('/admin/keys?created=1');
+  } catch (err) {
+    console.error('❌ CREATE KEY ERROR:', err);
+    // Trả về lỗi chi tiết thay vì im lặng
+    res.redirect('/admin/keys?error=' + encodeURIComponent(err.message));
+  }
+});
     if (adminRecord) { adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; await adminRecord.save(); }
     await Log.create({ action: 'key_created', details: `${req.admin.email} tạo key ${key}`, ip_address: req.ip });
     res.redirect('/admin/keys?created=1');

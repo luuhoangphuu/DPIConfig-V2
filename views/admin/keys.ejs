@@ -73,7 +73,6 @@
             <th>Key</th>
             <th>Hạng</th>
             <th>Thiết bị</th>
-            <th>Hết hạn</th>
             <th>Còn lại</th>
             <th>Bật/Tắt</th>
             <th style="text-align:right;">Thao tác</th>
@@ -103,9 +102,6 @@
               <td>
                 <span style="font-weight:800;color:#4fc3f7;font-family:'Caveat';font-size:1.2rem;"><%= active %></span>
                 <span style="color:#b8c5d9;">/ <%= k.max_devices %></span>
-              </td>
-              <td style="color:#b8c5d9;font-size:0.85rem;">
-                <%= new Date(k.expires_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
               </td>
               <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
               <td>
@@ -352,7 +348,7 @@ document.querySelectorAll('.view-devices-btn').forEach(btn => {
           html += '<tr><td><code>' + d.hwid.substring(0,18) + (d.hwid.length > 18 ? '...' : '') + '</code></td>';
           html += '<td style="font-weight:600;">' + (d.device_name || '<em style="color:#b8c5d9;">Chưa đặt</em>') + '</td>';
           html += '<td>' + (d.is_active ? '<span style="color:#81c784;font-weight:700;">● Hoạt động</span>' : '<span style="color:#ef5350;font-weight:700;">● Bị khóa</span>') + '</td>';
-          html += '<td style="color:#b8c5d9;font-size:0.85rem;">' + new Date(d.createdAt).toLocaleString('vi-VN') + '</td>';
+          html += '';
           html += '<td style="text-align:right;"><form method="POST" action="/admin/keys/toggle-device/' + d.id + '" style="display:inline;margin:0;"><button class="vg-btn-icon ' + (d.is_active ? 'warn' : '') + '"><i class="fas fa-power-off"></i></button></form> ';
           html += '<form method="POST" action="/admin/keys/unbind-device/' + d.id + '" style="display:inline;margin:0;" onsubmit="return confirm(\'Xóa thiết bị này?\')"><button class="vg-btn-icon danger"><i class="fas fa-trash"></i></button></form></td></tr>';
         });
