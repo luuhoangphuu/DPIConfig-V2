@@ -255,9 +255,6 @@ router.get('/keys', async (req, res) => {
     });
   } catch (err) { console.error(err); res.status(500).send('Lỗi: ' + err.message); }
 });
-    res.render('admin/keys', { user: req.admin, isSuper, keys, currentPage: page, totalPages: Math.ceil(count / limit), search });
-  } catch (err) { console.error(err); res.status(500).send('Lỗi: ' + err.message); }
-});
 
 router.post('/keys/create', async (req, res) => {
   try {
