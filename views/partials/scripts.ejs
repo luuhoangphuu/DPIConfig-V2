@@ -93,3 +93,179 @@
 </script>
 </body>
 </html>
+
+<script>
+// ============================================
+// SPRINT 1: TOPBAR + COMMAND PALETTE + TOAST
+// ============================================
+(function() {
+  // ========== TOAST SYSTEM ==========
+  window.showToast = function(type, title, desc) {
+    const container = document.getElementById('snToastContainer');
+    if (!container) return;
+    
+    const icons = { success: 'fa-check', error: 'fa-times', warning: 'fa-exclamation', info: 'fa-info' };
+    const toast = document.createElement('div');
+    toast.className = 'sn-toast ' + type;
+    toast.innerHTML = 
+      '<div class="sn-toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
+      '<div class="sn-toast-body">' +
+        '<div class="sn-toast-title">' + title + '</div>' +
+        (desc ? '<div class="sn-toast-desc">' + desc + '</div>' : '') +
+      '</div>' +
+      '<button class="sn-toast-close" type="button"><i class="fas fa-times"></i></button>';
+    
+    container.appendChild(toast);
+    
+    const close = () => {
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    };
+    toast.querySelector('.sn-toast-close').addEventListener('click', close);
+    setTimeout(close, 4000);
+  };
+  
+  // Auto-convert URL params to toasts
+  const params = new URLSearchParams(window.location.search);
+  const toastMap = {
+    created: ['success', 'Đã tạo thành công!', ''],
+    toggled: ['success', 'Đã đổi trạng thái', ''],
+    deleted: ['error', 'Đã xóa', ''],
+    updated: ['success', 'Đã cập nhật', ''],
+    kicked: ['warning', 'Đã khóa thiết bị', ''],
+    extended: ['success', 'Đã gia hạn Key', '']
+  };
+  for (const [key, val] of Object.entries(toastMap)) {
+    if (params.get(key) === '1' || params.get(key)) {
+      window.showToast(val[0], val[1], params.get(key) !== '1' ? params.get(key) : val[2]);
+      break;
+    }
+  }
+  
+  // ========== USER DROPDOWN ==========
+  const userTrigger = document.getElementById('userTrigger');
+  const userMenu = document.getElementById('userMenu');
+  if (userTrigger && userMenu) {
+    userTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => userMenu.classList.remove('show'));
+    userMenu.addEventListener('click', (e) => e.stopPropagation());
+  }
+  
+  // ========== COMMAND PALETTE ==========
+  const cmdkOverlay = document.getElementById('cmdkOverlay');
+  const cmdkInput = document.getElementById('cmdkInput');
+  const cmdkResults = document.getElementById('cmdkResults');
+  const openBtn = document.getElementById('openCmdK');
+  
+  if (!cmdkOverlay || !cmdkInput || !cmdkResults) return;
+  
+  const isSuper = typeof window.__isSuper !== 'undefined' ? window.__isSuper : false;
+  
+  // Detect super from user role badge text
+  const roleBadge = document.querySelector('.sn-user-role');
+  const isSuperDetected = roleBadge && roleBadge.textContent.toLowerCase().includes('super');
+  
+  const allCommands = [
+    { section: 'Hành động', icon: 'fa-plus-circle', label: 'Tạo Key mới', action: () => { window.location.href = '/admin/keys'; } },
+    { section: 'Điều hướng', icon: 'fa-chart-pie', label: 'Dashboard', action: () => { window.location.href = '/admin/dashboard'; } },
+    { section: 'Điều hướng', icon: 'fa-key', label: 'Quản lý Key', action: () => { window.location.href = '/admin/keys'; } },
+    { section: 'Điều hướng', icon: 'fa-user-cog', label: 'Tài khoản', action: () => { window.location.href = '/admin/profile'; } },
+  ];
+  
+  if (isSuperDetected) {
+    allCommands.push(
+      { section: 'Quản lý', icon: 'fa-user-shield', label: 'Quản trị viên', action: () => { window.location.href = '/admin/admins'; } },
+      { section: 'Quản lý', icon: 'fa-store', label: 'Người bán', action: () => { window.location.href = '/admin/sellers'; } },
+      { section: 'Hệ thống', icon: 'fa-cloud-download-alt', label: 'Phiên bản App', action: () => { window.location.href = '/admin/versions'; } },
+      { section: 'Hệ thống', icon: 'fa-bullhorn', label: 'Thông báo', action: () => { window.location.href = '/admin/announcements'; } }
+    );
+  }
+  
+  allCommands.push(
+    { section: 'Khác', icon: 'fa-sign-out-alt', label: 'Đăng xuất', action: () => { window.location.href = '/admin/logout'; } }
+  );
+  
+  let activeIdx = 0;
+  let filtered = allCommands;
+  
+  function renderCmds(items) {
+    if (!items.length) {
+      cmdkResults.innerHTML = '<div class="sn-cmdk-empty"><i class="fas fa-search" style="font-size:2rem;opacity:0.3;"></i><p style="margin-top:12px;">Không tìm thấy lệnh nào</p></div>';
+      return;
+    }
+    let html = '';
+    let lastSection = '';
+    items.forEach((cmd, i) => {
+      if (cmd.section !== lastSection) {
+        html += '<div class="sn-cmdk-section">' + cmd.section + '</div>';
+        lastSection = cmd.section;
+      }
+      html += '<div class="sn-cmdk-item' + (i === activeIdx ? ' active' : '') + '" data-idx="' + i + '"><i class="fas ' + cmd.icon + '"></i><span>' + cmd.label + '</span></div>';
+    });
+    cmdkResults.innerHTML = html;
+    
+    cmdkResults.querySelectorAll('.sn-cmdk-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.dataset.idx);
+        filtered[idx].action();
+        closeCmdK();
+      });
+    });
+  }
+  
+  function openCmdK() {
+    cmdkOverlay.style.display = 'flex';
+    cmdkInput.value = '';
+    activeIdx = 0;
+    filtered = allCommands;
+    renderCmds(filtered);
+    setTimeout(() => cmdkInput.focus(), 50);
+  }
+  
+  function closeCmdK() {
+    cmdkOverlay.style.display = 'none';
+  }
+  
+  if (openBtn) openBtn.addEventListener('click', openCmdK);
+  
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      openCmdK();
+    }
+    if (e.key === 'Escape' && cmdkOverlay.style.display === 'flex') closeCmdK();
+    
+    if (cmdkOverlay.style.display === 'flex') {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, filtered.length - 1);
+        renderCmds(filtered);
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        renderCmds(filtered);
+      }
+      if (e.key === 'Enter' && filtered[activeIdx]) {
+        e.preventDefault();
+        filtered[activeIdx].action();
+        closeCmdK();
+      }
+    }
+  });
+  
+  cmdkInput.addEventListener('input', () => {
+    const q = cmdkInput.value.toLowerCase().trim();
+    filtered = q ? allCommands.filter(c => c.label.toLowerCase().includes(q)) : allCommands;
+    activeIdx = 0;
+    renderCmds(filtered);
+  });
+  
+  cmdkOverlay.addEventListener('click', (e) => {
+    if (e.target === cmdkOverlay) closeCmdK();
+  });
+})();
+</script>

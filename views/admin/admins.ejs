@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'Quản lý Admin' }) %>
+<%- include('../partials/header', { title: 'Quản lý Admin', pageName: 'Quản lý Admin', user }) %>
 <% const adminEmail = typeof envAdminEmail !== "undefined" ? envAdminEmail : (user && user.email) || "admin@dpiconfig.com"; %>
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'admins' }) %>
