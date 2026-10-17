@@ -23,12 +23,12 @@
               <td><code>#<%= v.version_code %></code></td>
               <td style="font-weight: 700; color: var(--gold); font-family: 'Caveat'; font-size: 1.3rem;"><%= v.version_name %></td>
               <td>
-                <form method="POST" action="/admin/versions/toggle-required/<%= v.id %>" style="margin:0;">
+                <form method="POST" action="/yncuti/versions/toggle-required/<%= v.id %>" style="margin:0;">
                   <label class="vg-toggle"><input type="checkbox" <%= v.is_required ? 'checked' : '' %> onchange="this.form.submit()"><span class="vg-slider"></span></label>
                 </form>
               </td>
               <td>
-                <form method="POST" action="/admin/versions/toggle-update/<%= v.id %>" style="margin:0;">
+                <form method="POST" action="/yncuti/versions/toggle-update/<%= v.id %>" style="margin:0;">
                   <label class="vg-toggle"><input type="checkbox" <%= v.update_enabled ? 'checked' : '' %> onchange="this.form.submit()"><span class="vg-slider"></span></label>
                 </form>
               </td>
@@ -36,9 +36,9 @@
               <td style="text-align:right;">
                 <div class="d-flex gap-1 justify-content-end">
                   <% if (!v.is_active) { %>
-                    <form method="POST" action="/admin/versions/activate/<%= v.id %>" style="display:inline;margin:0;"><button class="vg-btn-icon" title="Kích hoạt"><i class="fas fa-check"></i></button></form>
+                    <form method="POST" action="/yncuti/versions/activate/<%= v.id %>" style="display:inline;margin:0;"><button class="vg-btn-icon" title="Kích hoạt"><i class="fas fa-check"></i></button></form>
                   <% } %>
-                  <form method="POST" action="/admin/versions/delete/<%= v.id %>" onsubmit="return confirm('Xóa?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger"><i class="fas fa-trash"></i></button></form>
+                  <form method="POST" action="/yncuti/versions/delete/<%= v.id %>" onsubmit="return confirm('Xóa?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger"><i class="fas fa-trash"></i></button></form>
                 </div>
               </td>
             </tr>
@@ -55,7 +55,7 @@
 <div class="modal fade" id="createVersionModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered"><div class="modal-content vg-modal">
     <div class="modal-header"><h5 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> Thêm phiên bản</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <form method="POST" action="/admin/versions/create">
+    <form method="POST" action="/yncuti/versions/create">
       <div class="modal-body">
         <div class="row">
           <div class="col-md-6 mb-3"><label class="form-label">Version code</label><input type="number" name="version_code" class="form-control" required min="1"></div>

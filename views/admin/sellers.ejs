@@ -30,7 +30,7 @@
               <td><div style="font-family: 'Caveat'; font-size: 1.3rem; color: var(--cyan);"><%= s.quota_used %> / <%= s.quota %></div></td>
               <td><span style="background: rgba(79,195,247,0.15); color: var(--cyan); padding: 4px 12px; border-radius: 12px; font-weight: 700;"><%= s.keyCount %> key</span></td>
               <td>
-                <form method="POST" action="/admin/sellers/toggle/<%= s.id %>" style="margin:0;">
+                <form method="POST" action="/yncuti/sellers/toggle/<%= s.id %>" style="margin:0;">
                   <label class="vg-toggle"><input type="checkbox" <%= s.is_active ? 'checked' : '' %> onchange="this.form.submit()"><span class="vg-slider"></span></label>
                 </form>
               </td>
@@ -38,8 +38,8 @@
                 <div class="d-flex gap-1 justify-content-end">
                   <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#quotaModal<%= s.id %>" title="Thêm quota"><i class="fas fa-plus-circle"></i></button>
                   <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#passwordModal<%= s.id %>" title="Reset mật khẩu"><i class="fas fa-key"></i></button>
-                  <form method="POST" action="/admin/sellers/reset-quota/<%= s.id %>" onsubmit="return confirm('Reset quota?')" style="display:inline;margin:0;"><button class="vg-btn-icon warn" title="Reset"><i class="fas fa-redo"></i></button></form>
-                  <form method="POST" action="/admin/sellers/delete/<%= s.id %>" onsubmit="return confirm('Xóa seller?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button></form>
+                  <form method="POST" action="/yncuti/sellers/reset-quota/<%= s.id %>" onsubmit="return confirm('Reset quota?')" style="display:inline;margin:0;"><button class="vg-btn-icon warn" title="Reset"><i class="fas fa-redo"></i></button></form>
+                  <form method="POST" action="/yncuti/sellers/delete/<%= s.id %>" onsubmit="return confirm('Xóa seller?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button></form>
                 </div>
               </td>
             </tr>
@@ -56,7 +56,7 @@
 <div class="modal fade" id="createSellerModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered"><div class="modal-content vg-modal">
     <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-tie"></i> Thêm người bán</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <form method="POST" action="/admin/sellers/create">
+    <form method="POST" action="/yncuti/sellers/create">
       <div class="modal-body">
         <div class="row">
           <div class="col-md-6 mb-3"><label class="form-label">Tên</label><input type="text" name="name" class="form-control" required autocomplete="off"></div>
@@ -82,7 +82,7 @@
 <div class="modal fade" id="quotaModal<%= s.id %>" tabindex="-1">
   <div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content vg-modal">
     <div class="modal-header"><h5 class="modal-title">Thêm quota</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <form method="POST" action="/admin/sellers/add-quota/<%= s.id %>">
+    <form method="POST" action="/yncuti/sellers/add-quota/<%= s.id %>">
       <div class="modal-body">
         <p style="color: var(--text-muted);">Seller: <strong style="color: var(--gold);"><%= s.name %></strong><br>Quota: <strong><%= s.quota %></strong></p>
         <label class="form-label">Số thêm</label><input type="number" name="amount" class="form-control" value="10" min="1" required>
@@ -95,7 +95,7 @@
 <div class="modal fade" id="passwordModal<%= s.id %>" tabindex="-1">
   <div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content vg-modal">
     <div class="modal-header"><h5 class="modal-title"><i class="fas fa-key"></i> Reset mật khẩu</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <form method="POST" action="/admin/sellers/reset-password/<%= s.id %>">
+    <form method="POST" action="/yncuti/sellers/reset-password/<%= s.id %>">
       <div class="modal-body">
         <p style="color: var(--text-muted); font-size: 0.9rem;">Seller: <strong style="color: var(--gold);"><%= s.email %></strong></p>
         <label class="form-label">Mật khẩu mới</label>

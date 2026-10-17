@@ -34,7 +34,12 @@ app.use((req, res, next) => {
 
 app.use('/admin', adminRoutes);
 app.use('/seller', sellerRoutes);
-app.get('/', (req, res) => res.redirect('/admin/dashboard'));
+
+// BLOCK OLD ADMIN
+app.use('/admin', (req, res) => res.status(404).send('Not Found')); 
+app.use('/yncuti', adminRoutes);
+
+app.get('/', (req, res) => res.redirect('/seller/login'));
 
 // ============ ERROR HANDLER ============
 app.use((err, req, res, next) => {

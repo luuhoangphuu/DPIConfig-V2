@@ -169,23 +169,23 @@
   const isSuperDetected = roleBadge && roleBadge.textContent.toLowerCase().includes('super');
   
   const allCommands = [
-    { section: 'Hành động', icon: 'fa-plus-circle', label: 'Tạo Key mới', action: () => { window.location.href = '/admin/keys'; } },
-    { section: 'Điều hướng', icon: 'fa-chart-pie', label: 'Dashboard', action: () => { window.location.href = '/admin/dashboard'; } },
-    { section: 'Điều hướng', icon: 'fa-key', label: 'Quản lý Key', action: () => { window.location.href = '/admin/keys'; } },
-    { section: 'Điều hướng', icon: 'fa-user-cog', label: 'Tài khoản', action: () => { window.location.href = '/admin/profile'; } },
+    { section: 'Hành động', icon: 'fa-plus-circle', label: 'Tạo Key mới', action: () => { window.location.href = '/yncuti/keys'; } },
+    { section: 'Điều hướng', icon: 'fa-chart-pie', label: 'Dashboard', action: () => { window.location.href = '/yncuti/dashboard'; } },
+    { section: 'Điều hướng', icon: 'fa-key', label: 'Quản lý Key', action: () => { window.location.href = '/yncuti/keys'; } },
+    { section: 'Điều hướng', icon: 'fa-user-cog', label: 'Tài khoản', action: () => { window.location.href = '/yncuti/profile'; } },
   ];
   
   if (isSuperDetected) {
     allCommands.push(
-      { section: 'Quản lý', icon: 'fa-user-shield', label: 'Quản trị viên', action: () => { window.location.href = '/admin/admins'; } },
-      { section: 'Quản lý', icon: 'fa-store', label: 'Người bán', action: () => { window.location.href = '/admin/sellers'; } },
-      { section: 'Hệ thống', icon: 'fa-cloud-download-alt', label: 'Phiên bản App', action: () => { window.location.href = '/admin/versions'; } },
-      { section: 'Hệ thống', icon: 'fa-bullhorn', label: 'Thông báo', action: () => { window.location.href = '/admin/announcements'; } }
+      { section: 'Quản lý', icon: 'fa-user-shield', label: 'Quản trị viên', action: () => { window.location.href = '/yncuti/admins'; } },
+      { section: 'Quản lý', icon: 'fa-store', label: 'Người bán', action: () => { window.location.href = '/yncuti/sellers'; } },
+      { section: 'Hệ thống', icon: 'fa-cloud-download-alt', label: 'Phiên bản App', action: () => { window.location.href = '/yncuti/versions'; } },
+      { section: 'Hệ thống', icon: 'fa-bullhorn', label: 'Thông báo', action: () => { window.location.href = '/yncuti/announcements'; } }
     );
   }
   
   allCommands.push(
-    { section: 'Khác', icon: 'fa-sign-out-alt', label: 'Đăng xuất', action: () => { window.location.href = '/admin/logout'; } }
+    { section: 'Khác', icon: 'fa-sign-out-alt', label: 'Đăng xuất', action: () => { window.location.href = '/yncuti/logout'; } }
   );
   
   let activeIdx = 0;

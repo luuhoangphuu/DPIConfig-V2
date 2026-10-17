@@ -64,7 +64,7 @@
                 <%= a.expires_at ? new Date(a.expires_at).toLocaleString('vi-VN') : 'Không' %>
               </td>
               <td>
-                <form method="POST" action="/admin/announcements/toggle/<%= a.id %>" style="margin:0;">
+                <form method="POST" action="/yncuti/announcements/toggle/<%= a.id %>" style="margin:0;">
                   <label class="vg-toggle">
                     <input type="checkbox" <%= a.is_enabled ? 'checked' : '' %> onchange="this.form.submit()">
                     <span class="vg-slider"></span>
@@ -75,7 +75,7 @@
                 </form>
               </td>
               <td style="text-align:right;">
-                <form method="POST" action="/admin/announcements/delete/<%= a.id %>" onsubmit="return confirm('Xóa thông báo này?')" style="display:inline;margin:0;">
+                <form method="POST" action="/yncuti/announcements/delete/<%= a.id %>" onsubmit="return confirm('Xóa thông báo này?')" style="display:inline;margin:0;">
                   <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button>
                 </form>
               </td>
@@ -106,7 +106,7 @@
         <h5 class="modal-title"><i class="fas fa-bullhorn"></i> Tạo thông báo</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form method="POST" action="/admin/announcements/create">
+      <form method="POST" action="/yncuti/announcements/create">
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Tiêu đề</label>

@@ -41,7 +41,7 @@
           <i class="fas fa-filter"></i> Lọc
         </button>
         <% if (search || tier || status) { %>
-          <a href="/admin/keys" class="sn-quick-btn" style="border-color:rgba(239,83,80,0.4);color:#ef5350;">
+          <a href="/yncuti/keys" class="sn-quick-btn" style="border-color:rgba(239,83,80,0.4);color:#ef5350;">
             <i class="fas fa-times"></i> Xóa lọc
           </a>
         <% } %>
@@ -105,7 +105,7 @@
               </td>
               <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
               <td>
-                <form method="POST" action="/admin/keys/toggle/<%= k.id %>" style="margin:0;">
+                <form method="POST" action="/yncuti/keys/toggle/<%= k.id %>" style="margin:0;">
                   <label class="vg-toggle">
                     <input type="checkbox" <%= k.is_active && !isExpired ? 'checked' : '' %> onchange="this.form.submit()">
                     <span class="vg-slider"></span>
@@ -120,10 +120,10 @@
                   <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn">
                     <i class="fas fa-calendar-plus"></i>
                   </button>
-                  <form method="POST" action="/admin/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Khóa tất cả thiết bị?')" style="display:inline;margin:0;">
+                  <form method="POST" action="/yncuti/keys/kick-all/<%= k.id %>" onsubmit="return confirm('Khóa tất cả thiết bị?')" style="display:inline;margin:0;">
                     <button class="vg-btn-icon warn" title="Khóa tất cả"><i class="fas fa-ban"></i></button>
                   </form>
-                  <form method="POST" action="/admin/keys/delete/<%= k.id %>" onsubmit="return confirm('Xóa Key này?')" style="display:inline;margin:0;">
+                  <form method="POST" action="/yncuti/keys/delete/<%= k.id %>" onsubmit="return confirm('Xóa Key này?')" style="display:inline;margin:0;">
                     <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash-alt"></i></button>
                   </form>
                 </div>
@@ -179,7 +179,7 @@
         <h5 class="modal-title"><i class="fas fa-star"></i> Tạo Key mới</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form method="POST" action="/admin/keys/create">
+      <form method="POST" action="/yncuti/keys/create">
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Tiền tố</label>
@@ -226,7 +226,7 @@
           <h5 class="modal-title"><i class="fas fa-calendar-plus"></i> Gia hạn</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <form method="POST" action="/admin/keys/extend/<%= k.id %>">
+        <form method="POST" action="/yncuti/keys/extend/<%= k.id %>">
           <div class="modal-body">
             <label class="form-label">Ngày hết hạn mới</label>
             <input type="datetime-local" name="new_expiry" class="form-control" required>
@@ -318,7 +318,7 @@ function bulkDelete() {
   keys.forEach(k => {
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/admin/keys/delete/' + k.id;
+    form.action = '/yncuti/keys/delete/' + k.id;
     document.body.appendChild(form);
     form.submit();
   });
@@ -340,7 +340,7 @@ document.querySelectorAll('.view-devices-btn').forEach(btn => {
     body.innerHTML = '<p style="text-align:center;color:#b8c5d9;">Đang tải...</p>';
     new bootstrap.Modal(document.getElementById('devicesModal')).show();
     try {
-      const res = await fetch('/admin/keys/devices/' + keyId);
+      const res = await fetch('/yncuti/keys/devices/' + keyId);
       const data = await res.json();
       if (data.success && data.devices.length) {
         let html = '<table class="vg-table"><thead><tr><th>HWID</th><th>Tên</th><th>Trạng thái</th><th>Ngày thêm</th><th style="text-align:right;">Thao tác</th></tr></thead><tbody>';
@@ -349,8 +349,8 @@ document.querySelectorAll('.view-devices-btn').forEach(btn => {
           html += '<td style="font-weight:600;">' + (d.device_name || '<em style="color:#b8c5d9;">Chưa đặt</em>') + '</td>';
           html += '<td>' + (d.is_active ? '<span style="color:#81c784;font-weight:700;">● Hoạt động</span>' : '<span style="color:#ef5350;font-weight:700;">● Bị khóa</span>') + '</td>';
           html += '';
-          html += '<td style="text-align:right;"><form method="POST" action="/admin/keys/toggle-device/' + d.id + '" style="display:inline;margin:0;"><button class="vg-btn-icon ' + (d.is_active ? 'warn' : '') + '"><i class="fas fa-power-off"></i></button></form> ';
-          html += '<form method="POST" action="/admin/keys/unbind-device/' + d.id + '" style="display:inline;margin:0;" onsubmit="return confirm(\'Xóa thiết bị này?\')"><button class="vg-btn-icon danger"><i class="fas fa-trash"></i></button></form></td></tr>';
+          html += '<td style="text-align:right;"><form method="POST" action="/yncuti/keys/toggle-device/' + d.id + '" style="display:inline;margin:0;"><button class="vg-btn-icon ' + (d.is_active ? 'warn' : '') + '"><i class="fas fa-power-off"></i></button></form> ';
+          html += '<form method="POST" action="/yncuti/keys/unbind-device/' + d.id + '" style="display:inline;margin:0;" onsubmit="return confirm(\'Xóa thiết bị này?\')"><button class="vg-btn-icon danger"><i class="fas fa-trash"></i></button></form></td></tr>';
         });
         body.innerHTML = html + '</tbody></table>';
       } else {

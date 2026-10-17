@@ -76,7 +76,7 @@
                 </span>
               </td>
               <td>
-                <form method="POST" action="/admin/admins/toggle/<%= a.id %>" style="margin:0;">
+                <form method="POST" action="/yncuti/admins/toggle/<%= a.id %>" style="margin:0;">
                   <label class="vg-toggle">
                     <input type="checkbox" <%= a.is_active ? 'checked' : '' %> onchange="this.form.submit()">
                     <span class="vg-slider"></span>
@@ -94,10 +94,10 @@
                   <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#passwordModal<%= a.id %>" title="Reset mật khẩu">
                     <i class="fas fa-key"></i>
                   </button>
-                  <form method="POST" action="/admin/admins/reset-quota/<%= a.id %>" onsubmit="return confirm('Reset quota_used về 0?')" style="display:inline;margin:0;">
+                  <form method="POST" action="/yncuti/admins/reset-quota/<%= a.id %>" onsubmit="return confirm('Reset quota_used về 0?')" style="display:inline;margin:0;">
                     <button class="vg-btn-icon warn" title="Reset đã dùng"><i class="fas fa-redo"></i></button>
                   </form>
-                  <form method="POST" action="/admin/admins/delete/<%= a.id %>" onsubmit="return confirm('Xóa admin này? Key cũ vẫn giữ nhưng không còn thuộc admin.')" style="display:inline;margin:0;">
+                  <form method="POST" action="/yncuti/admins/delete/<%= a.id %>" onsubmit="return confirm('Xóa admin này? Key cũ vẫn giữ nhưng không còn thuộc admin.')" style="display:inline;margin:0;">
                     <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button>
                   </form>
                 </div>
@@ -122,7 +122,7 @@
         <h5 class="modal-title"><i class="fas fa-user-shield"></i> Thêm Admin</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form method="POST" action="/admin/admins/create">
+      <form method="POST" action="/yncuti/admins/create">
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Tên</label>
@@ -194,7 +194,7 @@
           <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Thêm quota</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <form method="POST" action="/admin/admins/add-quota/<%= a.id %>">
+        <form method="POST" action="/yncuti/admins/add-quota/<%= a.id %>">
           <div class="modal-body">
             <p style="color: var(--text-muted); font-size: 0.9rem;">
               Admin: <strong style="color: var(--gold);"><%= a.name || a.email %></strong><br>
@@ -220,7 +220,7 @@
           <h5 class="modal-title"><i class="fas fa-crown"></i> Đổi role</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <form method="POST" action="/admin/admins/change-role/<%= a.id %>">
+        <form method="POST" action="/yncuti/admins/change-role/<%= a.id %>">
           <div class="modal-body">
             <p style="color: var(--text-muted); font-size: 0.9rem;">
               Admin: <strong style="color: var(--gold);"><%= a.email %></strong><br>
@@ -249,7 +249,7 @@
           <h5 class="modal-title"><i class="fas fa-key"></i> Reset mật khẩu</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <form method="POST" action="/admin/admins/reset-password/<%= a.id %>">
+        <form method="POST" action="/yncuti/admins/reset-password/<%= a.id %>">
           <div class="modal-body">
             <p style="color: var(--text-muted); font-size: 0.9rem;">
               Admin: <strong style="color: var(--gold);"><%= a.email %></strong>

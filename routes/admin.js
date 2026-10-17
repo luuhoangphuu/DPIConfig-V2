@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecret';
 
 function requireAdmin(req, res, next) {
   const token = req.cookies.admin_token;
-  if (!token) return res.redirect('/admin/login');
+  if (!token) return res.redirect('/yncuti/login');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.email === process.env.ADMIN_EMAIL) {
@@ -24,12 +24,12 @@ function requireAdmin(req, res, next) {
     next();
   } catch (err) {
     res.clearCookie('admin_token');
-    res.redirect('/admin/login');
+    res.redirect('/yncuti/login');
   }
 }
 
 function requireSuperAdmin(req, res, next) {
-  if (!req.admin) return res.redirect('/admin/login');
+  if (!req.admin) return res.redirect('/yncuti/login');
   if (req.admin.role !== 'super' && req.admin.is_super !== true) {
     return res.status(403).send('Không có quyền');
   }
@@ -50,7 +50,7 @@ router.get('/reset-admin', async (req, res) => {
     } else {
       await Admin.create({ email, password_hash: hash, name: 'Super Admin', role: 'super', quota: 999999, is_active: true });
     }
-    res.send(`<h1 style="color:#0a1e3f">Thành công! <a href="/admin/login">Đăng nhập</a></h1>`);
+    res.send(`<h1 style="color:#0a1e3f">Thành công! <a href="/yncuti/login">Đăng nhập</a></h1>`);
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 
@@ -67,7 +67,7 @@ router.post('/login', async (req, res) => {
       dbAdmin.last_login = new Date(); await dbAdmin.save();
       const token = jwt.sign({ id: dbAdmin.id, email, role: isEnvAdmin ? 'super' : dbAdmin.role, name: dbAdmin.name, is_super: isEnvAdmin || dbAdmin.role === 'super' }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
-      return res.redirect('/admin/dashboard');
+      return res.redirect('/yncuti/dashboard');
     }
 
     if (isEnvAdmin && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
@@ -77,14 +77,14 @@ router.post('/login', async (req, res) => {
       }
       const token = jwt.sign({ id: envAdmin.id, email, role: 'super', name: envAdmin.name, is_super: true }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('admin_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
-      return res.redirect('/admin/dashboard');
+      return res.redirect('/yncuti/dashboard');
     }
     res.render('admin/login', { error: 'Sai email hoặc mật khẩu' });
   } catch (err) { res.render('admin/login', { error: 'Lỗi hệ thống' }); }
 });
 
-router.get('/logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/admin/login'); });
-router.get('/force-logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/admin/login'); });
+router.get('/logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/yncuti/login'); });
+router.get('/force-logout', (req, res) => { res.clearCookie('admin_token'); res.redirect('/yncuti/login'); });
 
 router.use(requireAdmin);
 
@@ -138,8 +138,8 @@ router.post('/keys/create', async (req, res) => {
     let adminRecord = null;
     if (!isSuper && req.admin.id) {
       adminRecord = await Admin.findByPk(req.admin.id);
-      if (!adminRecord) return res.redirect('/admin/login');
-      if (adminRecord.quota_used >= adminRecord.quota) return res.redirect('/admin/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
+      if (!adminRecord) return res.redirect('/yncuti/login');
+      if (adminRecord.quota_used >= adminRecord.quota) return res.redirect('/yncuti/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
     }
     let maxDev = parseInt(max_devices) || 1;
     if (maxDev > 999) maxDev = 999;
@@ -157,36 +157,36 @@ router.post('/keys/create', async (req, res) => {
     if (adminRecord) { adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; await adminRecord.save(); }
     await Log.create({ action: 'key_created', details: `${req.admin.email} tạo key ${key}`, ip_address: req.ip });
     
-    res.redirect('/admin/keys?created=1');
-  } catch (err) { res.redirect('/admin/keys?error=' + encodeURIComponent(err.message)); }
+    res.redirect('/yncuti/keys?created=1');
+  } catch (err) { res.redirect('/yncuti/keys?error=' + encodeURIComponent(err.message)); }
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
-  try { const k = await Key.findByPk(req.params.id); if (k) { k.is_active = !k.is_active; await k.save(); } res.redirect('/admin/keys?toggled=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) { k.is_active = !k.is_active; await k.save(); } res.redirect('/yncuti/keys?toggled=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.post('/keys/kick-all/:id', async (req, res) => {
-  try { const k = await Key.findByPk(req.params.id); if (k) await KeyDevice.update({ is_active: false }, { where: { key_id: k.id } }); res.redirect('/admin/keys?kicked=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) await KeyDevice.update({ is_active: false }, { where: { key_id: k.id } }); res.redirect('/yncuti/keys?kicked=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.post('/keys/delete-all-devices/:id', async (req, res) => {
-  try { const k = await Key.findByPk(req.params.id); if (k) await KeyDevice.destroy({ where: { key_id: k.id } }); res.redirect('/admin/keys?deleted_all_devices=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) await KeyDevice.destroy({ where: { key_id: k.id } }); res.redirect('/yncuti/keys?deleted_all_devices=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.post('/keys/toggle-device/:deviceId', async (req, res) => {
-  try { const d = await KeyDevice.findByPk(req.params.deviceId); if (d) { d.is_active = !d.is_active; await d.save(); } res.redirect('/admin/keys?device_toggled=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const d = await KeyDevice.findByPk(req.params.deviceId); if (d) { d.is_active = !d.is_active; await d.save(); } res.redirect('/yncuti/keys?device_toggled=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.post('/keys/unbind-device/:deviceId', async (req, res) => {
-  try { const d = await KeyDevice.findByPk(req.params.deviceId); if (d) await d.destroy(); res.redirect('/admin/keys?device_deleted=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const d = await KeyDevice.findByPk(req.params.deviceId); if (d) await d.destroy(); res.redirect('/yncuti/keys?device_deleted=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.post('/keys/extend/:id', async (req, res) => {
-  try { const { new_expiry } = req.body; const k = await Key.findByPk(req.params.id); if (k && new_expiry) { k.expires_at = new Date(new_expiry); await k.save(); } res.redirect('/admin/keys?extended=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const { new_expiry } = req.body; const k = await Key.findByPk(req.params.id); if (k && new_expiry) { k.expires_at = new Date(new_expiry); await k.save(); } res.redirect('/yncuti/keys?extended=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.post('/keys/delete/:id', async (req, res) => {
-  try { const k = await Key.findByPk(req.params.id); if (k) { await KeyDevice.destroy({ where: { key_id: k.id } }); await k.destroy(); } res.redirect('/admin/keys?deleted=1'); } catch (err) { res.redirect('/admin/keys'); }
+  try { const k = await Key.findByPk(req.params.id); if (k) { await KeyDevice.destroy({ where: { key_id: k.id } }); await k.destroy(); } res.redirect('/yncuti/keys?deleted=1'); } catch (err) { res.redirect('/yncuti/keys'); }
 });
 
 router.get('/keys/devices/:id', async (req, res) => {
@@ -204,30 +204,30 @@ router.get('/admins', requireSuperAdmin, async (req, res) => {
 router.post('/admins/create', requireSuperAdmin, async (req, res) => {
   try {
     const { email, password, name, role, quota, can_choose_tier, can_choose_duration, max_devices_default } = req.body;
-    if (!email || !password) return res.redirect('/admin/admins?error=missing');
+    if (!email || !password) return res.redirect('/yncuti/admins?error=missing');
     const dup = await Admin.findOne({ where: { email } });
-    if (dup) return res.redirect('/admin/admins?error=email_exists');
+    if (dup) return res.redirect('/yncuti/admins?error=email_exists');
     await Admin.create({ email, password_hash: bcrypt.hashSync(password, 10), name: name || 'Admin', role: role || 'admin', quota: parseInt(quota) || 0, quota_used: 0, can_choose_tier: can_choose_tier === 'on', can_choose_duration: can_choose_duration === 'on', max_devices_default: parseInt(max_devices_default) || 1, is_active: true, created_by: req.admin.email });
-    res.redirect('/admin/admins?success=created');
-  } catch (err) { res.redirect('/admin/admins?error=' + encodeURIComponent(err.message)); }
+    res.redirect('/yncuti/admins?success=created');
+  } catch (err) { res.redirect('/yncuti/admins?error=' + encodeURIComponent(err.message)); }
 });
 
 router.post('/admins/update/:id', requireSuperAdmin, async (req, res) => {
   try {
     const a = await Admin.findByPk(req.params.id);
-    if (!a) return res.redirect('/admin/admins?error=not_found');
+    if (!a) return res.redirect('/yncuti/admins?error=not_found');
     const { name, role, quota, can_choose_tier, can_choose_duration, max_devices_default, is_active, new_password } = req.body;
     a.name = name; a.role = role; a.quota = parseInt(quota) || 0;
     a.can_choose_tier = can_choose_tier === 'on'; a.can_choose_duration = can_choose_duration === 'on';
     a.max_devices_default = parseInt(max_devices_default) || 1; a.is_active = is_active === 'on';
     if (new_password) a.password_hash = bcrypt.hashSync(new_password, 10);
     await a.save();
-    res.redirect('/admin/admins?success=updated');
-  } catch (err) { res.redirect('/admin/admins?error=1'); }
+    res.redirect('/yncuti/admins?success=updated');
+  } catch (err) { res.redirect('/yncuti/admins?error=1'); }
 });
 
 router.post('/admins/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { const a = await Admin.findByPk(req.params.id); if (a && a.email !== process.env.ADMIN_EMAIL) await a.destroy(); res.redirect('/admin/admins?success=deleted'); } catch (err) { res.redirect('/admin/admins?error=1'); }
+  try { const a = await Admin.findByPk(req.params.id); if (a && a.email !== process.env.ADMIN_EMAIL) await a.destroy(); res.redirect('/yncuti/admins?success=deleted'); } catch (err) { res.redirect('/yncuti/admins?error=1'); }
 });
 
 // ==================== NGƯỜI BÁN ====================
@@ -242,16 +242,16 @@ router.post('/sellers/create', requireSuperAdmin, async (req, res) => {
   try {
     const { email, password, name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default } = req.body;
     const dup = await Seller.findOne({ where: { email } });
-    if (dup) return res.redirect('/admin/sellers?error=email_exists');
+    if (dup) return res.redirect('/yncuti/sellers?error=email_exists');
     await Seller.create({ email, password_hash: bcrypt.hashSync(password, 10), name: name || 'Seller', phone, quota: parseInt(quota) || 0, quota_used: 0, can_choose_tier: can_choose_tier === 'on', can_choose_duration: can_choose_duration === 'on', default_tier: default_tier || 'Normal', max_devices_default: parseInt(max_devices_default) || 1, is_active: true, created_by: req.admin.email });
-    res.redirect('/admin/sellers?success=created');
-  } catch (err) { res.redirect('/admin/sellers?error=1'); }
+    res.redirect('/yncuti/sellers?success=created');
+  } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
 });
 
 router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
   try {
     const s = await Seller.findByPk(req.params.id);
-    if (!s) return res.redirect('/admin/sellers');
+    if (!s) return res.redirect('/yncuti/sellers');
     const { name, phone, quota, can_choose_tier, can_choose_duration, default_tier, max_devices_default, is_active, new_password } = req.body;
     s.name = name; s.phone = phone; s.quota = parseInt(quota) || 0;
     s.can_choose_tier = can_choose_tier === 'on'; s.can_choose_duration = can_choose_duration === 'on';
@@ -259,12 +259,12 @@ router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
     s.is_active = is_active === 'on';
     if (new_password) s.password_hash = bcrypt.hashSync(new_password, 10);
     await s.save();
-    res.redirect('/admin/sellers?success=updated');
-  } catch (err) { res.redirect('/admin/sellers?error=1'); }
+    res.redirect('/yncuti/sellers?success=updated');
+  } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
 });
 
 router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await Seller.destroy({ where: { id: req.params.id } }); res.redirect('/admin/sellers?success=deleted'); } catch (err) { res.redirect('/admin/sellers?error=1'); }
+  try { await Seller.destroy({ where: { id: req.params.id } }); res.redirect('/yncuti/sellers?success=deleted'); } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
 });
 
 // ==================== PHIÊN BẢN APP ====================
@@ -279,12 +279,12 @@ router.post('/versions/create', requireSuperAdmin, async (req, res) => {
   try {
     const { version_code, version_name, download_url, changelog, is_required, min_supported_version, release_channel } = req.body;
     await AppVersion.create({ version_code: parseInt(version_code), version_name, download_url, changelog, is_required: is_required === 'on', min_supported_version: parseInt(min_supported_version) || 0, release_channel: release_channel || 'stable', is_active: true, update_enabled: true });
-    res.redirect('/admin/versions?success=created');
-  } catch (err) { res.redirect('/admin/versions?error=1'); }
+    res.redirect('/yncuti/versions?success=created');
+  } catch (err) { res.redirect('/yncuti/versions?error=1'); }
 });
 
 router.post('/versions/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await AppVersion.destroy({ where: { id: req.params.id } }); res.redirect('/admin/versions?success=deleted'); } catch (err) { res.redirect('/admin/versions?error=1'); }
+  try { await AppVersion.destroy({ where: { id: req.params.id } }); res.redirect('/yncuti/versions?success=deleted'); } catch (err) { res.redirect('/yncuti/versions?error=1'); }
 });
 
 // ==================== THÔNG BÁO ====================
@@ -299,16 +299,16 @@ router.post('/announcements/create', requireSuperAdmin, async (req, res) => {
   try {
     const { title, message, type, priority, is_dismissible } = req.body;
     await Announcement.create({ title, message, type: type || 'info', priority: parseInt(priority) || 5, is_dismissible: is_dismissible === 'on', is_enabled: true, created_by: req.admin.email });
-    res.redirect('/admin/announcements?success=created');
-  } catch (err) { res.redirect('/admin/announcements?error=1'); }
+    res.redirect('/yncuti/announcements?success=created');
+  } catch (err) { res.redirect('/yncuti/announcements?error=1'); }
 });
 
 router.post('/announcements/toggle/:id', requireSuperAdmin, async (req, res) => {
-  try { const a = await Announcement.findByPk(req.params.id); if (a) { a.is_enabled = !a.is_enabled; await a.save(); } res.redirect('/admin/announcements?success=toggled'); } catch (err) { res.redirect('/admin/announcements?error=1'); }
+  try { const a = await Announcement.findByPk(req.params.id); if (a) { a.is_enabled = !a.is_enabled; await a.save(); } res.redirect('/yncuti/announcements?success=toggled'); } catch (err) { res.redirect('/yncuti/announcements?error=1'); }
 });
 
 router.post('/announcements/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await Announcement.destroy({ where: { id: req.params.id } }); res.redirect('/admin/announcements?success=deleted'); } catch (err) { res.redirect('/admin/announcements?error=1'); }
+  try { await Announcement.destroy({ where: { id: req.params.id } }); res.redirect('/yncuti/announcements?success=deleted'); } catch (err) { res.redirect('/yncuti/announcements?error=1'); }
 });
 
 // ==================== PROFILE ====================
@@ -325,16 +325,16 @@ router.get('/profile', async (req, res) => {
 router.post('/profile/change-password', async (req, res) => {
   try {
     const { old_password, new_password, confirm_password } = req.body;
-    if (!old_password || !new_password || !confirm_password) return res.redirect('/admin/profile?error=missing');
-    if (new_password !== confirm_password) return res.redirect('/admin/profile?error=password_mismatch');
-    if (new_password.length < 6) return res.redirect('/admin/profile?error=too_short');
+    if (!old_password || !new_password || !confirm_password) return res.redirect('/yncuti/profile?error=missing');
+    if (new_password !== confirm_password) return res.redirect('/yncuti/profile?error=password_mismatch');
+    if (new_password.length < 6) return res.redirect('/yncuti/profile?error=too_short');
     const admin = await Admin.findOne({ where: { email: req.admin.email } });
-    if (!admin) return res.redirect('/admin/profile?error=not_found');
-    if (!bcrypt.compareSync(old_password, admin.password_hash)) return res.redirect('/admin/profile?error=wrong_password');
+    if (!admin) return res.redirect('/yncuti/profile?error=not_found');
+    if (!bcrypt.compareSync(old_password, admin.password_hash)) return res.redirect('/yncuti/profile?error=wrong_password');
     admin.password_hash = bcrypt.hashSync(new_password, 10);
     await admin.save();
-    res.redirect('/admin/profile?success=password_changed');
-  } catch (err) { res.redirect('/admin/profile?error=system'); }
+    res.redirect('/yncuti/profile?success=password_changed');
+  } catch (err) { res.redirect('/yncuti/profile?error=system'); }
 });
 
 module.exports = router;
