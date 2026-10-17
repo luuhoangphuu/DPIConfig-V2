@@ -1,0 +1,113 @@
+<%
+  const isSuper = user && (user.role === 'super' || user.is_super === true);
+  const currentPath = typeof currentPage !== 'undefined' ? currentPage : '';
+  const initial = user && user.email ? user.email.charAt(0).toUpperCase() : '?';
+  const activeCount = (typeof activeKeys !== 'undefined') ? activeKeys : null;
+%>
+<nav class="vg-sidebar">
+  <!-- LOGO -->
+  <div class="vg-logo">
+    <div class="vg-star-logo">
+      <svg viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="9" fill="#ffd700" stroke="#050d1f" stroke-width="1.5"/>
+        <g stroke="#4fc3f7" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9">
+          <path d="M 50 22 Q 68 40 50 56 Q 32 72 50 88"/>
+          <path d="M 88 50 Q 68 32 50 50 Q 32 68 12 50"/>
+        </g>
+      </svg>
+      <div class="star-core"></div>
+    </div>
+    <h5>DPIConfig</h5>
+    <small>HoangPhu</small>
+  </div>
+
+  <!-- NAV -->
+  <ul class="vg-nav">
+    <!-- ===== CHÍNH ===== -->
+    <li class="sn-section-label">Chính</li>
+
+    <li>
+      <a href="/admin/dashboard" class="nav-link <%= currentPath == 'dashboard' ? 'active' : '' %>">
+        <i class="fas fa-chart-pie"></i>
+        <span>Bảng điều khiển</span>
+      </a>
+    </li>
+    <li>
+      <a href="/admin/keys" class="nav-link <%= currentPath == 'keys' ? 'active' : '' %>">
+        <i class="fas fa-key"></i>
+        <span>Quản lý Key</span>
+        <% if (activeCount !== null && activeCount > 0) { %>
+          <span class="sn-badge"><%= activeCount %></span>
+        <% } %>
+      </a>
+    </li>
+
+    <!-- ===== QUẢN LÝ (SUPER ONLY) ===== -->
+    <% if (isSuper) { %>
+      <li class="sn-section-label">Quản lý</li>
+
+      <li>
+        <a href="/admin/admins" class="nav-link <%= currentPath == 'admins' ? 'active' : '' %>">
+          <i class="fas fa-user-shield"></i>
+          <span>Quản trị viên</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/sellers" class="nav-link <%= currentPath == 'sellers' ? 'active' : '' %>">
+          <i class="fas fa-store"></i>
+          <span>Người bán</span>
+        </a>
+      </li>
+
+      <!-- ===== HỆ THỐNG (SUPER ONLY) ===== -->
+      <li class="sn-section-label">Hệ thống</li>
+
+      <li>
+        <a href="/admin/versions" class="nav-link <%= currentPath == 'versions' ? 'active' : '' %>">
+          <i class="fas fa-cloud-download-alt"></i>
+          <span>Phiên bản App</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/announcements" class="nav-link <%= currentPath == 'announcements' ? 'active' : '' %>">
+          <i class="fas fa-bullhorn"></i>
+          <span>Thông báo</span>
+        </a>
+      </li>
+    <% } %>
+
+    <!-- ===== TÀI KHOẢN ===== -->
+    <li class="sn-section-label">Tài khoản</li>
+
+    <li>
+      <a href="/admin/profile" class="nav-link <%= currentPath == 'profile' ? 'active' : '' %>">
+        <i class="fas fa-user-cog"></i>
+        <span>Tài khoản</span>
+      </a>
+    </li>
+  </ul>
+
+  <!-- FOOTER -->
+  <div class="vg-footer">
+    <div class="vg-time-badge" id="vgTime">--:--:--</div>
+
+    <div class="sn-user-box">
+      <div class="sn-avatar <%= isSuper ? 'super' : '' %>"><%= initial %></div>
+      <div class="sn-user-info">
+        <div class="sn-user-name"><%= user.name || user.email.split('@')[0] %></div>
+        <div class="sn-user-role">
+          <% if (isSuper) { %>
+            <i class="fas fa-crown"></i> Super Admin
+          <% } else { %>
+            <i class="fas fa-user"></i> Admin
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <a href="/admin/logout" class="vg-btn-logout">
+      <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+    </a>
+    <div class="vg-copyright">© 2025 HoangPhu · Duy</div>
+  </div>
+</nav>

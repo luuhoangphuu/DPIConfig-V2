@@ -1,0 +1,175 @@
+<%- include('../partials/header', { title: 'Dashboard' }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'dashboard', activeKeys }) %>
+  <div class="vg-main flex-grow-1">
+
+    <!-- ====== QUOTA CARD (chỉ admin thường) ====== -->
+    <% if (!isSuper && adminInfo) {
+         const used = adminInfo.quota_used || 0;
+         const total = adminInfo.quota || 1;
+         const pct = Math.min(100, Math.round((used / total) * 100));
+         const cls = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
+    %>
+      <div class="sn-quota anim d1">
+        <div class="sn-quota-head">
+          <h3 class="sn-quota-title">📊 Quota của bạn</h3>
+          <div class="sn-quota-nums">
+            <%= used %> / <%= total %>
+            <small>(còn <%= Math.max(0, total - used) %> key)</small>
+          </div>
+        </div>
+        <div class="sn-progress">
+          <div class="sn-progress-fill <%= cls %>" style="width: <%= pct %>%"></div>
+        </div>
+        <% if (used >= total) { %>
+          <div style="margin-top:12px; padding:10px 14px; background:rgba(239,83,80,0.15); border-left:3px solid #ef5350; border-radius:8px; color:#ff8a80; font-size:0.88rem;">
+            <i class="fas fa-exclamation-triangle"></i> Đã hết quota. Liên hệ Super Admin để nạp thêm.
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
+    <!-- ====== HERO GREETING ====== -->
+    <div class="sn-hero anim d2">
+      <div>
+        <h1 class="sn-hero-greet" id="snGreet">Xin chào 👋</h1>
+        <p class="sn-hero-sub">
+          Chào mừng trở lại, <b><%= user.name || user.email.split('@')[0] %></b> ·
+          <span id="snToday">--</span>
+        </p>
+      </div>
+      <div class="sn-quick-actions">
+        <a href="/admin/keys" class="sn-quick-btn">
+          <i class="fas fa-plus-circle"></i> Tạo Key mới
+        </a>
+        <a href="?show=<%= showAll ? '' : 'all' %>" class="sn-quick-btn cyan">
+          <i class="fas <%= showAll ? 'fa-eye-slash' : 'fa-eye' %>"></i>
+          <%= showAll ? 'Ẩn log check' : 'Xem tất cả log' %>
+        </a>
+      </div>
+    </div>
+
+    <!-- ====== STAT CARDS ====== -->
+    <div class="sn-stat-grid">
+      <div class="sn-stat total anim d1">
+        <div class="sn-stat-icon"><i class="fas fa-key"></i></div>
+        <div class="sn-stat-label">Tổng Key</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= totalKeys %>">0</div>
+      </div>
+      <div class="sn-stat active anim d2">
+        <div class="sn-stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="sn-stat-label">Đang hoạt động</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= activeKeys %>">0</div>
+      </div>
+      <div class="sn-stat expired anim d3">
+        <div class="sn-stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="sn-stat-label">Đã hết hạn</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= expiredKeys %>">0</div>
+      </div>
+      <div class="sn-stat devices anim d4">
+        <div class="sn-stat-icon"><i class="fas fa-mobile-alt"></i></div>
+        <div class="sn-stat-label">Thiết bị kích hoạt</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= devicesActivated %>">0</div>
+      </div>
+    </div>
+
+    <!-- ====== RECENT LOGS ====== -->
+    <div class="sn-section-head anim d3">
+      <h2 class="sn-section-title">
+        <i class="fas fa-history"></i> Hoạt động gần đây
+      </h2>
+    </div>
+
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr>
+            <th style="width:170px;">Thời gian</th>
+            <th style="width:200px;">Hành động</th>
+            <th>Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% 
+            const actionMap = {
+              'key_created':           { cls: 'create',  icon: 'fa-plus',        label: 'Tạo Key' },
+              'seller_key_created':    { cls: 'create',  icon: 'fa-plus',        label: 'Seller tạo Key' },
+              'key_expired_deleted':   { cls: 'delete',  icon: 'fa-trash',       label: 'Tự động xóa' },
+              'check':                 { cls: 'check',   icon: 'fa-check',       label: 'Check Key' },
+              'key_deleted':           { cls: 'delete',  icon: 'fa-trash',       label: 'Xóa Key' },
+              'key_extended':          { cls: 'warn',    icon: 'fa-calendar',    label: 'Gia hạn' },
+              'device_kicked':         { cls: 'warn',    icon: 'fa-ban',         label: 'Khóa thiết bị' },
+              'admin_created':         { cls: 'info',    icon: 'fa-user-plus',   label: 'Tạo Admin' },
+              'announcement_created':  { cls: 'info',    icon: 'fa-bullhorn',    label: 'Thông báo' },
+            };
+          %>
+          <% recentLogs.forEach(log => {
+               const a = actionMap[log.action] || { cls: 'default', icon: 'fa-circle', label: log.action };
+          %>
+            <tr>
+              <td style="color: #4fc3f7; font-family: 'Courier New', monospace; font-weight: 700; font-size: 0.82rem;">
+                <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
+              </td>
+              <td>
+                <span class="sn-action <%= a.cls %>">
+                  <i class="fas <%= a.icon %>"></i> <%= a.label %>
+                </span>
+              </td>
+              <td style="color: #b8c5d9; font-size: 0.9rem;"><%= log.details %></td>
+            </tr>
+          <% }) %>
+          <% if (recentLogs.length === 0) { %>
+            <tr>
+              <td colspan="3">
+                <div class="vg-empty">
+                  <i class="fas fa-moon"></i>
+                  <p>Chưa có hoạt động nào trong 24 giờ qua</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<%- include('../partials/scripts') %>
+
+<script>
+  // ===== GREETING + DATE =====
+  (function() {
+    const now = new Date();
+    const hour = parseInt(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', hour12: false }));
+    let greet = 'Xin chào';
+    let emoji = '👋';
+    if (hour >= 5 && hour < 12) { greet = 'Chào buổi sáng'; emoji = '☀️'; }
+    else if (hour >= 12 && hour < 18) { greet = 'Chào buổi chiều'; emoji = '🌤️'; }
+    else if (hour >= 18 && hour < 22) { greet = 'Chào buổi tối'; emoji = '🌆'; }
+    else { greet = 'Khuya rồi, nghỉ ngơi nhé'; emoji = '🌙'; }
+    const g = document.getElementById('snGreet');
+    if (g) g.textContent = greet + ' ' + emoji;
+
+    const t = document.getElementById('snToday');
+    if (t) t.textContent = now.toLocaleDateString('vi-VN', {
+      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
+      timeZone: 'Asia/Ho_Chi_Minh'
+    });
+  })();
+
+  // ===== COUNTER ANIMATION =====
+  document.querySelectorAll('.sn-animate-num').forEach(el => {
+    const target = parseInt(el.dataset.count) || 0;
+    const dur = 900;
+    const start = performance.now();
+    function tick(t) {
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased).toLocaleString('vi-VN');
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = target.toLocaleString('vi-VN');
+    }
+    requestAnimationFrame(tick);
+  });
+</script>

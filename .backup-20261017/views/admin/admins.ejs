@@ -1,0 +1,286 @@
+<%- include('../partials/header', { title: 'Quản lý Admin' }) %>
+<% const adminEmail = typeof envAdminEmail !== "undefined" ? envAdminEmail : (user && user.email) || "admin@dpiconfig.com"; %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'admins' }) %>
+  <div class="vg-main flex-grow-1">
+
+    <div class="vg-page-head anim">
+      <div>
+        <h1 class="vg-page-title">Quản lý Admin</h1>
+        <p class="vg-page-sub">Tài khoản có thể tạo key, bị giới hạn quota</p>
+      </div>
+      <button class="vg-btn anim d2" data-bs-toggle="modal" data-bs-target="#createAdminModal">
+        <i class="fas fa-plus"></i> Thêm Admin
+      </button>
+    </div>
+
+    <!-- Admin chính từ ENV -->
+    <div class="vg-card anim d3" style="padding: 20px 24px; margin-bottom: 20px; border-color: rgba(255,215,0,0.5); background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(79,195,247,0.05));">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 54px; height: 54px; border-radius: 16px; background: linear-gradient(135deg, #ffd700, #f59e0b); display: flex; align-items: center; justify-content: center; color: #0a1e3f; font-size: 1.5rem;">
+          <i class="fas fa-crown"></i>
+        </div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: 800; color: var(--gold); font-size: 1.1rem;"><%= adminEmail %></span></span>
+            <span style="padding: 3px 10px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border-radius: 10px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.5px;">
+              SUPER ADMIN TỐI CAO
+            </span>
+          </div>
+          <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+            Tài khoản gốc từ biến môi trường · Không thể xóa
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danh sách admin -->
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr>
+            <th>Tài khoản</th>
+            <th>Role</th>
+            <th>Quota</th>
+            <th>Đã tạo</th>
+            <th>Trạng thái</th>
+            <th style="text-align:right;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% admins.forEach(a => { %>
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--gold); font-size: 1rem;"><%= a.name || a.email %></div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);"><%= a.email %></div>
+              </td>
+              <td>
+                <% if (a.role === 'super') { %>
+                  <span style="padding: 4px 12px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border-radius: 12px; font-weight: 800; font-size: 0.72rem;">
+                    ⭐ SUPER
+                  </span>
+                <% } else { %>
+                  <span style="padding: 4px 12px; background: rgba(79,195,247,0.15); color: #4fc3f7; border-radius: 12px; font-weight: 700; font-size: 0.72rem;">
+                    ADMIN
+                  </span>
+                <% } %>
+              </td>
+              <td>
+                <div style="font-family: 'Caveat'; font-size: 1.3rem; color: var(--cyan);">
+                  <%= a.quota_used %> / <%= a.quota %>
+                </div>
+              </td>
+              <td>
+                <span style="background: rgba(79,195,247,0.15); color: var(--cyan); padding: 4px 12px; border-radius: 12px; font-weight: 700;">
+                  <%= a.keyCount %> key
+                </span>
+              </td>
+              <td>
+                <form method="POST" action="/admin/admins/toggle/<%= a.id %>" style="margin:0;">
+                  <label class="vg-toggle">
+                    <input type="checkbox" <%= a.is_active ? 'checked' : '' %> onchange="this.form.submit()">
+                    <span class="vg-slider"></span>
+                  </label>
+                </form>
+              </td>
+              <td style="text-align:right;">
+                <div class="d-flex gap-1 justify-content-end">
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#quotaModal<%= a.id %>" title="Thêm quota">
+                    <i class="fas fa-plus-circle"></i>
+                  </button>
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#roleModal<%= a.id %>" title="Đổi role">
+                    <i class="fas fa-crown"></i>
+                  </button>
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#passwordModal<%= a.id %>" title="Reset mật khẩu">
+                    <i class="fas fa-key"></i>
+                  </button>
+                  <form method="POST" action="/admin/admins/reset-quota/<%= a.id %>" onsubmit="return confirm('Reset quota_used về 0?')" style="display:inline;margin:0;">
+                    <button class="vg-btn-icon warn" title="Reset đã dùng"><i class="fas fa-redo"></i></button>
+                  </form>
+                  <form method="POST" action="/admin/admins/delete/<%= a.id %>" onsubmit="return confirm('Xóa admin này? Key cũ vẫn giữ nhưng không còn thuộc admin.')" style="display:inline;margin:0;">
+                    <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (admins.length === 0) { %>
+            <tr><td colspan="6"><div class="vg-empty"><i class="fas fa-user-shield"></i><p>Chưa có admin phụ nào</p></div></td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal tạo admin -->
+<div class="modal fade" id="createAdminModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content vg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-user-shield"></i> Thêm Admin</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/admin/admins/create">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tên</label>
+            <input type="text" name="name" class="form-control" placeholder="VD: Nguyễn Văn B">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email đăng nhập</label>
+            <input type="email" name="email" class="form-control" required placeholder="admin2@dpiconfig.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mật khẩu</label>
+            <input type="text" name="password" class="form-control" required minlength="6" placeholder="Nhập mật khẩu">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select" id="roleSelect">
+              <option value="admin" selected>Admin thường (bị giới hạn quota)</option>
+              <option value="super">⭐ Super Admin (toàn quyền)</option>
+            </select>
+            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 6px;">
+              Super Admin có thể tạo Admin khác và Seller.
+            </small>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Quota (số key được tạo)</label>
+              <input type="number" name="quota" class="form-control" value="50" min="0">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Số TB mặc định</label>
+              <input type="number" name="max_devices_default" class="form-control" value="1" min="1" max="999">
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input type="checkbox" name="can_choose_tier" class="form-check-input" id="tierCheck" checked>
+              <label class="form-check-label" for="tierCheck" style="color: var(--gold);">
+                Cho phép chọn hạng (VIP/Thường)
+              </label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" name="can_choose_duration" class="form-check-input" id="durCheck" checked>
+              <label class="form-check-label" for="durCheck" style="color: var(--gold);">
+                Cho phép chọn thời hạn
+              </label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ghi chú</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Ghi chú nội bộ"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="vg-btn"><i class="fas fa-check"></i> Tạo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal quota + role cho mỗi admin -->
+<% admins.forEach(a => { %>
+  <!-- Quota modal -->
+  <div class="modal fade" id="quotaModal<%= a.id %>" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content vg-modal">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Thêm quota</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="/admin/admins/add-quota/<%= a.id %>">
+          <div class="modal-body">
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Admin: <strong style="color: var(--gold);"><%= a.name || a.email %></strong><br>
+              Quota hiện tại: <strong><%= a.quota %></strong>
+            </p>
+            <label class="form-label">Số quota muốn thêm</label>
+            <input type="number" name="amount" class="form-control" value="50" min="1" required>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="vg-btn">Thêm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role modal -->
+  <div class="modal fade" id="roleModal<%= a.id %>" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content vg-modal">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-crown"></i> Đổi role</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="/admin/admins/change-role/<%= a.id %>">
+          <div class="modal-body">
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Admin: <strong style="color: var(--gold);"><%= a.email %></strong><br>
+              Role hiện tại: <strong><%= a.role.toUpperCase() %></strong>
+            </p>
+            <label class="form-label">Role mới</label>
+            <select name="role" class="form-select">
+              <option value="admin" <%= a.role === 'admin' ? 'selected' : '' %>>Admin thường</option>
+              <option value="super" <%= a.role === 'super' ? 'selected' : '' %>>⭐ Super Admin</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="vg-btn">Cập nhật</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password modal -->
+  <div class="modal fade" id="passwordModal<%= a.id %>" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content vg-modal">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-key"></i> Reset mật khẩu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="/admin/admins/reset-password/<%= a.id %>">
+          <div class="modal-body">
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Admin: <strong style="color: var(--gold);"><%= a.email %></strong>
+            </p>
+            <label class="form-label">Mật khẩu mới</label>
+            <input type="text" name="new_password" class="form-control" required minlength="6" placeholder="Nhập mật khẩu mới">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="vg-btn">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) %>
+
+<%- include('../partials/scripts') %>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const Toast = Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
+    background: 'rgba(10, 30, 63, 0.98)', color: '#ffd700'
+  });
+  if (urlParams.get('created') === '1') Toast.fire({ icon: 'success', title: 'Đã tạo admin' });
+  if (urlParams.get('toggled') === '1') Toast.fire({ icon: 'success', title: 'Đã đổi trạng thái' });
+  if (urlParams.get('quota_added') === '1') Toast.fire({ icon: 'success', title: 'Đã thêm quota' });
+  if (urlParams.get('quota_reset') === '1') Toast.fire({ icon: 'success', title: 'Đã reset quota' });
+  if (urlParams.get('role_changed') === '1') Toast.fire({ icon: 'success', title: 'Đã đổi role' });
+  if (urlParams.get('deleted') === '1') Toast.fire({ icon: 'error', title: 'Đã xóa admin' });
+  if (urlParams.get('error') === 'email_exists') Toast.fire({ icon: 'error', title: 'Email đã tồn tại' });
+  if (urlParams.get('error') === 'self_action') Toast.fire({ icon: 'error', title: 'Không thể thao tác trên chính mình' });
+  if (urlParams.get('error') === 'missing') Toast.fire({ icon: 'error', title: 'Thiếu thông tin' });
+</script>

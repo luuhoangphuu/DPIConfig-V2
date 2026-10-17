@@ -1,0 +1,81 @@
+<nav class="vg-sidebar">
+  <div class="vg-logo">
+    <div class="vg-star-logo">
+      <svg viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="9" fill="#ffd700" stroke="#050d1f" stroke-width="1.5"/>
+        <g stroke="#4fc3f7" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9">
+          <path d="M 50 22 Q 68 40 50 56 Q 32 72 50 88"/>
+          <path d="M 88 50 Q 68 32 50 50 Q 32 68 12 50"/>
+        </g>
+      </svg>
+      <div class="star-core"></div>
+    </div>
+    <h5>DPIConfig</h5>
+    <small>HoangPhu</small>
+  </div>
+
+  <ul class="vg-nav">
+    <li>
+      <a href="/admin/dashboard" class="nav-link <%= currentPage == 'dashboard' ? 'active' : '' %>">
+        <i class="fas fa-star"></i> <span>Bảng điều khiển</span>
+      </a>
+    </li>
+    <li>
+      <a href="/admin/keys" class="nav-link <%= currentPage == 'keys' ? 'active' : '' %>">
+        <i class="fas fa-key"></i> <span>Quản lý Key</span>
+      </a>
+    </li>
+
+    <% const isSuper = user && (user.role === 'super' || user.is_super === true); if (isSuper) { %>
+      <li>
+        <a href="/admin/admins" class="nav-link <%= currentPage == 'admins' ? 'active' : '' %>">
+          <i class="fas fa-user-shield"></i> <span>Quản lý Admin</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/sellers" class="nav-link <%= currentPage == 'sellers' ? 'active' : '' %>">
+          <i class="fas fa-user-tie"></i> <span>Người bán</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/versions" class="nav-link <%= currentPage == 'versions' ? 'active' : '' %>">
+          <i class="fas fa-cloud-download-alt"></i> <span>Phiên bản App</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/announcements" class="nav-link <%= currentPage == 'announcements' ? 'active' : '' %>">
+          <i class="fas fa-bullhorn"></i> <span>Thông báo</span>
+        </a>
+      </li>
+    <% } %>
+
+    <li>
+      <a href="/admin/profile" class="nav-link <%= currentPage == 'profile' ? 'active' : '' %>">
+        <i class="fas fa-user-cog"></i> <span>Tài khoản</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="vg-footer">
+    <div class="vg-time-badge" id="vgTime">--:--:--</div>
+    <div class="vg-user">
+      <i class="fas fa-user-circle"></i>
+      <span><%= user.email.charAt(0) %>***@gmail.com</span>
+    </div>
+
+    <% if (user && (user.role === 'super' || user.is_super === true)) { %>
+      <div style="display: inline-block; padding: 3px 12px; background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border-radius: 12px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px;">
+        ⭐ SUPER ADMIN
+      </div>
+    <% } else { %>
+      <div style="display: inline-block; padding: 3px 12px; background: rgba(79, 195, 247, 0.2); color: #4fc3f7; border-radius: 12px; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px;">
+        ADMIN
+      </div>
+    <% } %>
+
+    <a href="/admin/logout" class="vg-btn-logout">
+      <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+    </a>
+    <div class="vg-copyright">© 2025 HoangPhu · Duy</div>
+  </div>
+</nav>

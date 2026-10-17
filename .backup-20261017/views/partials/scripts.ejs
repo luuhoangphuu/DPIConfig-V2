@@ -1,0 +1,95 @@
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function updateTime() {
+    const t = document.getElementById('vgTime');
+    if (t) t.textContent = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    const d = document.getElementById('todayDate');
+    if (d) d.textContent = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+
+  function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(el => {
+      const expiry = new Date(el.getAttribute('data-expiry')).getTime();
+      const diff = expiry - Date.now();
+      if (diff <= 0) { el.textContent = '✕ Hết hạn'; el.className = 'countdown danger'; }
+      else {
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        if (d > 0) el.textContent = `${d}n ${h}g`;
+        else if (h > 0) el.textContent = `${h}g ${m}p`;
+        else el.textContent = `${m} phút`;
+        el.className = d <= 3 ? 'countdown warning' : 'countdown safe';
+      }
+    });
+  }
+  updateCountdowns();
+  setInterval(updateCountdowns, 30000);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const Toast = Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
+    background: 'rgba(10, 30, 63, 0.98)', color: '#ffd700', iconColor: '#4fc3f7'
+  });
+  const messages = {
+    created: { icon: 'success', title: 'Đã tạo Key mới!' },
+    toggled: { icon: 'success', title: 'Đã đổi trạng thái' },
+    kicked: { icon: 'warning', title: 'Đã khóa tất cả thiết bị' },
+    deleted_all_devices: { icon: 'error', title: 'Đã xóa tất cả thiết bị' },
+    device_toggled: { icon: 'success', title: 'Đã đổi trạng thái thiết bị' },
+    device_deleted: { icon: 'error', title: 'Đã xóa thiết bị' },
+    extended: { icon: 'success', title: 'Đã gia hạn Key' },
+    deleted: { icon: 'error', title: 'Đã xóa Key' }
+  };
+  for (const [key, val] of Object.entries(messages)) {
+    if (urlParams.get(key) === '1') Toast.fire(val);
+  }
+
+  // Toggle hiệu ứng động
+  const effectToggle = document.getElementById('effectToggle');
+  if (effectToggle) {
+    const savedEffect = localStorage.getItem('effectOff') === 'true';
+    if (savedEffect) {
+      document.body.classList.add('effect-off');
+      effectToggle.querySelector('i').className = 'fas fa-play';
+    }
+    effectToggle.addEventListener('click', function() {
+      const isOff = document.body.classList.toggle('effect-off');
+      this.querySelector('i').className = isOff ? 'fas fa-play' : 'fas fa-pause';
+      localStorage.setItem('effectOff', isOff);
+      // Reload để WebGL khởi động lại đúng
+      if (!isOff) location.reload();
+    });
+  }
+
+  // ===== MOBILE MENU =====
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+  const sidebar = document.querySelector('.vg-sidebar');
+  
+  if (mobileMenuBtn && sidebar) {
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      mobileOverlay.classList.toggle('active');
+    });
+    
+    mobileOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      mobileOverlay.classList.remove('active');
+    });
+    
+    // Click vào menu thì đóng sidebar
+    sidebar.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('open');
+          mobileOverlay.classList.remove('active');
+        }
+      });
+    });
+  }
+</script>
+</body>
+</html>

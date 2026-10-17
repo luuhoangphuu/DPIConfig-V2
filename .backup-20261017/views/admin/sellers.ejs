@@ -1,0 +1,110 @@
+<%- include('../partials/header', { title: 'Người bán' }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'sellers' }) %>
+  <div class="vg-main flex-grow-1">
+    <div class="vg-page-head anim">
+      <div>
+        <h1 class="vg-page-title">Người bán</h1>
+        <p class="vg-page-sub">Quản lý đại lý phân phối key</p>
+      </div>
+      <button class="vg-btn anim d2" data-bs-toggle="modal" data-bs-target="#createSellerModal">
+        <i class="fas fa-plus"></i> Thêm người bán
+      </button>
+    </div>
+
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr><th>Người bán</th><th>Liên hệ</th><th>Quota</th><th>Đã tạo</th><th>Trạng thái</th><th style="text-align:right;">Thao tác</th></tr>
+        </thead>
+        <tbody>
+          <% sellers.forEach(s => { %>
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--gold); font-size: 1.05rem;"><%= s.name %></div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);"><%= s.email %></div>
+              </td>
+              <td style="font-size: 0.85rem;">
+                <%= s.phone ? '<i class="fas fa-phone" style="color: var(--cyan);"></i> ' + s.phone : '<span style="color: var(--text-muted);">—</span>' %>
+              </td>
+              <td><div style="font-family: 'Caveat'; font-size: 1.3rem; color: var(--cyan);"><%= s.quota_used %> / <%= s.quota %></div></td>
+              <td><span style="background: rgba(79,195,247,0.15); color: var(--cyan); padding: 4px 12px; border-radius: 12px; font-weight: 700;"><%= s.keyCount %> key</span></td>
+              <td>
+                <form method="POST" action="/admin/sellers/toggle/<%= s.id %>" style="margin:0;">
+                  <label class="vg-toggle"><input type="checkbox" <%= s.is_active ? 'checked' : '' %> onchange="this.form.submit()"><span class="vg-slider"></span></label>
+                </form>
+              </td>
+              <td style="text-align:right;">
+                <div class="d-flex gap-1 justify-content-end">
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#quotaModal<%= s.id %>" title="Thêm quota"><i class="fas fa-plus-circle"></i></button>
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#passwordModal<%= s.id %>" title="Reset mật khẩu"><i class="fas fa-key"></i></button>
+                  <form method="POST" action="/admin/sellers/reset-quota/<%= s.id %>" onsubmit="return confirm('Reset quota?')" style="display:inline;margin:0;"><button class="vg-btn-icon warn" title="Reset"><i class="fas fa-redo"></i></button></form>
+                  <form method="POST" action="/admin/sellers/delete/<%= s.id %>" onsubmit="return confirm('Xóa seller?')" style="display:inline;margin:0;"><button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button></form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (sellers.length === 0) { %>
+            <tr><td colspan="6"><div class="vg-empty"><i class="fas fa-user-tie"></i><p>Chưa có người bán nào</p></div></td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="createSellerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content vg-modal">
+    <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-tie"></i> Thêm người bán</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form method="POST" action="/admin/sellers/create">
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 mb-3"><label class="form-label">Tên</label><input type="text" name="name" class="form-control" required autocomplete="off"></div>
+          <div class="col-md-6 mb-3"><label class="form-label">SĐT/Zalo</label><input type="text" name="phone" class="form-control"></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required autocomplete="off"></div>
+        <div class="mb-3"><label class="form-label">Mật khẩu</label><input type="password" name="password" class="form-control" required minlength="6" autocomplete="new-password"></div>
+        <div class="row">
+          <div class="col-md-6 mb-3"><label class="form-label">Quota</label><input type="number" name="quota" class="form-control" value="10" min="0"></div>
+          <div class="col-md-6 mb-3"><label class="form-label">Số TB mặc định</label><input type="number" name="max_devices_default" class="form-control" value="1" min="1"></div>
+        </div>
+        <div class="mb-3">
+          <div class="form-check"><input type="checkbox" name="can_choose_tier" class="form-check-input" checked><label class="form-check-label" style="color: var(--gold);">Cho phép chọn hạng</label></div>
+          <div class="form-check"><input type="checkbox" name="can_choose_duration" class="form-check-input" checked><label class="form-check-label" style="color: var(--gold);">Cho phép chọn thời hạn</label></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button><button type="submit" class="vg-btn"><i class="fas fa-check"></i> Tạo</button></div>
+    </form>
+  </div></div>
+</div>
+
+<% sellers.forEach(s => { %>
+<div class="modal fade" id="quotaModal<%= s.id %>" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content vg-modal">
+    <div class="modal-header"><h5 class="modal-title">Thêm quota</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form method="POST" action="/admin/sellers/add-quota/<%= s.id %>">
+      <div class="modal-body">
+        <p style="color: var(--text-muted);">Seller: <strong style="color: var(--gold);"><%= s.name %></strong><br>Quota: <strong><%= s.quota %></strong></p>
+        <label class="form-label">Số thêm</label><input type="number" name="amount" class="form-control" value="10" min="1" required>
+      </div>
+      <div class="modal-footer"><button type="submit" class="vg-btn">Thêm</button></div>
+    </form>
+  </div></div>
+</div>
+
+<div class="modal fade" id="passwordModal<%= s.id %>" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content vg-modal">
+    <div class="modal-header"><h5 class="modal-title"><i class="fas fa-key"></i> Reset mật khẩu</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <form method="POST" action="/admin/sellers/reset-password/<%= s.id %>">
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Seller: <strong style="color: var(--gold);"><%= s.email %></strong></p>
+        <label class="form-label">Mật khẩu mới</label>
+        <input type="password" name="new_password" class="form-control" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="modal-footer"><button type="submit" class="vg-btn">Reset</button></div>
+    </form>
+  </div></div>
+</div>
+<% }) %>
+
+<%- include('../partials/scripts') %>

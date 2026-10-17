@@ -1,0 +1,165 @@
+<%- include('../partials/header', { title: 'Thông báo' }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'announcements' }) %>
+  <div class="vg-main flex-grow-1">
+
+    <div class="vg-page-head anim">
+      <div>
+        <h1 class="vg-page-title">Thông báo</h1>
+        <p class="vg-page-sub">Gửi tin nhắn đến tất cả người dùng app</p>
+      </div>
+      <button class="vg-btn anim d2" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal">
+        <i class="fas fa-plus"></i> Tạo thông báo
+      </button>
+    </div>
+
+    <div class="vg-card anim d3" style="padding: 20px 24px; margin-bottom: 24px;">
+      <div style="display: flex; gap: 10px; color: var(--cyan); font-size: 0.9rem;">
+        <i class="fas fa-info-circle" style="font-size: 1.1rem;"></i>
+        <div>
+          App sẽ gọi <code style="background: rgba(5,13,31,0.8); color: var(--gold); padding: 3px 8px; border-radius: 4px;">GET /api/announcement</code> khi mở.
+          Chỉ những thông báo có toggle <b style="color: #81c784;">BẬT</b> và chưa hết hạn mới hiện trong app.
+        </div>
+      </div>
+    </div>
+
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr>
+            <th>Ưu tiên</th>
+            <th>Tiêu đề</th>
+            <th>Loại</th>
+            <th>Hết hạn</th>
+            <th>Hiển thị</th>
+            <th style="text-align:right;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% announcements.forEach(a => {
+               const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
+          %>
+            <tr style="<%= isExpired ? 'opacity: 0.5;' : '' %>">
+              <td>
+                <span style="background: rgba(255,215,0,0.15); color: var(--gold); padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">
+                  <%= a.priority %>
+                </span>
+              </td>
+              <td style="font-weight: 700; color: var(--gold); font-family: 'Caveat'; font-size: 1.2rem;"><%= a.title %></td>
+              <td>
+                <% 
+                  const typeColors = {
+                    info: { bg: 'rgba(79,195,247,0.15)', color: '#4fc3f7', label: 'Thông tin' },
+                    success: { bg: 'rgba(129,199,132,0.15)', color: '#81c784', label: 'Thành công' },
+                    warning: { bg: 'rgba(255,215,0,0.15)', color: '#ffd700', label: 'Cảnh báo' },
+                    error: { bg: 'rgba(239,83,80,0.15)', color: '#ef5350', label: 'Lỗi' }
+                  };
+                  const c = typeColors[a.type] || typeColors.info;
+                %>
+                <span style="background: <%= c.bg %>; color: <%= c.color %>; padding: 4px 12px; border-radius: 12px; font-weight: 700; font-size: 0.75rem;">
+                  <%= c.label %>
+                </span>
+              </td>
+              <td style="font-size: 0.85rem; color: <%= isExpired ? '#ef5350' : 'var(--text-muted)' %>;">
+                <%= a.expires_at ? new Date(a.expires_at).toLocaleString('vi-VN') : 'Không' %>
+              </td>
+              <td>
+                <form method="POST" action="/admin/announcements/toggle/<%= a.id %>" style="margin:0;">
+                  <label class="vg-toggle">
+                    <input type="checkbox" <%= a.is_enabled ? 'checked' : '' %> onchange="this.form.submit()">
+                    <span class="vg-slider"></span>
+                  </label>
+                  <div style="font-size: 0.7rem; color: <%= a.is_enabled ? '#81c784' : 'var(--text-muted)' %>; margin-top: 4px;">
+                    <%= a.is_enabled ? 'Đang bật' : 'Đã khóa' %>
+                  </div>
+                </form>
+              </td>
+              <td style="text-align:right;">
+                <form method="POST" action="/admin/announcements/delete/<%= a.id %>" onsubmit="return confirm('Xóa thông báo này?')" style="display:inline;margin:0;">
+                  <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (announcements.length === 0) { %>
+            <tr>
+              <td colspan="6">
+                <div class="vg-empty">
+                  <i class="fas fa-bullhorn"></i>
+                  <p>Chưa có thông báo nào</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal tạo thông báo -->
+<div class="modal fade" id="createAnnouncementModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content vg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-bullhorn"></i> Tạo thông báo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/admin/announcements/create">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tiêu đề</label>
+            <input type="text" name="title" class="form-control" placeholder="VD: Bảo trì hệ thống" required maxlength="200">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nội dung</label>
+            <textarea name="message" class="form-control" rows="4" placeholder="VD: Hệ thống sẽ bảo trì lúc 22h tối nay..." required></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Loại</label>
+              <select name="type" class="form-select">
+                <option value="info">ℹ️ Thông tin</option>
+                <option value="success">✅ Thành công</option>
+                <option value="warning">⚠️ Cảnh báo</option>
+                <option value="error">❌ Lỗi</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Ưu tiên (1-10)</label>
+              <input type="number" name="priority" class="form-control" value="5" min="1" max="10">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ngày hết hạn (không bắt buộc)</label>
+            <input type="datetime-local" name="expires_at" class="form-control">
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="is_dismissible" class="form-check-input" id="dismissibleCheck" checked>
+            <label class="form-check-label" for="dismissibleCheck" style="color: var(--gold); font-weight: 600;">
+              Cho phép user đóng thông báo
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="vg-btn"><i class="fas fa-paper-plane"></i> Gửi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/scripts') %>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const Toast = Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
+    background: 'rgba(10, 30, 63, 0.98)', color: '#ffd700', iconColor: '#4fc3f7'
+  });
+  if (urlParams.get('created') === '1') Toast.fire({ icon: 'success', title: 'Đã tạo thông báo' });
+  if (urlParams.get('toggled') === '1') Toast.fire({ icon: 'success', title: 'Đã đổi trạng thái' });
+  if (urlParams.get('deleted') === '1') Toast.fire({ icon: 'error', title: 'Đã xóa thông báo' });
+  if (urlParams.get('error') === 'missing_fields') Toast.fire({ icon: 'error', title: 'Thiếu tiêu đề hoặc nội dung' });
+</script>

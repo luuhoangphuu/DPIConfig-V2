@@ -1,0 +1,118 @@
+<%- include('../partials/header', { title: 'Dashboard' }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'dashboard' }) %>
+  <div class="vg-main flex-grow-1">
+
+    <% if (!isSuper && adminInfo) { %>
+    <div class="vg-card anim d1" style="padding: 20px 24px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(79,195,247,0.08));">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-family: 'Caveat'; font-size: 1.8rem; color: var(--gold); margin-bottom: 6px;">
+            Quota của bạn
+          </div>
+          <div style="color: var(--text-muted); font-size: 0.9rem;">
+            Bạn còn <strong style="color: #81c784;"><%= Math.max(0, adminInfo.quota - adminInfo.quota_used) %></strong> key có thể tạo
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: 'Caveat'; font-size: 2.5rem; color: var(--cyan); line-height: 1;">
+            <%= adminInfo.quota_used %> / <%= adminInfo.quota %>
+          </div>
+        </div>
+      </div>
+      <% if (adminInfo.quota_used >= adminInfo.quota) { %>
+        <div style="margin-top: 12px; padding: 10px; background: rgba(239,83,80,0.15); border-left: 3px solid #ef5350; border-radius: 6px; color: #ff8a80; font-size: 0.9rem;">
+          <i class="fas fa-exclamation-triangle"></i> Bạn đã hết quota. Liên hệ Super Admin để nạp thêm.
+        </div>
+      <% } %>
+    </div>
+    <% } %>
+
+    <div class="vg-page-head anim">
+      <div>
+        <h1 class="vg-page-title">Đêm đầy sao</h1>
+        <p class="vg-page-sub">"Nhìn những ngôi sao luôn khiến tôi mơ mộng" — Vincent van Gogh</p>
+      </div>
+      <span class="vg-btn-ghost anim d2" style="pointer-events:none;">
+        <i class="far fa-calendar"></i>
+        <span id="todayDate">--</span>
+      </span>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <div class="col-xl-3 col-md-6 anim d1">
+        <div class="vg-card vg-stat stat-total">
+          <div class="vg-stat-icon icon-total"><i class="fas fa-key"></i></div>
+          <div class="vg-stat-label">Tổng Key</div>
+          <div class="vg-stat-value"><%= totalKeys %></div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6 anim d2">
+        <div class="vg-card vg-stat stat-active">
+          <div class="vg-stat-icon icon-active"><i class="fas fa-check-circle"></i></div>
+          <div class="vg-stat-label">Đang hoạt động</div>
+          <div class="vg-stat-value"><%= activeKeys %></div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6 anim d3">
+        <div class="vg-card vg-stat stat-expired">
+          <div class="vg-stat-icon icon-expired"><i class="fas fa-clock"></i></div>
+          <div class="vg-stat-label">Đã hết hạn</div>
+          <div class="vg-stat-value"><%= expiredKeys %></div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6 anim d4">
+        <div class="vg-card vg-stat stat-devices">
+          <div class="vg-stat-icon icon-devices"><i class="fas fa-mobile-alt"></i></div>
+          <div class="vg-stat-label">Thiết bị kích hoạt</div>
+          <div class="vg-stat-value"><%= devicesActivated %></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="vg-section-title">
+        <i class="fas fa-history"></i> Hoạt động gần đây
+      </h2>
+      <a href="?show=<%= showAll ? '' : 'all' %>" class="vg-btn-ghost">
+        <i class="fas <%= showAll ? 'fa-eye-slash' : 'fa-eye' %>"></i>
+        <%= showAll ? 'Ẩn log check' : 'Hiển thị tất cả' %>
+      </a>
+    </div>
+
+    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Hành động</th>
+            <th>Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentLogs.forEach(log => { %>
+            <tr>
+              <td style="color: var(--cyan-1); font-family: 'Courier New', monospace; font-weight: 700;">
+                <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
+              </td>
+              <td><span class="vg-badge-action"><%= log.action %></span></td>
+              <td style="color: var(--text-muted);"><%= log.details %></td>
+            </tr>
+          <% }) %>
+          <% if (recentLogs.length === 0) { %>
+            <tr>
+              <td colspan="3">
+                <div class="vg-empty">
+                  <i class="fas fa-moon"></i>
+                  <p>Chưa có hoạt động nào trong 24 giờ qua</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+<%- include('../partials/scripts') %>
