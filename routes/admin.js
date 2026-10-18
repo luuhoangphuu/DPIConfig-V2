@@ -190,12 +190,18 @@ router.post('/keys/create', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const { tier, duration, prefix, max_devices } = req.body;
+    
     let adminRecord = null;
     if (!isSuper && req.admin.id) {
       adminRecord = await Admin.findByPk(req.admin.id);
       if (!adminRecord) return res.redirect('/yncuti/login');
-      if (adminRecord.quota_used >= adminRecord.quota) return res.redirect('/yncuti/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
+      
+      // Check Quota
+      if (adminRecord.quota_used >= adminRecord.quota) {
+        return res.redirect('/yncuti/keys?error=' + encodeURIComponent('Bạn đã hết quota tạo key.'));
+      }
     }
+
     let maxDev = parseInt(max_devices) || 1;
     if (maxDev > 999) maxDev = 999;
 
@@ -205,15 +211,24 @@ router.post('/keys/create', async (req, res) => {
       const hours = Math.round((parseFloat(duration) || 30) * 24);
       expires_at = new Date(); expires_at.setHours(expires_at.getHours() + hours);
     }
+
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
     const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
-    
+
     await Key.create({ key, tier: tier || 'Normal', expires_at, max_devices: maxDev, created_by: req.admin.email, admin_id: req.admin.id || null });
-    if (adminRecord) { adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; await adminRecord.save(); }
-    await Log.create({ action: 'key_created', details: `${req.admin.email} tạo key ${key}`, ip_address: req.ip });
     
+    // 🔥 CẬP NHẬT QUOTA
+    if (adminRecord) { 
+      adminRecord.quota_used = (adminRecord.quota_used || 0) + 1; 
+      await adminRecord.save(); 
+    }
+    
+    await Log.create({ action: 'key_created', details: `${req.admin.email} tạo key ${key}`, ip_address: req.ip });
     res.redirect('/yncuti/keys?created=1');
-  } catch (err) { res.redirect('/yncuti/keys?error=' + encodeURIComponent(err.message)); }
+  } catch (err) { 
+    console.error(err);
+    res.redirect('/yncuti/keys?error=' + encodeURIComponent(err.message)); 
+  }
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
@@ -352,8 +367,24 @@ router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
 });
 
+
+router.post('/sellers/toggle/:id', requireSuperAdmin, async (req, res) => {
+  try {
+    const s = await Seller.findByPk(req.params.id);
+    if (s) { s.is_active = !s.is_active; await s.save(); }
+    res.redirect('/yncuti/sellers?success=updated');
+  } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
+});
+
 router.post('/sellers/delete/:id', requireSuperAdmin, async (req, res) => {
-  try { await Seller.destroy({ where: { id: req.params.id } }); res.redirect('/yncuti/sellers?success=deleted'); } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
+  try {
+    const s = await Seller.findByPk(req.params.id);
+    if (s) {
+      s.session_token = null; // 🔥 Ép văng phiên đăng nhập của Seller
+      await s.destroy();
+    }
+    res.redirect('/yncuti/sellers?success=deleted');
+  } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
 });
 
 // ==================== PHIÊN BẢN APP ====================

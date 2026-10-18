@@ -8,10 +8,10 @@ module.exports = async function sellerAuth(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'defaultSecret');
     const dbSeller = await Seller.findByPk(decoded.id);
     
-    // CHECK TOKEN PHIÊN
+    // Nếu Seller bị xóa khỏi DB hoặc bị đổi session token -> Đá văng
     if (!dbSeller || (dbSeller.session_token && dbSeller.session_token !== decoded.session_token)) {
       res.clearCookie('seller_token');
-      return res.redirect('/seller/login?error=session_expired');
+      return res.redirect('/seller/login');
     }
     
     req.seller = decoded;

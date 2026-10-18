@@ -102,31 +102,37 @@ router.post('/keys/create', async (req, res) => {
   try {
     const seller = await Seller.findByPk(req.seller.id);
     if (!seller || !seller.is_active) return res.redirect('/seller/login');
-    if (seller.quota_used >= seller.quota) return res.redirect('/seller/keys?error=quota_exceeded');
+    if (seller.quota_used >= seller.quota) return res.redirect('/seller/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
+
     const { tier, duration, prefix } = req.body;
     const chosenTier = seller.can_choose_tier ? (tier === 'VIP' ? 'VIP' : 'Normal') : seller.default_tier;
     const dur = seller.can_choose_duration ? (duration || 30) : 30;
+    
     let expires_at;
     if (dur === 'forever') expires_at = new Date('2099-12-31T23:59:59');
     else {
       const days = parseFloat(dur) <= 0 ? 30 : parseFloat(dur);
       const hours = Math.round(days * 24);
-      expires_at = new Date();
-      expires_at.setHours(expires_at.getHours() + hours);
+      expires_at = new Date(); expires_at.setHours(expires_at.getHours() + hours);
     }
+
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+    const key = `${prefix || 'ZwicApex'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+
     await Key.create({
-      key, tier: chosenTier, expires_at,
-      max_devices: seller.max_devices_default,
-      created_by: seller.email,
-      seller_id: seller.id
+      key, tier: chosenTier, expires_at, max_devices: seller.max_devices_default, created_by: seller.email, seller_id: seller.id
     });
+    
+    // 🔥 CẬP NHẬT QUOTA
     seller.quota_used = (seller.quota_used || 0) + 1;
     await seller.save();
+    
     await Log.create({ action: 'seller_key_created', details: `Seller ${seller.email} tạo key ${key}`, ip_address: req.ip });
     res.redirect('/seller/keys?created=1');
-  } catch (err) { console.error(err); res.redirect('/seller/keys?error=create_failed'); }
+  } catch (err) { 
+    console.error(err);
+    res.redirect('/seller/keys?error=' + encodeURIComponent(err.message)); 
+  }
 });
 
 router.post('/keys/toggle/:id', async (req, res) => {
