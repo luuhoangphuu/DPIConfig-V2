@@ -6,6 +6,7 @@ const { Key, Log, KeyDevice, AppVersion, Announcement } = require('../models');
 const apiAuth = require('../middleware/apiAuth');
 const apiLimiter = require('../middleware/rateLimiter');
 const genKeyLimiter = require('../middleware/genKeyLimiter');
+const publicApiAuth = require('../middleware/publicApiAuth');
 
 // Hàm xóa key hết hạn (chạy mỗi lần có request)
 async function cleanupExpiredKeys() {

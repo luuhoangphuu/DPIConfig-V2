@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhận Key Miễn Phí - DPIConfig</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: url('/images/starry-night.jpg') center/cover fixed; min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #fff; padding: 20px; }
+    body::before { content: ''; position: fixed; inset: 0; background: rgba(5,13,31,0.85); backdrop-filter: blur(10px); z-index: -1; }
+    .card { background: rgba(10,30,63,0.7); border: 2px solid rgba(255,215,0,0.4); border-radius: 24px; padding: 40px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); backdrop-filter: blur(20px); }
+    h1 { font-family: 'Caveat', cursive; font-size: 3rem; color: #ffd700; margin-bottom: 10px; }
+    p { color: #b8c5d9; margin-bottom: 30px; line-height: 1.6; }
+    .btn { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #0a1e3f; border: none; padding: 16px 32px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,215,0,0.4); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .result-box { display: none; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.4); border: 1px solid #81c784; border-radius: 16px; }
+    .key-display { font-family: monospace; font-size: 1.5rem; color: #81c784; font-weight: bold; letter-spacing: 2px; margin: 15px 0; padding: 15px; background: rgba(129,199,132,0.1); border-radius: 8px; word-break: break-all; }
+    .copy-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Nhận Key Miễn Phí</h1>
+    <p>Vượt link quảng cáo để nhận Key trải nghiệm ngay!</p>
+    
+    <div id="step-1">
+      <button class="btn" id="btnGetKey" onclick="startGetKey()"><i class="fas fa-gift"></i> Lấy Key Ngay</button>
+    </div>
+    <div id="step-loading" style="display:none;">
+      <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: #ffd700; margin: 20px 0;"></i>
+      <p>Đang tạo Key cho bạn...</p>
+    </div>
+    <div id="step-result" class="result-box">
+      <h3 style="color:#81c784;"><i class="fas fa-check-circle"></i> Lấy Key Thành Công!</h3>
+      <div class="key-display" id="keyText">...</div>
+      <button class="copy-btn" onclick="copyKey()"><i class="fas fa-copy"></i> Copy Key</button>
+    </div>
+  </div>
+
+  <script>
+    function startGetKey() {
+      document.getElementById('step-1').style.display = 'none';
+      document.getElementById('step-loading').style.display = 'block';
+      fetch('/api/yncutie', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': 'ync_8f9a2b4c6d1e3f5a7b9c0d2e4f6a8b1c' },
+        body: JSON.stringify({ tier: 'Normal' }) 
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('step-loading').style.display = 'none';
+        document.getElementById('step-result').style.display = 'block';
+        if (data.success) {
+          document.getElementById('keyText').innerText = data.key;
+          window.currentKey = data.key;
+        } else {
+          document.getElementById('keyText').innerText = 'Lỗi: ' + data.error;
+          document.getElementById('keyText').style.color = '#ef5350';
+          document.getElementById('btnGetKey').disabled = false;
+        }
+      })
+      .catch(err => { alert('Có lỗi xảy ra, vui lòng thử lại!'); location.reload(); });
+    }
+    function copyKey() {
+      if (!window.currentKey) return;
+      navigator.clipboard.writeText(window.currentKey);
+      alert('Đã copy Key!');
+    }
+  </script>
+</body>
+</html>
