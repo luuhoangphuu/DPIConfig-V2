@@ -498,4 +498,21 @@ router.get('/logs', async (req, res) => {
 });
 
 
+
+// API nhỏ để Dashboard tự động cập nhật số liệu (Polling)
+router.get('/api/dashboard-stats', async (req, res) => {
+  try {
+    const isSuper = req.admin.role === 'super' || req.admin.is_super === true || req.admin.email === process.env.ADMIN_EMAIL;
+    let keyWhere = {};
+    if (!isSuper && req.admin.id) keyWhere.admin_id = req.admin.id;
+
+    const totalKeys = await Key.count({ where: keyWhere });
+    const activeKeys = await Key.count({ where: { ...keyWhere, is_active: true } });
+    const expiredKeys = await Key.count({ where: { ...keyWhere, expires_at: { [Op.lt]: new Date() } } });
+    const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
+
+    res.json({ totalKeys, activeKeys, expiredKeys, devicesActivated });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;

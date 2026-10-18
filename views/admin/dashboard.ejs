@@ -171,6 +171,35 @@
   });
 </script>
   
+
+<script>
+  // TỰ ĐỘNG CẬP NHẬT SỐ LIỆU MỖI 15 GIÂY (Realtime)
+  setInterval(async () => {
+    try {
+      const res = await fetch('/yncuti/api/dashboard-stats');
+      const data = await res.json();
+      
+      if (data.totalKeys !== undefined) {
+        const updateNum = (selector, val) => {
+          const el = document.querySelector(selector);
+          if (el && el.innerText !== val.toString()) {
+            el.innerText = val.toLocaleString('vi-VN');
+            el.style.transform = 'scale(1.2)'; // Hiệu ứng giật nhẹ
+            el.style.color = '#81c784';        // Nhấp nháy xanh
+            setTimeout(() => { el.style.transform = 'scale(1)'; el.style.color = ''; }, 300);
+          }
+        };
+        
+        // Cập nhật từng thẻ
+        updateNum('.sn-stat.total .sn-stat-value', data.totalKeys);
+        updateNum('.sn-stat.active .sn-stat-value', data.activeKeys);
+        updateNum('.sn-stat.expired .sn-stat-value', data.expiredKeys);
+        updateNum('.sn-stat.devices .sn-stat-value', data.devicesActivated);
+      }
+    } catch (e) { console.log('Lỗi cập nhật realtime:', e); }
+  }, 15000); // 15 giây cập nhật 1 lần
+</script>
+
 <%- include('../partials/scripts') %>
 <script>
   (function() {
