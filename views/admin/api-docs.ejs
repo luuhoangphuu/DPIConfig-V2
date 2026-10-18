@@ -2,63 +2,41 @@
 <div class="d-flex">
   <%- include('../partials/sidebar', { user, currentPage: 'api', activeKeys }) %>
   <div class="vg-main flex-grow-1">
-
     <div class="sn-hero anim d1">
       <div>
-        <h1 class="sn-hero-greet">💻 API Integration</h1>
-        <p class="sn-hero-sub">Tài liệu tích hợp hệ thống dành cho Seller và Đối tác</p>
+        <h1 class="sn-hero-greet">💻 Tài liệu Tích hợp API</h1>
+        <p class="sn-hero-sub">Hướng dẫn code cho Seller/Đối tác</p>
       </div>
     </div>
     
-    <div class="vg-card anim d2" style="padding: 30px; line-height: 1.8; margin-bottom: 30px;">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px;">
-        <div style="width:40px; height:40px; border-radius:10px; background:rgba(79,195,247,0.2); color:#4fc3f7; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
-          <i class="fas fa-key"></i>
-        </div>
-        <h3 style="color:#fff; font-family:'Caveat'; font-size: 1.8rem; margin:0;">1. API Tạo Key Tự Động</h3>
-      </div>
+    <div class="vg-card anim d2" style="padding: 30px; line-height: 1.8;">
+      <h3 style="color:#ffd700; font-family:'Caveat'; font-size: 2rem;">1. API Tạo Key Tự Động</h3>
+      <p style="color:#b8c5d9">Gửi request POST để nhận Key. Dùng Token của Seller để tự động trừ Quota.</p>
       
-      <p style="color:#b8c5d9; margin-bottom: 20px;">Gửi request POST để nhận Key. Dùng Token của Seller để tự động trừ Quota.</p>
-      
-      <!-- Code Block giả lập VS Code -->
-      <div class="sn-code-window">
-        <div class="sn-code-header">
-          <div class="sn-code-dots"><span></span><span></span><span></span></div>
-          <div class="sn-code-title">POST /api/gen-key</div>
-          <button class="sn-code-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <pre class="sn-code-body"><code><span class="c-method">POST</span> <span class="c-url">https://dpi-config.vercel.app/api/gen-key</span>
+      <pre style="background:#050d1f; padding:20px; border-radius:12px; border:1px solid #4fc3f7; overflow-x:auto;">
+<code style="color:#81c784;">POST</code> <span style="color:#fff">https://dpi-config.vercel.app/api/gen-key</span>
 
-<span class="c-comment">// Headers</span>
-<span class="c-key">"Content-Type"</span>: <span class="c-string">"application/json"</span>
-
-<span class="c-comment">// Body (JSON)</span>
+<span style="color:#4fc3f7">Headers:</span>
 {
-  <span class="c-key">"token"</span>: <span class="c-string">"sk_abc123..."</span>,  <span class="c-comment">// Lấy từ trang Quản lý Người bán</span>
-  <span class="c-key">"tier"</span>: <span class="c-string">"Normal"</span>,         <span class="c-comment">// Hoặc "VIP"</span>
-  <span class="c-key">"prefix"</span>: <span class="c-string">"HoangPhu"</span>      <span class="c-comment">// Tiền tố Key (không bắt buộc)</span>
+  "Content-Type": "application/json"
 }
 
-<span class="c-comment">// Response Thành công (200 OK)</span>
+<span style="color:#4fc3f7">Body:</span>
 {
-  <span class="c-key">"success"</span>: <span class="c-bool">true</span>,
-  <span class="c-key">"key"</span>: <span class="c-string">"HoangPhu-A1B2-C3D4-E5F6"</span>,
-  <span class="c-key">"expires_at"</span>: <span class="c-string">"2026-10-18T..."</span>,
-  <span class="c-key">"duration_hours"</span>: <span class="c-num">8</span>
-}</code></pre>
-      </div>
-    </div>
+  "token": "sk_abc123...",  <span style="color:#6b7a94">// Token lấy từ trang Người Bán</span>
+  "tier": "Normal",         <span style="color:#6b7a94">// Hoặc "VIP"</span>
+  "prefix": "HoangPhu"      <span style="color:#6b7a94">// Tiền tố key (không bắt buộc)</span>
+}
 
+<span style="color:#4fc3f7">Response Thành công:</span>
+{
+  "success": true,
+  "key": "HoangPhu-A1B2-C3D4-E5F6",
+  "expires_at": "2026-10-18T...",
+  "duration_hours": 8
+}
+</code></pre>
+    </div>
   </div>
 </div>
 <%- include('../partials/scripts') %>
-
-<script>
-function copyCode(btn) {
-  const code = btn.closest('.sn-code-window').querySelector('.sn-code-body').innerText;
-  navigator.clipboard.writeText(code);
-  btn.innerText = 'Copied!';
-  btn.style.color = '#81c784';
-  setTimeout(() => { btn.innerText = 'Copy'; btn.style.color = '#b8c5d9'; }, 2000);
-}
-</script>

@@ -428,4 +428,34 @@ router.post('/profile/change-password', async (req, res) => {
   } catch (err) { res.redirect('/yncuti/profile?error=system'); }
 });
 
+
+// ==================== TRANG CHỨC NĂNG MỚI ====================
+router.get('/devices', async (req, res) => {
+  try {
+    const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
+    let where = { is_active: true };
+    // Nếu không phải super, chỉ lấy thiết bị thuộc key của admin đó (logic đơn giản hóa)
+    const devices = await KeyDevice.findAll({ where, include: Key, limit: 100, order: [['createdAt', 'DESC']] });
+    const activeKeys = await Key.count({ where: { is_active: true } });
+    res.render('admin/devices', { user: req.admin, isSuper, devices, currentPage: 'devices', activeKeys });
+  } catch (e) { res.status(500).send(e.message); }
+});
+
+router.get('/logs', async (req, res) => {
+  try {
+    const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
+    const logs = await Log.findAll({ limit: 100, order: [['createdAt', 'DESC']] });
+    const activeKeys = await Key.count({ where: { is_active: true } });
+    res.render('admin/logs', { user: req.admin, isSuper, logs, currentPage: 'logs', activeKeys });
+  } catch (e) { res.status(500).send(e.message); }
+});
+
+router.get('/api-docs', async (req, res) => {
+  try {
+    const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
+    const activeKeys = await Key.count({ where: { is_active: true } });
+    res.render('admin/api-docs', { user: req.admin, isSuper, currentPage: 'api', activeKeys });
+  } catch (e) { res.status(500).send(e.message); }
+});
+
 module.exports = router;

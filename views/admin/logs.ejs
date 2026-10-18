@@ -8,40 +8,27 @@
         <p class="sn-hero-sub">Theo dõi mọi thao tác trên hệ thống</p>
       </div>
     </div>
-    <div class="vg-card anim d2" style="padding: 0; overflow:hidden;">
-      <div class="vg-table-wrap">
-        <table class="vg-table">
-          <thead>
+    <div class="vg-card anim d2" style="padding: 0;">
+      <table class="vg-table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Hành động</th>
+            <th>Chi tiết</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(l => { %>
             <tr>
-              <th>Thời gian</th>
-              <th>Hành động</th>
-              <th>Chi tiết</th>
-              <th>IP</th>
+              <td style="color:#4fc3f7"><%= new Date(l.createdAt).toLocaleString('vi-VN') %></td>
+              <td><span class="sn-badge"><%= l.action %></span></td>
+              <td style="color:#b8c5d9"><%= l.details %></td>
+              <td><code><%= l.ip_address %></code></td>
             </tr>
-          </thead>
-          <tbody>
-            <% logs.forEach(l => { %>
-              <tr>
-                <td style="color:#4fc3f7; font-family:monospace; font-weight:600;"><%= new Date(l.createdAt).toLocaleString('vi-VN') %></td>
-                <td>
-                  <% 
-                    let badgeCls = 'default';
-                    if(l.action.includes('create') || l.action.includes('success')) badgeCls = 'success';
-                    else if(l.action.includes('delete') || l.action.includes('kick') || l.action.includes('block')) badgeCls = 'danger';
-                    else if(l.action.includes('check')) badgeCls = 'info';
-                  %>
-                  <span class="sn-log-badge <%= badgeCls %>"><%= l.action %></span>
-                </td>
-                <td style="color:#e0e0e0"><%= l.details %></td>
-                <td><span class="sn-ip-badge"><%= l.ip_address %></span></td>
-              </tr>
-            <% }) %>
-            <% if (logs.length === 0) { %>
-              <tr><td colspan="4" style="text-align:center; padding: 40px; color:#6b7a94;">Chưa có nhật ký nào.</td></tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
