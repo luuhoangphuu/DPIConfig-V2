@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Ho_Chi_Minh';
 const pg = require('pg');
 const express = require('express');
 const cookieParser = require('cookie-parser');

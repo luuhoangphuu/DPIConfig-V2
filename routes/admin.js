@@ -101,62 +101,60 @@ router.use(requireAdmin);
 // ==================== DASHBOARD ====================
 router.get('/dashboard', async (req, res) => {
   try {
-    const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
-    const showAll = req.query.show === 'all';
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
-    // 1. Đếm dữ liệu (Super Admin đếm tất cả, Admin thường đếm của mình)
+    // Xác định quyền Super Admin
+    const isSuper = req.admin.role === 'super' || req.admin.is_super === true || req.admin.email === process.env.ADMIN_EMAIL;
+
+    // 🔥 LẤY TOÀN BỘ DỮ LIỆU ĐỂ ĐẾM (Bỏ bộ lọc 24h để hiển thị đúng tổng số)
     let keyWhere = {};
-    if (!isSuper && req.admin.id) keyWhere.admin_id = req.admin.id;
-    
-    const where = { createdAt: { [Op.gte]: oneDayAgo } };
-    if (!showAll) where.action = { [Op.ne]: 'check' };
+    if (!isSuper && req.admin.id) {
+      keyWhere.admin_id = req.admin.id; // Admin thường chỉ đếm key của mình
+    }
 
     const totalKeys = await Key.count({ where: keyWhere });
     const activeKeys = await Key.count({ where: { ...keyWhere, is_active: true } });
     const expiredKeys = await Key.count({ where: { ...keyWhere, expires_at: { [Op.lt]: new Date() } } });
     const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
     
-    const recentLogs = await Log.findAll({ where, limit: 15, order: [['createdAt', 'DESC']], include: Key });
+    // Log 24h gần đây
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    let logWhere = { createdAt: { [Op.gte]: oneDayAgo } };
+    if (!req.query.show) logWhere.action = { [Op.ne]: 'check' };
+    const recentLogs = await Log.findAll({ where: logWhere, limit: 15, order: [['createdAt', 'DESC']], include: Key });
 
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
-
     const recentKeysList = await Key.findAll({ limit: 5, order: [['createdAt', 'DESC']] });
     
     let topSellers = [];
     if (isSuper) { topSellers = await Seller.findAll({ order: [['quota_used', 'DESC']], limit: 5 }); }
 
-    // 2. TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ 7 NGÀY QUA
+    // 🔥 TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ 7 NGÀY (Ép múi giờ VN)
     const chartData = [];
     const chartLabels = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-      chartLabels.push(dateStr);
+      chartLabels.push(d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }));
       
-      const startOfDay = new Date(d.setHours(0,0,0,0));
-      const endOfDay = new Date(d.setHours(23,59,59,999));
+      const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+      const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
       
       const count = await Key.count({
-        where: { 
-          ...keyWhere,
-          createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay }
-        }
+        where: Object.assign({}, keyWhere, { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } })
       });
       chartData.push(count);
     }
 
-    // 3. Truyền TẤT CẢ ra View
+    // Debug log (xem trên Vercel Logs nếu vẫn lỗi)
+    console.log('[DASHBOARD DEBUG]', { isSuper, admin_id: req.admin.id, totalKeys, activeKeys });
+
     res.render('admin/dashboard', {
       user: req.admin, isSuper, adminInfo,
-      totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll,
-      recentKeysList, topSellers,
-      chartData, chartLabels  // 🔥 Bổ sung biến còn thiếu ở đây
+      totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll: req.query.show === 'all',
+      recentKeysList, topSellers, chartData, chartLabels
     });
   } catch (err) {
-    console.error(err);
+    console.error('[DASHBOARD ERROR]', err);
     res.status(500).send('Lỗi: ' + err.message);
   }
 });
