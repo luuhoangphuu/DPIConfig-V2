@@ -2935,3 +2935,72 @@ document.addEventListener('DOMContentLoaded', function() {
   background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px;
 }
 </style>
+
+<style>
+/* ===== CODE WINDOW (API DOCS) ===== */
+.sn-code-window {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 12px;
+  overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  margin-top: 15px;
+}
+.sn-code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #161b22; padding: 10px 16px; border-bottom: 1px solid #30363d;
+}
+.sn-code-dots { display: flex; gap: 6px; }
+.sn-code-dots span { width: 12px; height: 12px; border-radius: 50%; }
+.sn-code-dots span:nth-child(1) { background: #ff5f56; }
+.sn-code-dots span:nth-child(2) { background: #ffbd2e; }
+.sn-code-dots span:nth-child(3) { background: #27c93f; }
+.sn-code-title { color: #8b949e; font-family: monospace; font-size: 0.85rem; }
+.sn-code-copy {
+  background: rgba(255,255,255,0.1); border: none; color: #b8c5d9;
+  padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;
+}
+.sn-code-copy:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.sn-code-body {
+  padding: 16px; margin: 0; color: #c9d1d9; font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.9rem; line-height: 1.6; overflow-x: auto;
+}
+/* Syntax Highlight Colors */
+.c-method { color: #ff7b72; font-weight: bold; }
+.c-url { color: #79c0ff; }
+.c-key { color: #7ee787; }
+.c-string { color: #a5d6ff; }
+.c-bool { color: #ff7b72; }
+.c-num { color: #79c0ff; }
+.c-comment { color: #8b949e; font-style: italic; }
+
+/* ===== BADGES (DEVICES & LOGS) ===== */
+.sn-hwid-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(79,195,247,0.1); color: #4fc3f7;
+  padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.85rem;
+  border: 1px solid rgba(79,195,247,0.3);
+}
+.sn-key-badge {
+  font-family: monospace; font-size: 0.85rem; color: #ffd700;
+  background: rgba(255,215,0,0.1); padding: 4px 10px; border-radius: 6px;
+  border: 1px solid rgba(255,215,0,0.3);
+}
+.sn-status-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+  border-radius: 20px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;
+}
+.sn-status-badge.active { background: rgba(129,199,132,0.15); color: #81c784; border: 1px solid rgba(129,199,132,0.3); }
+.sn-status-badge.inactive { background: rgba(239,83,80,0.15); color: #ef5350; border: 1px solid rgba(239,83,80,0.3); }
+
+.sn-log-badge {
+  display: inline-block; padding: 4px 10px; border-radius: 6px;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+}
+.sn-log-badge.success { background: rgba(129,199,132,0.15); color: #81c784; border: 1px solid rgba(129,199,132,0.3); }
+.sn-log-badge.danger { background: rgba(239,83,80,0.15); color: #ef5350; border: 1px solid rgba(239,83,80,0.3); }
+.sn-log-badge.info { background: rgba(79,195,247,0.15); color: #4fc3f7; border: 1px solid rgba(79,195,247,0.3); }
+.sn-log-badge.default { background: rgba(255,215,0,0.15); color: #ffd700; border: 1px solid rgba(255,215,0,0.3); }
+
+.sn-ip-badge {
+  font-family: monospace; font-size: 0.8rem; color: #b8c5d9;
+  background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px;
+}
+</style>
