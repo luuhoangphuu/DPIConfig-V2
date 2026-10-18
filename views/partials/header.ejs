@@ -3160,3 +3160,58 @@ document.addEventListener('DOMContentLoaded', function() {
 .sn-chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .sn-chart-title { font-family: 'Caveat'; font-size: 1.6rem; color: #fff; margin: 0; }
 </style>
+
+<style>
+/* ==========================================
+   GLOBAL RESPONSIVE FIXES (Mobile First)
+   ========================================== */
+/* 1. Bảng dữ liệu: Tự động cuộn ngang trên mobile, không vỡ layout */
+.vg-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.vg-table {
+  min-width: 900px !important;
+}
+
+/* 2. Drawer (Trượt ngang) trên Mobile: Chiếm 100% màn hình */
+@media (max-width: 768px) {
+  .sn-drawer {
+    width: 100% !important;
+    max-width: 100vw !important;
+    right: -100vw !important;
+  }
+  .sn-drawer.open {
+    right: 0 !important;
+  }
+  .sn-hero {
+    padding: 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .sn-hero-greet { font-size: 1.6rem !important; }
+  .sn-quick-actions { width: 100%; flex-wrap: wrap; }
+  .sn-quick-btn { flex: 1; justify-content: center; font-size: 0.85rem; }
+  
+  /* Topbar thu gọn */
+  .sn-search-trigger { display: none !important; }
+  .sn-breadcrumb { font-size: 0.8rem; }
+  .sn-topbar-right .sn-user-meta { display: none; }
+  .sn-topbar-right .sn-user-chev { display: none; }
+  
+  /* Bottom Nav */
+  .sn-mobile-nav { display: flex !important; }
+  .vg-main { padding-bottom: 90px !important; }
+}
+
+/* 3. Biểu đồ Chart.js tự động co giãn */
+.sn-chart-card { padding: 16px !important; }
+.sn-chart-card canvas { max-height: 250px; }
+
+/* 4. Form và Modal trên Mobile */
+@media (max-width: 576px) {
+  .modal-dialog { margin: 10px !important; }
+  .sn-stat-value { font-size: 2rem !important; }
+}
+</style>
