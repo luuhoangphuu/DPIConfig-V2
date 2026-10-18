@@ -105,8 +105,7 @@ router.get('/dashboard', async (req, res) => {
     const showAll = req.query.show === 'all';
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
-    // Nếu là Super Admin: keyWhere = {} (Đếm TẤT CẢ Key)
-    // Nếu là Admin thường: keyWhere = { admin_id: ... } (Chỉ đếm key mình tạo)
+    // 1. Đếm dữ liệu (Super Admin đếm tất cả, Admin thường đếm của mình)
     let keyWhere = {};
     if (!isSuper && req.admin.id) keyWhere.admin_id = req.admin.id;
     
@@ -123,16 +122,38 @@ router.get('/dashboard', async (req, res) => {
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
 
-    // Lấy 5 Key mới nhất
     const recentKeysList = await Key.findAll({ limit: 5, order: [['createdAt', 'DESC']] });
-    // Lấy Top Sellers
+    
     let topSellers = [];
     if (isSuper) { topSellers = await Seller.findAll({ order: [['quota_used', 'DESC']], limit: 5 }); }
 
+    // 2. TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ 7 NGÀY QUA
+    const chartData = [];
+    const chartLabels = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      chartLabels.push(dateStr);
+      
+      const startOfDay = new Date(d.setHours(0,0,0,0));
+      const endOfDay = new Date(d.setHours(23,59,59,999));
+      
+      const count = await Key.count({
+        where: { 
+          ...keyWhere,
+          createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay }
+        }
+      });
+      chartData.push(count);
+    }
+
+    // 3. Truyền TẤT CẢ ra View
     res.render('admin/dashboard', {
       user: req.admin, isSuper, adminInfo,
       totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll,
-      recentKeysList, topSellers
+      recentKeysList, topSellers,
+      chartData, chartLabels  // 🔥 Bổ sung biến còn thiếu ở đây
     });
   } catch (err) {
     console.error(err);
