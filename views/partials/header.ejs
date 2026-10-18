@@ -1054,7 +1054,8 @@ body, html { overflow-x: hidden !important; }
     .vg-main { width: calc(100vw - 270px) !important; box-sizing: border-box !important; }
     @media (max-width: 768px) { .vg-main { width: 100vw !important; } }
   </style>
-  </head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
 <body>
   <!-- SN-TOPBAR -->
   <% if (typeof user !== 'undefined' && user) { %>
@@ -3117,4 +3118,45 @@ document.addEventListener('DOMContentLoaded', function() {
   color: #6b7a94;
   padding: 0 8px;
 }
+</style>
+
+<style>
+/* ===== SLIDE-OVER DRAWER (Trượt ngang) ===== */
+.sn-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(5,13,31,0.6); backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1040;
+}
+.sn-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+.sn-drawer {
+  position: fixed; top: 0; right: -500px; width: 100%; max-width: 500px; height: 100vh;
+  background: rgba(10,30,63,0.98); border-left: 1px solid rgba(255,255,255,0.1);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 1050; display: flex; flex-direction: column;
+}
+.sn-drawer.open { right: 0; }
+.sn-drawer-header {
+  padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;
+}
+.sn-drawer-title { font-family: 'Caveat'; font-size: 1.8rem; color: #ffd700; margin: 0; }
+.sn-drawer-close { background: transparent; border: none; color: #b8c5d9; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+.sn-drawer-close:hover { color: #ef5350; transform: rotate(90deg); }
+.sn-drawer-body { padding: 24px; overflow-y: auto; flex: 1; }
+
+/* ===== TOOLTIPS (Chú thích nổi) ===== */
+[data-tooltip] { position: relative; cursor: pointer; }
+[data-tooltip]::before {
+  content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-5px);
+  background: rgba(0,0,0,0.9); color: #fff; font-size: 0.75rem; padding: 4px 8px; border-radius: 6px;
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: all 0.2s;
+  border: 1px solid rgba(255,255,255,0.1); z-index: 9999;
+}
+[data-tooltip]:hover::before { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+
+/* ===== CHART CARD ===== */
+.sn-chart-card {
+  background: rgba(10,30,63,0.6); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 24px; margin-bottom: 24px;
+}
+.sn-chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.sn-chart-title { font-family: 'Caveat'; font-size: 1.6rem; color: #fff; margin: 0; }
 </style>

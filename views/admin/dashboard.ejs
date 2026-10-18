@@ -38,6 +38,17 @@
       </div>
     </div>
 
+    
+    <!-- BIỂU ĐỒ 7 NGÀY -->
+    <div class="sn-chart-card anim d3">
+      <div class="sn-chart-header">
+        <h3 class="sn-chart-title"><i class="fas fa-chart-line" style="color:#4fc3f7"></i> Key tạo mới (7 ngày qua)</h3>
+      </div>
+      <div style="height: 300px; width: 100%;">
+        <canvas id="keyChart"></canvas>
+      </div>
+    </div>
+  
     <!-- CÁC Ô CHỨC NĂNG (MODULES) -->
     <div class="sn-workspace-grid anim d3">
       
@@ -120,6 +131,46 @@
   </div>
 </div>
 
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('keyChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(255, 215, 0, 0.5)'); // Màu vàng mờ
+    gradient.addColorStop(1, 'rgba(255, 215, 0, 0.0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: <%- JSON.stringify(chartLabels) %>,
+        datasets: [{
+          label: 'Số lượng Key',
+          data: <%- JSON.stringify(chartData) %>,
+          borderColor: '#ffd700',
+          backgroundColor: gradient,
+          borderWidth: 3,
+          pointBackgroundColor: '#0a1e3f',
+          pointBorderColor: '#ffd700',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.4 // Đường cong mượt
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#b8c5d9' } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#b8c5d9', stepSize: 1 }, beginAtZero: true }
+        }
+      }
+    });
+  });
+</script>
+  
 <%- include('../partials/scripts') %>
 <script>
   (function() {

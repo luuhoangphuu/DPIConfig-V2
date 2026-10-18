@@ -96,13 +96,13 @@
               <td style="text-align:right;">
                 <div class="d-flex gap-1 justify-content-end">
                   <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị">
-                    <i class="fas fa-mobile-alt"></i>
+                    <i class="fas fa-mobile-alt" data-tooltip="Xem thiết bị"></i>
                   </button>
                   <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn">
-                    <i class="fas fa-calendar-plus"></i>
+                    <i class="fas fa-calendar-plus" data-tooltip="Gia hạn"></i>
                   </button>
                   <form method="POST" action="/yncuti/keys/delete/<%= k.id %>" onsubmit="return confirm('Xóa Key này?')" style="display:inline;margin:0;">
-                    <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                    <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash-alt" data-tooltip="Xóa Key"></i></button>
                   </form>
                 </div>
               </td>
@@ -161,19 +161,7 @@
   </div>
 </div>
 
-<!-- MODAL: DEVICES -->
-<div class="modal fade" id="devicesModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content vg-modal">
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="fas fa-mobile-alt"></i> Thiết bị của Key</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="devicesModalBody" style="min-height:100px;">
-        <p style="text-align:center;color:#b8c5d9;">Đang tải...</p>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- MODAL: CREATE KEY -->
@@ -222,8 +210,27 @@
   </div>
 </div>
 
+
+<!-- SLIDE-OVER DRAWER: DEVICES -->
+<div class="sn-drawer-overlay" id="drawerOverlay"></div>
+<div class="sn-drawer" id="devicesDrawer">
+  <div class="sn-drawer-header">
+    <h3 class="sn-drawer-title"><i class="fas fa-mobile-alt"></i> Thiết bị của Key</h3>
+    <button class="sn-drawer-close" onclick="closeDrawer()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="sn-drawer-body" id="devicesDrawerBody">
+    <!-- Nội dung load bằng JS -->
+  </div>
+</div>
+
 <%- include('../partials/scripts') %>
 <script>
+
+function closeDrawer() {
+  document.getElementById('devicesDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+document.getElementById('drawerOverlay')?.addEventListener('click', closeDrawer);
 function copyKey(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
     const icon = btn.querySelector('i'); const old = icon.className;
@@ -234,9 +241,9 @@ function copyKey(text, btn) {
 }
 document.querySelectorAll('.view-devices-btn').forEach(btn => {
   btn.addEventListener('click', async function() {
-    const keyId = this.dataset.keyId; const body = document.getElementById('devicesModalBody');
+    const keyId = this.dataset.keyId; const body = document.getElementById('devicesDrawerBody');
     body.innerHTML = '<div class="sn-skeleton sn-skeleton-row" style="height:50px;"></div><div class="sn-skeleton sn-skeleton-row" style="height:50px;"></div>';
-    new bootstrap.Modal(document.getElementById('devicesModal')).show();
+    document.getElementById('devicesDrawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open');
     try {
       const res = await fetch('/yncuti/keys/devices/' + keyId); const data = await res.json();
       if (data.success && data.devices.length) {

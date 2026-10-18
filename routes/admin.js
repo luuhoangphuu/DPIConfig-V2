@@ -122,6 +122,27 @@ router.get('/dashboard', async (req, res) => {
     // 🔥 LẤY DỮ LIỆU CHO CÁC MODULE MỚI
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
+
+    // TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ 7 NGÀY
+    const chartData = [];
+    const chartLabels = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      chartLabels.push(dateStr);
+      
+      const startOfDay = new Date(d.setHours(0,0,0,0));
+      const endOfDay = new Date(d.setHours(23,59,59,999));
+      
+      const count = await Key.count({
+        where: { 
+          ...keyWhere,
+          createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay }
+        }
+      });
+      chartData.push(count);
+    }
     
     // Lấy 5 Key mới nhất
     const recentKeysList = await Key.findAll({ limit: 5, order: [['createdAt', 'DESC']] });
@@ -135,7 +156,7 @@ router.get('/dashboard', async (req, res) => {
     res.render('admin/dashboard', {
       user: req.admin, isSuper, adminInfo,
       totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll,
-      recentKeysList, topSellers // Truyền thêm data mới ra view
+      recentKeysList, topSellers, chartData, chartLabels // Truyền thêm data chart
     });
   } catch (err) {
     console.error(err);
