@@ -1,0 +1,50 @@
+<%- include('../partials/header', { title: 'Quản lý Thiết bị', pageName: 'Thiết bị', user }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user, currentPage: 'devices', activeKeys }) %>
+  <div class="vg-main flex-grow-1">
+    <div class="sn-hero anim d1">
+      <div>
+        <h1 class="sn-hero-greet">📱 Quản lý Thiết bị</h1>
+        <p class="sn-hero-sub">Xem toàn bộ HWID đang hoạt động, khóa thiết bị từ xa</p>
+      </div>
+    </div>
+    <div class="vg-card anim d2" style="padding: 0; overflow:hidden;">
+      <div class="vg-table-wrap">
+        <table class="vg-table">
+          <thead>
+            <tr>
+              <th>HWID</th>
+              <th>Tên Thiết Bị</th>
+              <th>Thuộc Key</th>
+              <th>Trạng thái</th>
+              <th>Ngày kích hoạt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% devices.forEach(d => { %>
+              <tr>
+                <td>
+                  <span class="sn-hwid-badge"><i class="fas fa-microchip"></i> <%= d.hwid.substring(0, 18) %>...</span>
+                </td>
+                <td style="font-weight:600; color:#fff;"><%= d.device_name || 'Chưa đặt tên' %></td>
+                <td><span class="sn-key-badge"><%= d.Key ? d.Key.key : 'N/A' %></span></td>
+                <td>
+                  <% if (d.is_active) { %>
+                    <span class="sn-status-badge active"><i class="fas fa-check-circle"></i> Hoạt động</span>
+                  <% } else { %>
+                    <span class="sn-status-badge inactive"><i class="fas fa-ban"></i> Bị khóa</span>
+                  <% } %>
+                </td>
+                <td style="color:#b8c5d9; font-size:0.85rem;"><%= new Date(d.createdAt).toLocaleString('vi-VN') %></td>
+              </tr>
+            <% }) %>
+            <% if (devices.length === 0) { %>
+              <tr><td colspan="5" style="text-align:center; padding: 40px; color:#6b7a94;">Chưa có thiết bị nào kích hoạt.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/scripts') %>
