@@ -16,19 +16,20 @@ async function requireAdmin(req, res, next) {
   if (!token) return res.redirect('/yncuti/login');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const dbAdmin = await Admin.findByPk(decoded.id);
     
-    // CHECK TOKEN PHIÊN ĐĂNG NHẬP
-    if (!dbAdmin || (dbAdmin.session_token && dbAdmin.session_token !== decoded.session_token)) {
-      res.clearCookie('admin_token');
-      return res.redirect('/yncuti/login?error=session_expired');
+    // 🔥 ÉP QUYỀN SUPER NẾU EMAIL TRÙNG VỚI ADMIN_EMAIL TRONG ENV
+    if (decoded.email === process.env.ADMIN_EMAIL) {
+      decoded.role = 'super';
+      decoded.is_super = true;
     }
     
-    if (decoded.email === process.env.ADMIN_EMAIL) { decoded.role = 'super'; decoded.is_super = true; }
     if (!decoded.role) decoded.role = 'admin';
     req.admin = decoded;
     next();
-  } catch (err) { res.clearCookie('admin_token'); res.redirect('/yncuti/login'); }
+  } catch (err) {
+    res.clearCookie('admin_token');
+    res.redirect('/yncuti/login');
+  }
 }
 
 function requireSuperAdmin(req, res, next) {
@@ -104,59 +105,34 @@ router.get('/dashboard', async (req, res) => {
     const showAll = req.query.show === 'all';
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
+    // Nếu là Super Admin: keyWhere = {} (Đếm TẤT CẢ Key)
+    // Nếu là Admin thường: keyWhere = { admin_id: ... } (Chỉ đếm key mình tạo)
     let keyWhere = {};
     if (!isSuper && req.admin.id) keyWhere.admin_id = req.admin.id;
     
     const where = { createdAt: { [Op.gte]: oneDayAgo } };
     if (!showAll) where.action = { [Op.ne]: 'check' };
 
-    // Lấy dữ liệu thống kê cơ bản
     const totalKeys = await Key.count({ where: keyWhere });
     const activeKeys = await Key.count({ where: { ...keyWhere, is_active: true } });
     const expiredKeys = await Key.count({ where: { ...keyWhere, expires_at: { [Op.lt]: new Date() } } });
     const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
     
-    // Lấy Log
     const recentLogs = await Log.findAll({ where, limit: 15, order: [['createdAt', 'DESC']], include: Key });
 
-    // 🔥 LẤY DỮ LIỆU CHO CÁC MODULE MỚI
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
 
-    // TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ 7 NGÀY
-    const chartData = [];
-    const chartLabels = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-      chartLabels.push(dateStr);
-      
-      const startOfDay = new Date(d.setHours(0,0,0,0));
-      const endOfDay = new Date(d.setHours(23,59,59,999));
-      
-      const count = await Key.count({
-        where: { 
-          ...keyWhere,
-          createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay }
-        }
-      });
-      chartData.push(count);
-    }
-    
     // Lấy 5 Key mới nhất
     const recentKeysList = await Key.findAll({ limit: 5, order: [['createdAt', 'DESC']] });
-
-    // Lấy Top 5 Sellers (Chỉ dành cho Super)
+    // Lấy Top Sellers
     let topSellers = [];
-    if (isSuper) {
-      topSellers = await Seller.findAll({ order: [['quota_used', 'DESC']], limit: 5 });
-    }
+    if (isSuper) { topSellers = await Seller.findAll({ order: [['quota_used', 'DESC']], limit: 5 }); }
 
     res.render('admin/dashboard', {
       user: req.admin, isSuper, adminInfo,
       totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll,
-      recentKeysList, topSellers, chartData, chartLabels // Truyền thêm data chart
+      recentKeysList, topSellers
     });
   } catch (err) {
     console.error(err);
