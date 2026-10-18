@@ -450,12 +450,5 @@ router.get('/logs', async (req, res) => {
   } catch (e) { res.status(500).send(e.message); }
 });
 
-router.get('/api-docs', async (req, res) => {
-  try {
-    const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
-    const activeKeys = await Key.count({ where: { is_active: true } });
-    res.render('admin/api-docs', { user: req.admin, isSuper, currentPage: 'api', activeKeys });
-  } catch (e) { res.status(500).send(e.message); }
-});
 
 module.exports = router;
