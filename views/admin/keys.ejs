@@ -95,14 +95,14 @@
               </td>
               <td style="text-align:right;">
                 <div class="d-flex gap-1 justify-content-end">
-                  <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị">
-                    <i class="fas fa-mobile-alt" data-tooltip="Xem thiết bị"></i>
+                  <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" data-tooltip="Xem thiết bị">
+                    <i class="fas fa-mobile-alt"></i>
                   </button>
-                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn">
-                    <i class="fas fa-calendar-plus" data-tooltip="Gia hạn"></i>
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" data-tooltip="Gia hạn">
+                    <i class="fas fa-calendar-plus"></i>
                   </button>
                   <form method="POST" action="/yncuti/keys/delete/<%= k.id %>" onsubmit="return confirm('Xóa Key này?')" style="display:inline;margin:0;">
-                    <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash-alt" data-tooltip="Xóa Key"></i></button>
+                    <button class="vg-btn-icon danger" data-tooltip="Xóa Key"><i class="fas fa-trash-alt"></i></button>
                   </form>
                 </div>
               </td>
