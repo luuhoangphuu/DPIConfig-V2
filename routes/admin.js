@@ -103,19 +103,44 @@ router.get('/dashboard', async (req, res) => {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const showAll = req.query.show === 'all';
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
     let keyWhere = {};
     if (!isSuper && req.admin.id) keyWhere.admin_id = req.admin.id;
+    
     const where = { createdAt: { [Op.gte]: oneDayAgo } };
     if (!showAll) where.action = { [Op.ne]: 'check' };
+
+    // Lấy dữ liệu thống kê cơ bản
     const totalKeys = await Key.count({ where: keyWhere });
     const activeKeys = await Key.count({ where: { ...keyWhere, is_active: true } });
     const expiredKeys = await Key.count({ where: { ...keyWhere, expires_at: { [Op.lt]: new Date() } } });
     const devicesActivated = await KeyDevice.count({ where: { is_active: true } });
-    const recentLogs = await Log.findAll({ where, limit: 20, order: [['createdAt', 'DESC']], include: Key });
+    
+    // Lấy Log
+    const recentLogs = await Log.findAll({ where, limit: 15, order: [['createdAt', 'DESC']], include: Key });
+
+    // 🔥 LẤY DỮ LIỆU CHO CÁC MODULE MỚI
     let adminInfo = null;
     if (!isSuper && req.admin.id) adminInfo = await Admin.findByPk(req.admin.id);
-    res.render('admin/dashboard', { user: req.admin, isSuper, adminInfo, totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll });
-  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+    
+    // Lấy 5 Key mới nhất
+    const recentKeysList = await Key.findAll({ limit: 5, order: [['createdAt', 'DESC']] });
+
+    // Lấy Top 5 Sellers (Chỉ dành cho Super)
+    let topSellers = [];
+    if (isSuper) {
+      topSellers = await Seller.findAll({ order: [['quota_used', 'DESC']], limit: 5 });
+    }
+
+    res.render('admin/dashboard', {
+      user: req.admin, isSuper, adminInfo,
+      totalKeys, activeKeys, expiredKeys, devicesActivated, recentLogs, showAll,
+      recentKeysList, topSellers // Truyền thêm data mới ra view
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi: ' + err.message);
+  }
 });
 
 // ==================== KEYS ====================

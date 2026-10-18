@@ -3,53 +3,35 @@
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard', activeKeys }) %>
   <div class="vg-main flex-grow-1">
 
-    <!-- ====== QUOTA CARD (chỉ admin thường) ====== -->
+    <!-- HERO GREETING -->
+    <div class="sn-hero anim d2">
+      <div>
+        <h1 class="sn-hero-greet" id="snGreet">Xin chào 👋</h1>
+        <p class="sn-hero-sub">
+          Chào mừng trở lại, <b><%= user.name || user.email.split('@')[0] %></b> · <span id="snToday">--</span>
+        </p>
+      </div>
+      <div class="sn-quick-actions">
+        <a href="/yncuti/keys" class="sn-quick-btn"><i class="fas fa-plus-circle"></i> Tạo Key mới</a>
+      </div>
+    </div>
+
+    <!-- QUOTA (Chỉ Admin thường) -->
     <% if (!isSuper && adminInfo) {
-         const used = adminInfo.quota_used || 0;
-         const total = adminInfo.quota || 1;
+         const used = adminInfo.quota_used || 0; const total = adminInfo.quota || 1;
          const pct = Math.min(100, Math.round((used / total) * 100));
          const cls = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
     %>
       <div class="sn-quota anim d1">
         <div class="sn-quota-head">
           <h3 class="sn-quota-title">📊 Quota của bạn</h3>
-          <div class="sn-quota-nums">
-            <%= used %> / <%= total %>
-            <small>(còn <%= Math.max(0, total - used) %> key)</small>
-          </div>
+          <div class="sn-quota-nums"><%= used %> / <%= total %> <small>(còn <%= Math.max(0, total - used) %> key)</small></div>
         </div>
-        <div class="sn-progress">
-          <div class="sn-progress-fill <%= cls %>" style="width: <%= pct %>%"></div>
-        </div>
-        <% if (used >= total) { %>
-          <div style="margin-top:12px; padding:10px 14px; background:rgba(239,83,80,0.15); border-left:3px solid #ef5350; border-radius:8px; color:#ff8a80; font-size:0.88rem;">
-            <i class="fas fa-exclamation-triangle"></i> Đã hết quota. Liên hệ Super Admin để nạp thêm.
-          </div>
-        <% } %>
+        <div class="sn-progress"><div class="sn-progress-fill <%= cls %>" style="width: <%= pct %>%"></div></div>
       </div>
     <% } %>
 
-    <!-- ====== HERO GREETING ====== -->
-    <div class="sn-hero anim d2">
-      <div>
-        <h1 class="sn-hero-greet" id="snGreet">Xin chào 👋</h1>
-        <p class="sn-hero-sub">
-          Chào mừng trở lại, <b><%= user.name || user.email.split('@')[0] %></b> ·
-          <span id="snToday">--</span>
-        </p>
-      </div>
-      <div class="sn-quick-actions">
-        <a href="/yncuti/keys" class="sn-quick-btn">
-          <i class="fas fa-plus-circle"></i> Tạo Key mới
-        </a>
-        <a href="?show=<%= showAll ? '' : 'all' %>" class="sn-quick-btn cyan">
-          <i class="fas <%= showAll ? 'fa-eye-slash' : 'fa-eye' %>"></i>
-          <%= showAll ? 'Ẩn log check' : 'Xem tất cả log' %>
-        </a>
-      </div>
-    </div>
-
-    <!-- ====== STAT CARDS ====== -->
+    <!-- STAT CARDS -->
     <div class="sn-stat-grid">
       <div class="sn-stat total anim d1">
         <div class="sn-stat-icon"><i class="fas fa-key"></i></div>
@@ -73,102 +55,132 @@
       </div>
     </div>
 
-    <!-- ====== RECENT LOGS ====== -->
-    <div class="sn-section-head anim d3">
-      <h2 class="sn-section-title">
-        <i class="fas fa-history"></i> Hoạt động gần đây
-      </h2>
-    </div>
-
-    <div class="vg-card vg-table-wrap anim d4" style="padding: 0;">
-      <table class="vg-table">
-        <thead>
-          <tr>
-            <th style="width:170px;">Thời gian</th>
-            <th style="width:200px;">Hành động</th>
-            <th>Chi tiết</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% 
-            const actionMap = {
-              'key_created':           { cls: 'create',  icon: 'fa-plus',        label: 'Tạo Key' },
-              'seller_key_created':    { cls: 'create',  icon: 'fa-plus',        label: 'Seller tạo Key' },
-              'key_expired_deleted':   { cls: 'delete',  icon: 'fa-trash',       label: 'Tự động xóa' },
-              'check':                 { cls: 'check',   icon: 'fa-check',       label: 'Check Key' },
-              'key_deleted':           { cls: 'delete',  icon: 'fa-trash',       label: 'Xóa Key' },
-              'key_extended':          { cls: 'warn',    icon: 'fa-calendar',    label: 'Gia hạn' },
-              'device_kicked':         { cls: 'warn',    icon: 'fa-ban',         label: 'Khóa thiết bị' },
-              'admin_created':         { cls: 'info',    icon: 'fa-user-plus',   label: 'Tạo Admin' },
-              'announcement_created':  { cls: 'info',    icon: 'fa-bullhorn',    label: 'Thông báo' },
-            };
-          %>
-          <% recentLogs.forEach(log => {
-               const a = actionMap[log.action] || { cls: 'default', icon: 'fa-circle', label: log.action };
-          %>
-            <tr>
-              <td style="color: #4fc3f7; font-family: 'Courier New', monospace; font-weight: 700; font-size: 0.82rem;">
-                <%= new Date(log.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) %>
-              </td>
-              <td>
-                <span class="sn-action <%= a.cls %>">
-                  <i class="fas <%= a.icon %>"></i> <%= a.label %>
-                </span>
-              </td>
-              <td style="color: #b8c5d9; font-size: 0.9rem;"><%= log.details %></td>
-            </tr>
-          <% }) %>
-          <% if (recentLogs.length === 0) { %>
-            <tr>
-              <td colspan="3">
-                <div class="vg-empty">
-                  <i class="fas fa-moon"></i>
-                  <p>Chưa có hoạt động nào trong 24 giờ qua</p>
+    <!-- MODULES GRID (Chia 2 cột) -->
+    <div class="row g-4 mb-5">
+      
+      <!-- CỘT TRÁI: TOP SELLERS & RECENT KEYS -->
+      <div class="col-lg-6">
+        
+        <!-- MODULE: TOP SELLERS (Super Admin only) -->
+        <% if (isSuper) { %>
+        <div class="vg-card anim d3" style="padding: 24px; margin-bottom: 24px;">
+          <div class="sn-module-header">
+            <h3 class="sn-module-title"><i class="fas fa-crown" style="color:#ffd700"></i> Top Người Bán</h3>
+            <a href="/yncuti/sellers" class="sn-module-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+          </div>
+          <div class="sn-list">
+            <% if (topSellers.length === 0) { %>
+              <div class="sn-empty-list">Chưa có người bán nào.</div>
+            <% } %>
+            <% topSellers.forEach((s, index) => { %>
+              <div class="sn-list-item">
+                <div class="sn-list-rank <%= index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '' %>">#<%= index + 1 %></div>
+                <div class="sn-list-info">
+                  <div class="sn-list-name"><%= s.name %></div>
+                  <div class="sn-list-sub"><%= s.email %></div>
                 </div>
-              </td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
+                <div class="sn-list-value">
+                  <span style="color:#ffd700; font-weight:800; font-size:1.1rem;"><%= s.quota_used %></span> <span style="font-size:0.75rem;color:#b8c5d9">Key</span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+        <% } %>
 
+        <!-- MODULE: RECENT KEYS -->
+        <div class="vg-card anim d4" style="padding: 24px;">
+          <div class="sn-module-header">
+            <h3 class="sn-module-title"><i class="fas fa-key" style="color:#4fc3f7"></i> Key vừa tạo</h3>
+            <a href="/yncuti/keys" class="sn-module-link">Quản lý <i class="fas fa-arrow-right"></i></a>
+          </div>
+          <div class="sn-list">
+            <% recentKeysList.forEach(k => { %>
+              <div class="sn-list-item">
+                <div class="sn-list-icon" style="color:<%= k.tier === 'VIP' ? '#ffd700' : '#4fc3f7' %>"><i class="fas fa-star"></i></div>
+                <div class="sn-list-info">
+                  <div class="sn-list-name" style="font-family:monospace;"><%= k.key %></div>
+                  <div class="sn-list-sub"><%= new Date(k.createdAt).toLocaleString('vi-VN') %></div>
+                </div>
+                <div class="sn-list-value">
+                  <span class="<%= k.tier === 'VIP' ? 'vg-badge-vip' : 'vg-badge-normal' %>"><%= k.tier %></span>
+                </div>
+              </div>
+            <% }) %>
+            <% if (recentKeysList.length === 0) { %>
+              <div class="sn-empty-list">Chưa có key nào.</div>
+            <% } %>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CỘT PHẢI: HOẠT ĐỘNG GẦN ĐÂY (LOG) -->
+      <div class="col-lg-6">
+        <div class="vg-card anim d4" style="padding: 24px; height: 100%;">
+          <div class="sn-module-header">
+            <h3 class="sn-module-title"><i class="fas fa-history" style="color:#81c784"></i> Hoạt động gần đây</h3>
+            <a href="?show=<%= showAll ? '' : 'all' %>" class="sn-module-link">
+              <%= showAll ? 'Ẩn log check' : 'Xem tất cả' %>
+            </a>
+          </div>
+          
+          <div class="sn-timeline">
+            <% 
+              const actionMap = {
+                'key_created': { cls: 'create', icon: 'fa-plus', label: 'Tạo Key' },
+                'seller_key_created': { cls: 'create', icon: 'fa-plus', label: 'Seller tạo Key' },
+                'key_expired_deleted': { cls: 'delete', icon: 'fa-trash', label: 'Tự động xóa' },
+                'check': { cls: 'check', icon: 'fa-check', label: 'Check Key' },
+                'auto_key_created': { cls: 'create', icon: 'fa-robot', label: 'API tạo Key' },
+              };
+            %>
+            <% recentLogs.forEach(log => {
+                 const a = actionMap[log.action] || { cls: 'default', icon: 'fa-circle', label: log.action };
+            %>
+              <div class="sn-timeline-item">
+                <div class="sn-timeline-icon <%= a.cls %>"><i class="fas <%= a.icon %>"></i></div>
+                <div class="sn-timeline-content">
+                  <div class="sn-timeline-title"><%= a.label %></div>
+                  <div class="sn-timeline-desc"><%= log.details %></div>
+                  <div class="sn-timeline-time"><%= new Date(log.createdAt).toLocaleString('vi-VN') %></div>
+                </div>
+              </div>
+            <% }) %>
+            <% if (recentLogs.length === 0) { %>
+              <div class="sn-empty-list">Chưa có hoạt động nào.</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
 <%- include('../partials/scripts') %>
 
 <script>
-  // ===== GREETING + DATE =====
+  // GREETING
   (function() {
     const now = new Date();
     const hour = parseInt(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', hour12: false }));
-    let greet = 'Xin chào';
-    let emoji = '👋';
+    let greet = 'Xin chào'; let emoji = '👋';
     if (hour >= 5 && hour < 12) { greet = 'Chào buổi sáng'; emoji = '☀️'; }
     else if (hour >= 12 && hour < 18) { greet = 'Chào buổi chiều'; emoji = '🌤️'; }
     else if (hour >= 18 && hour < 22) { greet = 'Chào buổi tối'; emoji = '🌆'; }
     else { greet = 'Khuya rồi, nghỉ ngơi nhé'; emoji = '🌙'; }
-    const g = document.getElementById('snGreet');
-    if (g) g.textContent = greet + ' ' + emoji;
-
-    const t = document.getElementById('snToday');
-    if (t) t.textContent = now.toLocaleDateString('vi-VN', {
-      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
-      timeZone: 'Asia/Ho_Chi_Minh'
-    });
+    const g = document.getElementById('snGreet'); if (g) g.textContent = greet + ' ' + emoji;
+    const t = document.getElementById('snToday'); if (t) t.textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
   })();
 
-  // ===== COUNTER ANIMATION =====
+  // COUNTER
   document.querySelectorAll('.sn-animate-num').forEach(el => {
-    const target = parseInt(el.dataset.count) || 0;
-    const dur = 900;
-    const start = performance.now();
+    const target = parseInt(el.dataset.count) || 0; const dur = 900; const start = performance.now();
     function tick(t) {
-      const p = Math.min(1, (t - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
+      const p = Math.min(1, (t - start) / dur); const eased = 1 - Math.pow(1 - p, 3);
       el.textContent = Math.round(target * eased).toLocaleString('vi-VN');
-      if (p < 1) requestAnimationFrame(tick);
-      else el.textContent = target.toLocaleString('vi-VN');
+      if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString('vi-VN');
     }
     requestAnimationFrame(tick);
   });
