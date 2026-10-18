@@ -2710,3 +2710,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .sn-empty-list { text-align: center; padding: 20px; color: #6b7a94; font-style: italic; }
 </style>
+
+<style>
+/* TỐI ƯU HIỆU NĂNG: Bỏ blur ở thẻ lớn & bảng */
+.vg-card, .vg-table-wrap, .sn-stat {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(10, 30, 63, 0.95) !important; /* Nền đặc hơn để không bị lag */
+}
+
+/* Giữ blur nhẹ ở Sidebar & Topbar & Modal (vì diện tích nhỏ) */
+.vg-sidebar, .sn-topbar, .vg-modal {
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  will-change: backdrop-filter; /* Bật tăng tốc phần cứng */
+}
+
+/* Tắt hiệu ứng page fade để chuyển trang tức thì */
+.vg-main { animation: none !important; }
+
+/* Tối ưu hover (bỏ đổ bóng nặng) */
+.vg-card:hover, .sn-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+}
+</style>
