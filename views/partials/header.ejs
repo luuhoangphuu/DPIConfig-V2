@@ -2735,3 +2735,16 @@ document.addEventListener('DOMContentLoaded', function() {
   box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
 }
 </style>
+
+<style>
+/* Làm chậm Skeleton (2.5s) và mượt hơn */
+.sn-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.03) 75%) !important;
+  background-size: 200% 100% !important;
+  animation: sn-skeleton-smooth 2.5s ease-in-out infinite !important;
+}
+@keyframes sn-skeleton-smooth {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+</style>
