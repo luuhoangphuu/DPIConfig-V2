@@ -3,6 +3,7 @@
   <%- include('../partials/sidebar', { user: seller, currentPage: 'keys', activeKeys: 0 }) %>
   <div class="vg-main flex-grow-1">
 
+    <!-- HERO -->
     <div class="sn-hero anim d1" style="margin-bottom: 20px;">
       <div>
         <h1 class="sn-hero-greet">🔑 Kho Key của bạn</h1>
@@ -15,8 +16,8 @@
       </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="vg-card vg-table-wrap anim d2" style="padding: 0;">
+    <!-- BẢNG DỮ LIỆU -->
+    <div class="vg-card vg-table-wrap anim d2" style="padding: 0; overflow-x: auto;">
       <table class="vg-table" style="min-width: 800px;">
         <thead>
           <tr>
@@ -34,9 +35,13 @@
                const active = devs.filter(d => d.is_active).length;
                const isExpired = new Date(k.expires_at) < new Date();
           %>
-            <tr>
+            <tr class="sn-key-row">
               <td><code class="sn-key-code"><%= k.key %></code></td>
-              <td><span class="<%= k.tier === 'VIP' ? 'vg-badge-vip' : 'vg-badge-normal' %>"><%= k.tier === 'VIP' ? '★ VIP' : 'Thường' %></span></td>
+              <td>
+                <span class="<%= k.tier === 'VIP' ? 'vg-badge-vip' : 'vg-badge-normal' %>">
+                  <%= k.tier === 'VIP' ? '★ VIP' : 'Thường' %>
+                </span>
+              </td>
               <td>
                 <span style="font-weight:800;color:#4fc3f7;font-family:'Caveat';font-size:1.2rem;"><%= active %></span>
                 <span style="color:#b8c5d9;">/ <%= k.max_devices %></span>
@@ -51,32 +56,39 @@
                 </form>
               </td>
               <td style="text-align:right;">
-                <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị" data-tooltip="Xem thiết bị">
+                <!-- CHỈ GIỮ LẠI NÚT XEM THIẾT BỊ -->
+                <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" data-tooltip="Xem thiết bị">
                   <i class="fas fa-mobile-alt"></i>
                 </button>
               </td>
             </tr>
           <% }) %>
           <% if (keys.length === 0) { %>
-            <tr><td colspan="6" style="text-align:center; padding: 40px; color:#6b7a94;">Chưa có Key nào.</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding: 40px; color:#6b7a94;">Chưa có Key nào. Hãy tạo Key mới!</td></tr>
           <% } %>
         </tbody>
       </table>
     </div>
 
-    <!-- PAGINATION -->
+    <!-- PHÂN TRANG -->
     <div class="sn-pagination-bar anim d3" style="margin-top: 24px;">
-      <div class="sn-page-info">Hiển thị <b><%= (currentPage - 1) * 15 + 1 %></b> - <b><%= Math.min(currentPage * 15, totalPages * 15) %></b></div>
+      <div class="sn-page-info">
+        Hiển thị <b><%= (currentPage - 1) * 15 + 1 %></b> - <b><%= Math.min(currentPage * 15, totalPages * 15) %></b>
+      </div>
       <div class="sn-page-controls">
-        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="sn-page-btn <%= currentPage === 1 ? 'disabled' : '' %>"><i class="fas fa-chevron-left"></i> Trước</a>
-        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="sn-page-btn <%= currentPage === totalPages || totalPages === 0 ? 'disabled' : '' %>">Sau <i class="fas fa-chevron-right"></i></a>
+        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="sn-page-btn <%= currentPage === 1 ? 'disabled' : '' %>">
+          <i class="fas fa-chevron-left"></i> Trước
+        </a>
+        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="sn-page-btn <%= currentPage === totalPages || totalPages === 0 ? 'disabled' : '' %>">
+          Sau <i class="fas fa-chevron-right"></i>
+        </a>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- MODAL CREATE -->
+<!-- MODAL: TẠO KEY (ÉP CỨNG TIỀN TỐ) -->
 <div class="modal fade" id="createKeyModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content vg-modal">
@@ -86,18 +98,26 @@
       </div>
       <form method="POST" action="/seller/keys/create">
         <div class="modal-body">
-          
-    <div class="mb-3">
-      <label class="form-label">Tiền tố Key</label>
-      <input type="text" class="form-control" value="ZwicApex" readonly style="background:rgba(0,0,0,0.3); color:#b8c5d9; cursor:not-allowed;">
-      <small style="color:#ffd700; font-size:0.75rem; margin-top:4px; display:block;">* Hệ thống tự động gán tiền tố</small>
-    </div>
-  
-          <div class="mb-3"><label class="form-label">Hạng</label>
-            <select name="tier" class="form-select"><option value="VIP">★ VIP</option><option value="Normal" selected>Thường</option></select>
+          <div class="mb-3">
+            <label class="form-label">Tiền tố</label>
+            <input type="text" class="form-control" value="ZwicApex" readonly style="background: rgba(0,0,0,0.3); color: #b8c5d9; cursor: not-allowed;">
+            <small style="color:#ffd700; font-size:0.75rem; margin-top:4px; display:block;">* Hệ thống tự động gán tiền tố ZwicApex</small>
           </div>
-          <div class="mb-3"><label class="form-label">Thời hạn (Ngày)</label>
-            <select name="duration" class="form-select"><option value="1">1 ngày</option><option value="7">7 ngày</option><option value="30" selected>30 ngày</option></select>
+          <div class="mb-3">
+            <label class="form-label">Hạng</label>
+            <select name="tier" class="form-select">
+              <option value="VIP">★ VIP</option>
+              <option value="Normal" selected>Thường</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Thời hạn</label>
+            <select name="duration" class="form-select">
+              <option value="0.5">12 giờ</option>
+              <option value="1" selected>1 ngày</option>
+              <option value="7">7 ngày</option>
+              <option value="30">30 ngày</option>
+            </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -109,7 +129,7 @@
   </div>
 </div>
 
-<!-- DRAWER DEVICES -->
+<!-- DRAWER: XEM THIẾT BỊ -->
 <div class="sn-drawer-overlay" id="drawerOverlay"></div>
 <div class="sn-drawer" id="devicesDrawer">
   <div class="sn-drawer-header">
@@ -137,7 +157,7 @@ document.querySelectorAll('.view-devices-btn').forEach(btn => {
       const res = await fetch('/seller/keys/devices/' + keyId); const data = await res.json();
       if (data.success && data.devices.length) {
         let html = '<table class="vg-table"><thead><tr><th>HWID</th><th>Tên</th><th>Trạng thái</th></tr></thead><tbody>';
-        data.devices.forEach(d => { html += `<tr><td><code>${d.hwid.substring(0,18)}...</code></td><td>${d.device_name || 'Chưa đặt'}</td><td>${d.is_active ? '✅' : '❌'}</td></tr>`; });
+        data.devices.forEach(d => { html += `<tr><td><code>${d.hwid.substring(0,18)}...</code></td><td>${d.device_name || 'Chưa đặt'}</td><td>${d.is_active ? '<span style="color:#81c784">● Hoạt động</span>' : '<span style="color:#ef5350">● Bị khóa</span>'}</td></tr>`; });
         body.innerHTML = html + '</tbody></table>';
       } else { body.innerHTML = '<div class="vg-empty"><p>Chưa có thiết bị</p></div>'; }
     } catch (e) { body.innerHTML = '<p style="text-align:center;color:#ef5350;">Lỗi tải dữ liệu</p>'; }
