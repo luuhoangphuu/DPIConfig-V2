@@ -3360,3 +3360,108 @@ document.addEventListener('DOMContentLoaded', () => {
   background: rgba(239,83,80,0.2); border-color: #ef5350;
 }
 </style>
+
+<style>
+/* ==========================================
+   1. TRIỆT TIÊU LỖI GIẬT (JITTER FIX)
+   ========================================== */
+/* Ẩn thanh cuộn ngang thừa của bảng */
+.vg-table-wrap {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+/* Tắt hiệu ứng 3D Tilt trên các dòng của Bảng để tránh lag/giật */
+.sn-key-table tr, .sn-key-table td {
+  transform: none !important; 
+  perspective: none !important;
+}
+
+/* ==========================================
+   2. CUSTOM SCROLLBAR (Thanh cuộn Neon)
+   ========================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(5, 13, 31, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffd700, #f59e0b);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4fc3f7;
+}
+
+/* ==========================================
+   3. TABLE ROW HOVER GLIDE (Hiệu ứng dòng)
+   ========================================== */
+.sn-key-row {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.sn-key-row:hover {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.08), transparent) !important;
+  transform: translateX(4px); /* Nhích nhẹ sang phải */
+  box-shadow: inset 3px 0 0 #ffd700; /* Viền trái màu vàng */
+}
+.sn-key-row:hover td {
+  color: #fff !important;
+}
+
+/* ==========================================
+   4. BUTTON RIPPLE EFFECT (Sóng nước)
+   ========================================== */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-anim 0.6s linear;
+  pointer-events: none;
+}
+@keyframes ripple-anim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ==========================================
+   5. SMOOTH FADE IN (Chuyển trang mượt)
+   ========================================== */
+.vg-main {
+  animation: smooth-fade-up 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+@keyframes smooth-fade-up {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+// KÍCH HOẠT HIỆU ỨNG SÓNG NƯỚC (RIPPLE)
+document.addEventListener('DOMContentLoaded', () => {
+  const buttons = document.querySelectorAll('.vg-btn, .sn-quick-btn, .vg-btn-icon');
+  buttons.forEach(btn => {
+    btn.classList.add('btn-ripple');
+    btn.addEventListener('click', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      ripple.style.width = ripple.style.height = `${Math.max(rect.width, rect.height)}px`;
+      ripple.style.transform = `translate(-50%, -50%) scale(0)`;
+      
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  });
+});
+</script>
