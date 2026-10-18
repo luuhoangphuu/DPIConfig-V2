@@ -2601,3 +2601,54 @@ document.addEventListener('DOMContentLoaded', function() {
   box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2) !important;
 }
 </style>
+
+<style>
+/* ===== TOP PROGRESS BAR ===== */
+#sn-progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4fc3f7, #ffd700, #f59e0b);
+  width: 0%;
+  z-index: 99999;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px #ffd700;
+  opacity: 0;
+}
+#sn-progress-bar.loading {
+  opacity: 1;
+  animation: sn-progress-anim 2s infinite;
+}
+@keyframes sn-progress-anim {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 95%; }
+}
+
+/* ===== PAGE FADE IN ===== */
+.vg-main {
+  animation: sn-page-fade 0.4s ease-out forwards;
+}
+@keyframes sn-page-fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== SKELETON LOADING ===== */
+.sn-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: sn-skeleton-pulse 1.5s infinite;
+  border-radius: 6px;
+  display: inline-block;
+}
+@keyframes sn-skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sn-skeleton-row {
+  height: 40px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+</style>

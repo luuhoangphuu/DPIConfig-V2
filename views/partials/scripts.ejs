@@ -309,3 +309,55 @@
   }
 })();
 </script>
+
+<script>
+(function() {
+  // 1. TẠO TOP PROGRESS BAR
+  const bar = document.createElement('div');
+  bar.id = 'sn-progress-bar';
+  document.body.appendChild(bar);
+
+  function startProgress() {
+    bar.classList.add('loading');
+  }
+
+  // Bắt sự kiện click chuyển trang
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (link && link.href && !link.href.includes('#') && link.target !== '_blank' && !link.href.startsWith('javascript')) {
+      startProgress();
+    }
+  });
+
+  // 2. BẮT SỰ KIỆN SUBMIT FORM (Button Loading)
+  document.addEventListener('submit', function(e) {
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn && !btn.classList.contains('btn-loading')) {
+      startProgress();
+      btn.classList.add('btn-loading');
+      btn.disabled = true;
+      const originalHTML = btn.innerHTML;
+      // Đổi text thành vòng xoay
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Đang xử lý...';
+      
+      // Nếu vì lý do gì đó form không submit được (lỗi validation), phục hồi lại sau 5s
+      setTimeout(() => {
+        if (btn.classList.contains('btn-loading')) {
+          btn.classList.remove('btn-loading');
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          bar.classList.remove('loading');
+        }
+      }, 5000);
+    }
+  });
+
+  // Khi trang tải xong thì xóa thanh bar
+  window.addEventListener('pageshow', function() {
+    bar.classList.remove('loading');
+    bar.style.width = '100%';
+    setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('loading'); }, 300);
+  });
+})();
+</script>

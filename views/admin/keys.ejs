@@ -359,7 +359,13 @@ document.querySelectorAll('.view-devices-btn').forEach(btn => {
   btn.addEventListener('click', async function() {
     const keyId = this.dataset.keyId;
     const body = document.getElementById('devicesModalBody');
-    body.innerHTML = '<p style="text-align:center;color:#b8c5d9;">Đang tải...</p>';
+    body.innerHTML = `
+          <div style="padding: 10px;">
+            <div class="sn-skeleton sn-skeleton-row" style="width: 100%; height: 50px;"></div>
+            <div class="sn-skeleton sn-skeleton-row" style="width: 100%; height: 50px;"></div>
+            <div class="sn-skeleton sn-skeleton-row" style="width: 100%; height: 50px;"></div>
+          </div>
+        `;
     new bootstrap.Modal(document.getElementById('devicesModal')).show();
     try {
       const res = await fetch('/yncuti/keys/devices/' + keyId);
