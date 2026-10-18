@@ -3,13 +3,11 @@
   <%- include('../partials/sidebar', { user, currentPage: 'keys', activeKeys }) %>
   <div class="vg-main flex-grow-1">
 
-    <!-- ===== HERO ===== -->
-    <div class="sn-hero anim d1">
+    <!-- HERO -->
+    <div class="sn-hero anim d1" style="margin-bottom: 20px;">
       <div>
         <h1 class="sn-hero-greet">🔑 Vườn sao</h1>
-        <p class="sn-hero-sub">
-          Mỗi Key là một ngôi sao · Tổng <b><%= keys.length %></b> key đang hiển thị
-        </p>
+        <p class="sn-hero-sub">Mỗi Key là một ngôi sao · Tổng <b><%= keys.length %></b> key đang hiển thị</p>
       </div>
       <div class="sn-quick-actions">
         <button class="sn-quick-btn" data-bs-toggle="modal" data-bs-target="#createKeyModal">
@@ -18,7 +16,7 @@
       </div>
     </div>
 
-    <!-- UNIFIED CONTROL BAR -->
+    <!-- UNIFIED CONTROL BAR (Gộp Tabs + Search + Sort) -->
     <div class="vg-card anim d2" style="padding: 16px 20px; margin-bottom: 24px; border-radius: 16px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;">
       
       <!-- Tabs Phân loại -->
@@ -29,14 +27,14 @@
       </div>
 
       <!-- Thanh Tìm kiếm -->
-      <div class="sn-search-wrap" style="flex: 1; min-width: 200px;">
+      <div class="sn-search-wrap" style="flex: 1; min-width: 200px; position: relative;">
         <form method="GET" style="margin:0;">
           <i class="fas fa-search" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#4fc3f7;"></i>
           <input type="text" name="search" class="sn-search-input" placeholder="Tìm theo Key hoặc HWID..." value="<%= search %>" style="width:100%; padding: 10px 16px 10px 44px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none;">
         </form>
       </div>
 
-      <!-- Bộ lọc trạng thái & Sắp xếp -->
+      <!-- Sắp xếp -->
       <div class="d-flex gap-2" style="flex-shrink:0;">
         <select onchange="location = this.value;" class="sn-minimal-select" style="padding: 10px 16px;">
           <option value="?sort=newest" <%= !sort || sort === 'newest' ? 'selected' : '' %>>Mới nhất</option>
@@ -47,4 +45,187 @@
 
     </div>
 
+    <!-- BẢNG DỮ LIỆU (TABLE) -->
+    <div class="vg-card vg-table-wrap anim d3" style="padding: 0; overflow-x: auto;">
+      <table class="vg-table sn-key-table" style="min-width: 800px;">
+        <thead>
+          <tr>
+            <th style="width:40px;"><input type="checkbox" id="checkAll"></th>
+            <th>Key</th>
+            <th>Hạng</th>
+            <th>Thiết bị</th>
+            <th>Còn lại</th>
+            <th>Bật/Tắt</th>
+            <th style="text-align:right;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% keys.forEach(k => {
+               const devs = k.devices || [];
+               const active = devs.filter(d => d.is_active).length;
+               const isExpired = new Date(k.expires_at) < new Date();
+          %>
+            <tr class="sn-key-row" data-key-id="<%= k.id %>" data-key="<%= k.key %>">
+              <td><input type="checkbox" class="rowCheck" value="<%= k.id %>" data-key="<%= k.key %>"></td>
+              <td>
+                <div class="sn-key-cell">
+                  <code class="sn-key-code" title="<%= k.key %>"><%= k.key %></code>
+                  <button class="sn-copy-btn" onclick="copyKey('<%= k.key %>', this)" title="Copy">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </td>
+              <td>
+                <span class="<%= k.tier === 'VIP' ? 'vg-badge-vip' : 'vg-badge-normal' %>">
+                  <%= k.tier === 'VIP' ? '★ VIP' : 'Thường' %>
+                </span>
+              </td>
+              <td>
+                <span style="font-weight:800;color:#4fc3f7;font-family:'Caveat';font-size:1.2rem;"><%= active %></span>
+                <span style="color:#b8c5d9;">/ <%= k.max_devices %></span>
+              </td>
+              <td><span class="countdown" data-expiry="<%= k.expires_at.toISOString() %>">--</span></td>
+              <td>
+                <form method="POST" action="/yncuti/keys/toggle/<%= k.id %>" style="margin:0;">
+                  <label class="vg-toggle">
+                    <input type="checkbox" <%= k.is_active && !isExpired ? 'checked' : '' %> onchange="this.form.submit()">
+                    <span class="vg-slider"></span>
+                  </label>
+                </form>
+              </td>
+              <td style="text-align:right;">
+                <div class="d-flex gap-1 justify-content-end">
+                  <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị">
+                    <i class="fas fa-mobile-alt"></i>
+                  </button>
+                  <button class="vg-btn-icon" data-bs-toggle="modal" data-bs-target="#extend<%= k.id %>" title="Gia hạn">
+                    <i class="fas fa-calendar-plus"></i>
+                  </button>
+                  <form method="POST" action="/yncuti/keys/delete/<%= k.id %>" onsubmit="return confirm('Xóa Key này?')" style="display:inline;margin:0;">
+                    <button class="vg-btn-icon danger" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (keys.length === 0) { %>
+            <tr>
+              <td colspan="7">
+                <div class="vg-empty">
+                  <i class="fas fa-star"></i>
+                  <p>Chưa có Key nào. Hãy thắp sáng ngôi sao đầu tiên!</p>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
 
+    <!-- PHÂN TRANG -->
+    <div class="sn-pagination-bar anim d4">
+      <div class="sn-page-info">
+        Hiển thị <b><%= (currentPage - 1) * 15 + 1 %> - <%= Math.min(currentPage * 15, totalPages * 15) %></b> trong tổng số <b><%= totalPages * 15 %></b> key
+      </div>
+      <div class="sn-page-controls">
+        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&tier=<%= tier || '' %>" class="sn-page-btn <%= currentPage === 1 ? 'disabled' : '' %>">
+          <i class="fas fa-chevron-left"></i> Trước
+        </a>
+        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&tier=<%= tier || '' %>" class="sn-page-btn <%= currentPage === totalPages || totalPages === 0 ? 'disabled' : '' %>">
+          Sau <i class="fas fa-chevron-right"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: DEVICES -->
+<div class="modal fade" id="devicesModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content vg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-mobile-alt"></i> Thiết bị của Key</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="devicesModalBody" style="min-height:100px;">
+        <p style="text-align:center;color:#b8c5d9;">Đang tải...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CREATE KEY -->
+<div class="modal fade" id="createKeyModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content vg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-star"></i> Tạo Key mới</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/yncuti/keys/create">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tiền tố</label>
+            <input name="prefix" class="form-control" value="HoangPhu" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hạng</label>
+            <select name="tier" class="form-select" id="tierSelect" required>
+              <option value="VIP">★ VIP</option>
+              <option value="Normal" selected>Thường</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số thiết bị tối đa</label>
+            <input name="max_devices" type="number" class="form-control" value="1" id="maxDevicesInput" min="1" max="999" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Thời hạn (Ngày)</label>
+            <select name="duration" class="form-select" required>
+              <option value="0.5">12 giờ</option>
+              <option value="1" selected>1 ngày</option>
+              <option value="7">7 ngày</option>
+              <option value="30">30 ngày</option>
+              <option value="365">1 năm</option>
+              <option value="forever">♾️ Vĩnh viễn</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="vg-btn-ghost" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="vg-btn"><i class="fas fa-check"></i> Tạo Key</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/scripts') %>
+<script>
+function copyKey(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const icon = btn.querySelector('i'); const old = icon.className;
+    icon.className = 'fas fa-check'; btn.classList.add('copied');
+    setTimeout(() => { icon.className = old; btn.classList.remove('copied'); }, 1500);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã copy', showConfirmButton: false, timer: 1500, background: 'rgba(10,30,63,0.95)', color: '#ffd700' });
+  });
+}
+document.querySelectorAll('.view-devices-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const keyId = this.dataset.keyId; const body = document.getElementById('devicesModalBody');
+    body.innerHTML = '<div class="sn-skeleton sn-skeleton-row" style="height:50px;"></div><div class="sn-skeleton sn-skeleton-row" style="height:50px;"></div>';
+    new bootstrap.Modal(document.getElementById('devicesModal')).show();
+    try {
+      const res = await fetch('/yncuti/keys/devices/' + keyId); const data = await res.json();
+      if (data.success && data.devices.length) {
+        let html = '<table class="vg-table"><thead><tr><th>HWID</th><th>Tên</th><th>Trạng thái</th></tr></thead><tbody>';
+        data.devices.forEach(d => {
+          html += `<tr><td><code>${d.hwid.substring(0,18)}...</code></td><td>${d.device_name || 'Chưa đặt'}</td><td>${d.is_active ? '<span style="color:#81c784">● Hoạt động</span>' : '<span style="color:#ef5350">● Bị khóa</span>'}</td></tr>`;
+        });
+        body.innerHTML = html + '</tbody></table>';
+      } else { body.innerHTML = '<div class="vg-empty"><p>Chưa có thiết bị</p></div>'; }
+    } catch (e) { body.innerHTML = '<p style="text-align:center;color:#ef5350;">Lỗi tải dữ liệu</p>'; }
+  });
+});
+</script>

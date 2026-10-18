@@ -3,27 +3,48 @@
   <%- include('../partials/sidebar', { user, currentPage: 'dashboard', activeKeys }) %>
   <div class="vg-main flex-grow-1">
 
-    <!-- HERO GREETING -->
-    <div class="sn-hero anim d1" style="margin-bottom: 20px;">
+    <!-- HERO -->
+    <div class="sn-hero anim d1" style="margin-bottom: 24px;">
       <div>
         <h1 class="sn-hero-greet" id="snGreet">Xin chào 👋</h1>
-        <p class="sn-hero-sub">
-          Bạn đang ở <b>Trung tâm điều khiển</b>. Chọn một mô-đun bên dưới để bắt đầu làm việc.
-        </p>
+        <p class="sn-hero-sub">Chào mừng trở lại, <b><%= user.name || user.email.split('@')[0] %></b> · <span id="snToday">--</span></p>
+      </div>
+      <div class="sn-quick-actions">
+        <a href="/yncuti/keys" class="sn-quick-btn"><i class="fas fa-plus-circle"></i> Tạo Key mới</a>
       </div>
     </div>
 
-    <!-- WORKSPACE GRID -->
-    <div class="sn-workspace-grid anim d2">
+    <!-- 4 THẺ THỐNG KÊ -->
+    <div class="sn-stat-grid anim d2">
+      <div class="sn-stat total">
+        <div class="sn-stat-icon"><i class="fas fa-key"></i></div>
+        <div class="sn-stat-label">Tổng Key</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= totalKeys %>">0</div>
+      </div>
+      <div class="sn-stat active">
+        <div class="sn-stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="sn-stat-label">Đang hoạt động</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= activeKeys %>">0</div>
+      </div>
+      <div class="sn-stat expired">
+        <div class="sn-stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="sn-stat-label">Đã hết hạn</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= expiredKeys %>">0</div>
+      </div>
+      <div class="sn-stat devices">
+        <div class="sn-stat-icon"><i class="fas fa-mobile-alt"></i></div>
+        <div class="sn-stat-label">Thiết bị kích hoạt</div>
+        <div class="sn-stat-value sn-animate-num" data-count="<%= devicesActivated %>">0</div>
+      </div>
+    </div>
+
+    <!-- CÁC Ô CHỨC NĂNG (MODULES) -->
+    <div class="sn-workspace-grid anim d3">
       
-      <!-- MODULE 1: KEYS -->
       <a href="/yncuti/keys" class="sn-module-card mc-key">
         <div class="sn-mc-header">
           <div class="sn-mc-icon"><i class="fas fa-key"></i></div>
-          <div>
-            <h3 class="sn-mc-title">Quản lý Key</h3>
-            <div class="sn-mc-sub">Tạo, khóa và xem thiết bị</div>
-          </div>
+          <div><h3 class="sn-mc-title">Quản lý Key</h3><div class="sn-mc-sub">Tạo, khóa và xem thiết bị</div></div>
         </div>
         <div class="sn-mc-body">
           <div class="sn-mc-stat"><%= totalKeys %> <span>Keys</span></div>
@@ -32,118 +53,51 @@
       </a>
 
       <% if (isSuper) { %>
-        <!-- MODULE 2: ANNOUNCEMENTS -->
         <a href="/yncuti/announcements" class="sn-module-card mc-noti">
           <div class="sn-mc-header">
             <div class="sn-mc-icon"><i class="fas fa-bullhorn"></i></div>
-            <div>
-              <h3 class="sn-mc-title">Thông báo</h3>
-              <div class="sn-mc-sub">Gửi tin nhắn đến App</div>
-            </div>
+            <div><h3 class="sn-mc-title">Thông báo</h3><div class="sn-mc-sub">Gửi tin nhắn đến App</div></div>
           </div>
-          <div class="sn-mc-body">
-            <div class="sn-mc-stat" style="font-size:1.1rem; margin-bottom:5px; color:#b8c5d9;">Viết thông báo mới</div>
-            <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-          </div>
+          <div class="sn-mc-body"><div class="sn-mc-stat" style="font-size:1.1rem; color:#b8c5d9;">Viết thông báo</div><div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div></div>
         </a>
 
-        <!-- MODULE 3: SELLERS -->
         <a href="/yncuti/sellers" class="sn-module-card mc-seller">
           <div class="sn-mc-header">
             <div class="sn-mc-icon"><i class="fas fa-store"></i></div>
-            <div>
-              <h3 class="sn-mc-title">Người bán</h3>
-              <div class="sn-mc-sub">Quản lý đại lý & cấp Token</div>
-            </div>
+            <div><h3 class="sn-mc-title">Người bán</h3><div class="sn-mc-sub">Quản lý đại lý & Token</div></div>
           </div>
-          <div class="sn-mc-body">
-            <div class="sn-mc-stat"><%= topSellers.length %> <span>Đối tác</span></div>
-            <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-          </div>
+          <div class="sn-mc-body"><div class="sn-mc-stat"><%= topSellers.length %> <span>Đối tác</span></div><div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div></div>
         </a>
 
-        <!-- MODULE 4: ADMINS -->
         <a href="/yncuti/admins" class="sn-module-card mc-admin">
           <div class="sn-mc-header">
             <div class="sn-mc-icon"><i class="fas fa-user-shield"></i></div>
-            <div>
-              <h3 class="sn-mc-title">Quản trị viên</h3>
-              <div class="sn-mc-sub">Phân quyền nhân viên</div>
-            </div>
+            <div><h3 class="sn-mc-title">Quản trị viên</h3><div class="sn-mc-sub">Phân quyền nhân viên</div></div>
           </div>
-          <div class="sn-mc-body">
-            <div class="sn-mc-stat" style="font-size:1.1rem; margin-bottom:5px; color:#b8c5d9;">Thêm Admin mới</div>
-            <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-          </div>
+          <div class="sn-mc-body"><div class="sn-mc-stat" style="font-size:1.1rem; color:#b8c5d9;">Thêm Admin</div><div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div></div>
         </a>
 
-        <!-- MODULE 5: VERSIONS -->
-        <a href="/yncuti/versions" class="sn-module-card mc-version">
+        <a href="/yncuti/devices" class="sn-module-card" style="--mc-color: #29b6f6;">
           <div class="sn-mc-header">
-            <div class="sn-mc-icon"><i class="fas fa-cloud-download-alt"></i></div>
-            <div>
-              <h3 class="sn-mc-title">Phiên bản App</h3>
-              <div class="sn-mc-sub">Cập nhật & Khóa App cũ</div>
-            </div>
+            <div class="sn-mc-icon"><i class="fas fa-mobile-alt"></i></div>
+            <div><h3 class="sn-mc-title">Thiết bị</h3><div class="sn-mc-sub">Quản lý HWID</div></div>
           </div>
-          <div class="sn-mc-body">
-            <div class="sn-mc-stat" style="font-size:1.1rem; margin-bottom:5px; color:#b8c5d9;">Quản lý bản cập nhật</div>
-            <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-          </div>
+          <div class="sn-mc-body"><div class="sn-mc-stat" style="font-size:1.1rem; color:#b8c5d9;">Xem danh sách</div><div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div></div>
         </a>
 
-        
-      <!-- MODULE 7: DEVICES -->
-      <a href="/yncuti/devices" class="sn-module-card" style="--mc-color: #29b6f6;">
-        <div class="sn-mc-header">
-          <div class="sn-mc-icon"><i class="fas fa-mobile-alt"></i></div>
-          <div>
-            <h3 class="sn-mc-title">Thiết bị</h3>
-            <div class="sn-mc-sub">Quản lý HWID đang hoạt động</div>
+        <a href="/yncuti/api-docs" class="sn-module-card" style="--mc-color: #ce93d8;">
+          <div class="sn-mc-header">
+            <div class="sn-mc-icon"><i class="fas fa-code"></i></div>
+            <div><h3 class="sn-mc-title">API Docs</h3><div class="sn-mc-sub">Tài liệu tích hợp</div></div>
           </div>
-        </div>
-        <div class="sn-mc-body">
-          <div class="sn-mc-stat" style="font-size:1.1rem; margin-bottom:5px; color:#b8c5d9;">Xem danh sách</div>
-          <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-        </div>
-      </a>
-
-      <!-- MODULE 8: LOGS -->
-      <a href="/yncuti/logs" class="sn-module-card" style="--mc-color: #ff8a65;">
-        <div class="sn-mc-header">
-          <div class="sn-mc-icon"><i class="fas fa-history"></i></div>
-          <div>
-            <h3 class="sn-mc-title">Audit Logs</h3>
-            <div class="sn-mc-sub">Lịch sử thao tác hệ thống</div>
-          </div>
-        </div>
-        <div class="sn-mc-body">
-          <div class="sn-mc-stat" style="font-size:1.1rem; margin-bottom:5px; color:#b8c5d9;">Xem nhật ký</div>
-          <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-        </div>
-      </a>
-
-      <!-- MODULE 9: API DOCS (Thay thế cái API cũ) -->
-      <a href="/yncuti/api-docs" class="sn-module-card" style="--mc-color: #ce93d8;">
-        <div class="sn-mc-header">
-          <div class="sn-mc-icon"><i class="fas fa-code"></i></div>
-          <div>
-            <h3 class="sn-mc-title">API Docs</h3>
-            <div class="sn-mc-sub">Tài liệu tích hợp cho Dev</div>
-          </div>
-        </div>
-        <div class="sn-mc-body">
-          <div class="sn-mc-stat" style="font-size:1.1rem; margin-bottom:5px; color:#b8c5d9;">Xem hướng dẫn</div>
-          <div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div>
-        </div>
-      </a>
-
+          <div class="sn-mc-body"><div class="sn-mc-stat" style="font-size:1.1rem; color:#b8c5d9;">Xem hướng dẫn</div><div class="sn-mc-action"><i class="fas fa-arrow-right"></i></div></div>
+        </a>
       <% } %>
 
     </div>
 
-    <!-- SECTION: RECENT ACTIVITY (Dưới cùng) -->
-    <div class="vg-card anim d3" style="padding: 24px;">
+    <!-- HOẠT ĐỘNG GẦN ĐÂY -->
+    <div class="vg-card anim d4" style="padding: 24px;">
       <div class="sn-module-header">
         <h3 class="sn-module-title"><i class="fas fa-history" style="color:#81c784"></i> Hoạt động gần đây</h3>
       </div>
@@ -154,7 +108,6 @@
             'seller_key_created': { cls: 'create', icon: 'fa-plus', label: 'Seller tạo Key' },
             'key_expired_deleted': { cls: 'delete', icon: 'fa-trash', label: 'Tự động xóa' },
             'check': { cls: 'check', icon: 'fa-check', label: 'Check Key' },
-            'auto_key_created': { cls: 'create', icon: 'fa-robot', label: 'API tạo Key' },
           };
         %>
         <% recentLogs.slice(0, 5).forEach(log => {
@@ -176,7 +129,6 @@
 </div>
 
 <%- include('../partials/scripts') %>
-
 <script>
   (function() {
     const now = new Date();
@@ -187,5 +139,15 @@
     else if (hour >= 18 && hour < 22) { greet = 'Chào buổi tối'; emoji = '🌆'; }
     else { greet = 'Khuya rồi, nghỉ ngơi nhé'; emoji = '🌙'; }
     const g = document.getElementById('snGreet'); if (g) g.textContent = greet + ' ' + emoji;
+    const t = document.getElementById('snToday'); if (t) t.textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
   })();
+  document.querySelectorAll('.sn-animate-num').forEach(el => {
+    const target = parseInt(el.dataset.count) || 0; const dur = 900; const start = performance.now();
+    function tick(t) {
+      const p = Math.min(1, (t - start) / dur); const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased).toLocaleString('vi-VN');
+      if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString('vi-VN');
+    }
+    requestAnimationFrame(tick);
+  });
 </script>
