@@ -123,7 +123,7 @@ router.get('/keys', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
     const page = parseInt(req.query.page) || 1, limit = 15, offset = (page - 1) * limit;
-    const search = req.query.search || '', tier = req.query.tier || '', status = req.query.status || '';
+    const search = req.query.search || '', tier = req.query.tier || '', status = req.query.status || '', sort = req.query.sort || 'newest';
     let where = {};
     if (!isSuper && req.admin.id) where.admin_id = req.admin.id;
     if (search) where[Op.or] = [{ key: { [Op.iLike]: `%${search}%` } }, { hwid: { [Op.iLike]: `%${search}%` } }];
@@ -136,7 +136,7 @@ router.get('/keys', async (req, res) => {
       where, order: [['createdAt', 'DESC']], include: [{ model: KeyDevice, as: 'devices', required: false }], limit, offset
     });
     const activeKeys = await Key.count({ where: { ...(isSuper ? {} : { admin_id: req.admin.id }), is_active: true } });
-    res.render('admin/keys', { user: req.admin, isSuper, keys, currentPage: page, totalPages: Math.ceil(count / limit), search, tier, status, activeKeys });
+    res.render('admin/keys', { user: req.admin, isSuper, keys, currentPage: page, totalPages: Math.ceil(count / limit), search, tier, status, sort, activeKeys });
   } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
 });
 

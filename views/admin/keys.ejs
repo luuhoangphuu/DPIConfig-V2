@@ -19,7 +19,29 @@
     </div>
 
     <!-- ===== FILTER BAR ===== -->
-    <div class="sn-filter-bar anim d2">
+    
+<!-- PRO FILTER BAR & TABS -->
+<div class="sn-pro-controls anim d2" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+  
+  <!-- Tabs Phân loại -->
+  <div class="sn-segmented-control">
+    <a href="?tier=" class="sn-seg-btn <%= !tier ? 'active' : '' %>">Tất cả</a>
+    <a href="?tier=VIP" class="sn-seg-btn <%= tier === 'VIP' ? 'active' : '' %>">⭐ VIP</a>
+    <a href="?tier=Normal" class="sn-seg-btn <%= tier === 'Normal' ? 'active' : '' %>">Thường</a>
+  </div>
+
+  <!-- Dropdown Sắp xếp -->
+  <div class="sn-sort-dropdown">
+    <label style="color:#b8c5d9; font-size:0.85rem; margin-right:8px;">Sắp xếp:</label>
+    <select onchange="location = this.value;" class="sn-minimal-select">
+      <option value="?sort=newest" <%= !sort || sort === 'newest' ? 'selected' : '' %>>Mới nhất</option>
+      <option value="?sort=oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Cũ nhất</option>
+      <option value="?sort=expiring" <%= sort === 'expiring' ? 'selected' : '' %>>Sắp hết hạn</option>
+    </select>
+  </div>
+</div>
+
+<div class="sn-filter-bar anim d2">
       <form method="GET" class="sn-filter-form">
         <div class="sn-search-wrap">
           <i class="fas fa-search"></i>

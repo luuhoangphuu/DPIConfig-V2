@@ -2529,3 +2529,75 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+
+<style>
+/* ==========================================
+   LIQUID GLASS UI (Apple Style)
+   ========================================== */
+:root {
+  --glass-bg: rgba(15, 30, 55, 0.45);
+  --glass-bg-hover: rgba(25, 45, 75, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-blur: blur(28px) saturate(180%);
+  --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* Áp dụng cho Sidebar & Topbar */
+.vg-sidebar {
+  background: rgba(5, 13, 31, 0.65) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border-right: 1px solid var(--glass-border) !important;
+  box-shadow: 4px 0 30px rgba(0,0,0,0.5) !important;
+}
+.sn-topbar {
+  background: rgba(10, 20, 40, 0.55) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+/* Áp dụng cho TẤT CẢ Card, Modal, Table */
+.vg-card, .sn-stat, .sn-hero, .vg-modal, .vg-table-wrap {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  border-radius: 20px !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Hiệu ứng Hover cho Card (Nổi lên) */
+.vg-card:hover, .sn-stat:hover {
+  background: var(--glass-bg-hover) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.15) !important;
+  border-color: rgba(255, 215, 0, 0.3) !important;
+}
+
+/* Nút bấm kính lỏng */
+.vg-btn, .sn-quick-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s ease;
+}
+.vg-btn:hover, .sn-quick-btn:hover {
+  background: rgba(255, 215, 0, 0.15) !important;
+  border-color: rgba(255, 215, 0, 0.5) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;
+}
+
+/* Input kính lỏng */
+.form-control, .form-select, .sn-search-input {
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+.form-control:focus, .form-select:focus {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2) !important;
+}
+</style>
