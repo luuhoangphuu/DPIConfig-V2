@@ -9,7 +9,7 @@ module.exports = async function sellerAuth(req, res, next) {
     const dbSeller = await Seller.findByPk(decoded.id);
     
     // Nếu Seller bị xóa khỏi DB hoặc bị đổi session token -> Đá văng
-    if (!dbSeller || (dbSeller.session_token && dbSeller.session_token !== decoded.session_token)) {
+    if (!dbSeller || !dbSeller.is_active || (dbSeller.session_token && dbSeller.session_token !== decoded.session_token)) {
       res.clearCookie('seller_token');
       return res.redirect('/seller/login');
     }

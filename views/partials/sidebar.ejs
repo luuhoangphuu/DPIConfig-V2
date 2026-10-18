@@ -1,5 +1,7 @@
 <%
   const isSuper = user && (user.role === 'super' || user.is_super === true);
+   const isSeller = user && (user.type === 'seller' || !user.role);
+   const basePath = isSeller ? '/seller' : '/yncuti';
   const currentPath = typeof currentPage !== 'undefined' ? currentPage : '';
   const initial = user && user.email ? user.email.charAt(0).toUpperCase() : '?';
   const activeCount = (typeof activeKeys !== 'undefined') ? activeKeys : null;
@@ -24,12 +26,12 @@
   <ul class="vg-nav">
     <li class="sn-section-label">Chính</li>
     <li>
-      <a href="/yncuti/dashboard" class="nav-link <%= currentPath == 'dashboard' ? 'active' : '' %>">
+      <a href="${basePath}/dashboard" class="nav-link <%= currentPath == 'dashboard' ? 'active' : '' %>">
         <i class="fas fa-chart-pie"></i> <span>Bảng điều khiển</span>
       </a>
     </li>
     <li>
-      <a href="/yncuti/keys" class="nav-link <%= currentPath == 'keys' ? 'active' : '' %>">
+      <a href="${basePath}/keys" class="nav-link <%= currentPath == 'keys' ? 'active' : '' %>">
         <i class="fas fa-key"></i> <span>Quản lý Key</span>
         <% if (activeCount !== null && activeCount > 0) { %>
           <span class="sn-badge"><%= activeCount %></span>
@@ -47,22 +49,22 @@
         </div>
         <ul class="sn-dropdown-menu">
           <li>
-            <a href="/yncuti/admins" class="nav-link <%= currentPath == 'admins' ? 'active' : '' %>">
+            <a href="${basePath}/admins" class="nav-link <%= currentPath == 'admins' ? 'active' : '' %>">
               <i class="fas fa-user-shield"></i> Quản trị viên
             </a>
           </li>
           <li>
-            <a href="/yncuti/sellers" class="nav-link <%= currentPath == 'sellers' ? 'active' : '' %>">
+            <a href="${basePath}/sellers" class="nav-link <%= currentPath == 'sellers' ? 'active' : '' %>">
               <i class="fas fa-store"></i> Người bán
             </a>
           </li>
           <li>
-            <a href="/yncuti/versions" class="nav-link <%= currentPath == 'versions' ? 'active' : '' %>">
+            <a href="${basePath}/versions" class="nav-link <%= currentPath == 'versions' ? 'active' : '' %>">
               <i class="fas fa-cloud-download-alt"></i> Phiên bản App
             </a>
           </li>
           <li>
-            <a href="/yncuti/announcements" class="nav-link <%= currentPath == 'announcements' ? 'active' : '' %>">
+            <a href="${basePath}/announcements" class="nav-link <%= currentPath == 'announcements' ? 'active' : '' %>">
               <i class="fas fa-bullhorn"></i> Thông báo
             </a>
           </li>
@@ -72,7 +74,7 @@
 
     <li class="sn-section-label">Tài khoản</li>
     <li>
-      <a href="/yncuti/profile" class="nav-link <%= currentPath == 'profile' ? 'active' : '' %>">
+      <a href="${basePath}/profile" class="nav-link <%= currentPath == 'profile' ? 'active' : '' %>">
         <i class="fas fa-user-cog"></i> <span>Tài khoản</span>
       </a>
     </li>
@@ -89,7 +91,7 @@
         </div>
       </div>
     </div>
-    <a href="/yncuti/logout" class="vg-btn-logout">
+    <a href="${basePath}/logout" class="vg-btn-logout">
       <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
     </a>
     <div class="vg-copyright">© 2025 HoangPhu · Duy</div>

@@ -366,7 +366,11 @@ router.post('/sellers/update/:id', requireSuperAdmin, async (req, res) => {
 router.post('/sellers/toggle/:id', requireSuperAdmin, async (req, res) => {
   try {
     const s = await Seller.findByPk(req.params.id);
-    if (s) { s.is_active = !s.is_active; await s.save(); }
+    if (s) {
+      s.is_active = !s.is_active;
+      if (!s.is_active) s.session_token = null; // 🔥 Xóa token nếu bị tắt -> Văng ngay lập tức
+      await s.save();
+    }
     res.redirect('/yncuti/sellers?success=updated');
   } catch (err) { res.redirect('/yncuti/sellers?error=1'); }
 });

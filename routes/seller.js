@@ -29,7 +29,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     seller.last_login_ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
     await seller.save();
     const token = jwt.sign(
-      { id: seller.id, email: seller.email, name: seller.name, session_token: seller.session_token },
+      { id: seller.id, email: seller.email, name: seller.name, session_token: seller.session_token, type: 'seller' },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
