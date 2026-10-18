@@ -1,0 +1,78 @@
+<%- include('../partials/header', { title: 'Tài khoản', pageName: 'Tài khoản', user: seller }) %>
+<div class="d-flex">
+  <%- include('../partials/sidebar', { user: seller, currentPage: 'profile', activeKeys: 0 }) %>
+  <div class="vg-main flex-grow-1">
+
+    <div class="sn-hero anim d1" style="margin-bottom: 24px;">
+      <div>
+        <h1 class="sn-hero-greet">👤 Tài khoản của bạn</h1>
+        <p class="sn-hero-sub">Quản lý thông tin và bảo mật tài khoản Người bán</p>
+      </div>
+    </div>
+
+    <% if (success) { %>
+      <div class="vg-card anim d2" style="padding: 16px; margin-bottom: 20px; border-color: #81c784; background: rgba(129,199,132,0.1);">
+        <i class="fas fa-check-circle" style="color: #81c784;"></i> 
+        <strong style="color: #81c784;">Đã cập nhật thành công!</strong>
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="vg-card anim d2" style="padding: 16px; margin-bottom: 20px; border-color: #ef5350; background: rgba(239,83,80,0.1);">
+        <i class="fas fa-exclamation-circle" style="color: #ef5350;"></i> 
+        <strong style="color: #ef5350;">
+          <% 
+            const errMap = { 'missing': 'Thiếu thông tin', 'password_mismatch': 'Mật khẩu xác nhận không khớp', 'too_short': 'Mật khẩu phải từ 6 ký tự', 'wrong_password': 'Mật khẩu cũ không đúng' };
+            %><%= errMap[error] || error %>
+        </strong>
+      </div>
+    <% } %>
+
+    <!-- THÔNG TIN CƠ BẢN -->
+    <div class="vg-card anim d3" style="padding: 24px; margin-bottom: 24px;">
+      <h3 class="sn-module-title" style="margin-bottom: 20px;"><i class="fas fa-id-card"></i> Thông tin Người bán</h3>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Email</label>
+          <input type="text" class="form-control" value="<%= seller.email %>" readonly style="background: rgba(0,0,0,0.3);">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Tên hiển thị</label>
+          <input type="text" class="form-control" value="<%= seller.name %>" readonly style="background: rgba(0,0,0,0.3);">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Số điện thoại</label>
+          <input type="text" class="form-control" value="<%= seller.phone || 'Chưa cập nhật' %>" readonly style="background: rgba(0,0,0,0.3);">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Quota đã dùng</label>
+          <input type="text" class="form-control" value="<%= seller.quota_used %> / <%= seller.quota %>" readonly style="background: rgba(0,0,0,0.3);">
+        </div>
+      </div>
+    </div>
+
+    <!-- ĐỔI MẬT KHẨU -->
+    <div class="vg-card anim d4" style="padding: 24px;">
+      <h3 class="sn-module-title" style="margin-bottom: 20px;"><i class="fas fa-lock"></i> Đổi mật khẩu</h3>
+      <form method="POST" action="/seller/profile/change-password">
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <label class="form-label">Mật khẩu hiện tại</label>
+            <input type="password" name="old_password" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Mật khẩu mới</label>
+            <input type="password" name="new_password" class="form-control" required minlength="6">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Xác nhận mật khẩu mới</label>
+            <input type="password" name="confirm_password" class="form-control" required minlength="6">
+          </div>
+        </div>
+        <button type="submit" class="vg-btn"><i class="fas fa-save"></i> Lưu thay đổi</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+<%- include('../partials/scripts') %>

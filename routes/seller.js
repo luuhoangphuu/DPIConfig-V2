@@ -154,4 +154,35 @@ router.get('/keys/devices/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
+
+// ==================== PROFILE SELLER ====================
+router.get('/profile', async (req, res) => {
+  try {
+    const seller = await Seller.findByPk(req.seller.id);
+    if (!seller) return res.redirect('/seller/login');
+    res.render('seller/profile', {
+      user: seller, seller, currentPage: 'profile',
+      success: req.query.success || null, error: req.query.error || null
+    });
+  } catch (err) { res.status(500).send('Lỗi: ' + err.message); }
+});
+
+router.post('/profile/change-password', async (req, res) => {
+  try {
+    const { old_password, new_password, confirm_password } = req.body;
+    if (!old_password || !new_password || !confirm_password) return res.redirect('/seller/profile?error=missing');
+    if (new_password !== confirm_password) return res.redirect('/seller/profile?error=password_mismatch');
+    if (new_password.length < 6) return res.redirect('/seller/profile?error=too_short');
+    
+    const seller = await Seller.findByPk(req.seller.id);
+    if (!seller) return res.redirect('/seller/login');
+    if (!bcrypt.compareSync(old_password, seller.password_hash)) return res.redirect('/seller/profile?error=wrong_password');
+    
+    seller.password_hash = bcrypt.hashSync(new_password, 10);
+    await seller.save();
+    
+    res.redirect('/seller/profile?success=updated');
+  } catch (err) { res.redirect('/seller/profile?error=system'); }
+});
+
 module.exports = router;
