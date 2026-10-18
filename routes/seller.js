@@ -117,7 +117,7 @@ router.post('/keys/create', async (req, res) => {
     }
 
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `${prefix || 'ZwicApex'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+    const key = `ZwicApex-${randomPart.match(/.{1,4}/g).join('-')}`; // Ép cứng tiền tố ZwicApex
 
     await Key.create({
       key, tier: chosenTier, expires_at, max_devices: seller.max_devices_default, created_by: seller.email, seller_id: seller.id

@@ -51,7 +51,7 @@
                 </form>
               </td>
               <td style="text-align:right;">
-                <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị">
+                <button class="vg-btn-icon view-devices-btn" data-key-id="<%= k.id %>" title="Xem thiết bị" data-tooltip="Xem thiết bị">
                   <i class="fas fa-mobile-alt"></i>
                 </button>
               </td>
@@ -86,7 +86,13 @@
       </div>
       <form method="POST" action="/seller/keys/create">
         <div class="modal-body">
-          <div class="mb-3"><label class="form-label">Tiền tố</label><input name="prefix" class="form-control" value="HoangPhu" required></div>
+          
+    <div class="mb-3">
+      <label class="form-label">Tiền tố Key</label>
+      <input type="text" class="form-control" value="ZwicApex" readonly style="background:rgba(0,0,0,0.3); color:#b8c5d9; cursor:not-allowed;">
+      <small style="color:#ffd700; font-size:0.75rem; margin-top:4px; display:block;">* Hệ thống tự động gán tiền tố</small>
+    </div>
+  
           <div class="mb-3"><label class="form-label">Hạng</label>
             <select name="tier" class="form-select"><option value="VIP">★ VIP</option><option value="Normal" selected>Thường</option></select>
           </div>
