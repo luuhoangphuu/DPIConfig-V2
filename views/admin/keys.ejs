@@ -123,19 +123,40 @@
     </div>
 
     <!-- PHÂN TRANG -->
+    
+    <!-- PHÂN TRANG CHUẨN -->
     <div class="sn-pagination-bar anim d4">
       <div class="sn-page-info">
-        Hiển thị <b><%= (currentPage - 1) * 15 + 1 %> - <%= Math.min(currentPage * 15, totalPages * 15) %></b> trong tổng số <b><%= totalPages * 15 %></b> key
+        Hiển thị <b><%= (currentPage - 1) * 15 + 1 %></b> - <b><%= Math.min(currentPage * 15, totalPages * 15) %></b> trong tổng số <b><%= totalPages * 15 %></b> key
       </div>
+      
       <div class="sn-page-controls">
-        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&tier=<%= tier || '' %>" class="sn-page-btn <%= currentPage === 1 ? 'disabled' : '' %>">
+        <!-- Nút Trước -->
+        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&tier=<%= tier || '' %>&status=<%= status || '' %>&sort=<%= sort || '' %>" 
+           class="sn-page-btn <%= currentPage === 1 ? 'disabled' : '' %>">
           <i class="fas fa-chevron-left"></i> Trước
         </a>
-        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&tier=<%= tier || '' %>" class="sn-page-btn <%= currentPage === totalPages || totalPages === 0 ? 'disabled' : '' %>">
+        
+        <!-- Các nút số trang -->
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+            <a href="?page=<%= i %>&search=<%= search %>&tier=<%= tier || '' %>&status=<%= status || '' %>&sort=<%= sort || '' %>" 
+               class="sn-page-btn <%= i === currentPage ? 'active' : '' %>">
+              <%= i %>
+            </a>
+          <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+            <span class="sn-page-dots">...</span>
+          <% } %>
+        <% } %>
+
+        <!-- Nút Sau -->
+        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&tier=<%= tier || '' %>&status=<%= status || '' %>&sort=<%= sort || '' %>" 
+           class="sn-page-btn <%= currentPage === totalPages || totalPages === 0 ? 'disabled' : '' %>">
           Sau <i class="fas fa-chevron-right"></i>
         </a>
       </div>
     </div>
+
 
   </div>
 </div>

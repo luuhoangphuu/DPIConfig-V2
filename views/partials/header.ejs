@@ -3051,3 +3051,70 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .sn-minimal-select option { background: #0a1e3f; color: #fff; }
 </style>
+
+<style>
+/* ===== FIX PAGINATION XỊN XÒ ===== */
+.sn-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding: 16px 24px;
+  background: rgba(10, 30, 63, 0.6);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.sn-page-info {
+  color: #b8c5d9;
+  font-size: 0.9rem;
+}
+.sn-page-info b {
+  color: #ffd700;
+  font-family: 'Caveat', cursive;
+  font-size: 1.3rem;
+  margin: 0 4px;
+}
+.sn-page-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.sn-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  color: #b8c5d9;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  min-width: 40px;
+}
+.sn-page-btn:hover:not(.disabled) {
+  background: rgba(255,215,0,0.15);
+  color: #ffd700;
+  border-color: rgba(255,215,0,0.3);
+}
+.sn-page-btn.active {
+  background: linear-gradient(135deg, #ffd700, #f59e0b);
+  color: #0a1e3f;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 0 15px rgba(255,215,0,0.4);
+}
+.sn-page-btn.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+.sn-page-dots {
+  color: #6b7a94;
+  padding: 0 8px;
+}
+</style>
