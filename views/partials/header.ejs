@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title || 'DPIConfig HoangPhu' %></title>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     :root {
@@ -1055,6 +1056,24 @@ body, html { overflow-x: hidden !important; }
     @media (max-width: 768px) { .vg-main { width: 100vw !important; } }
   </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* FIX ICONS */
+.fas, .far, .fab {
+  display: inline-block !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: auto !important;
+  line-height: 1 !important;
+}
+.vg-btn-icon i {
+  font-size: 1.1rem !important;
+  color: #4fc3f7;
+}
+.vg-btn-icon.danger i { color: #ef5350 !important; }
+.vg-btn-icon:hover i { color: #ffd700 !important; }
+</style>
+
 </head>
 <body>
   <!-- SN-TOPBAR -->
