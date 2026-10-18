@@ -1,4 +1,4 @@
-module.exports = function publicApiAuth(req, res, next) {
+module.exports = function yncutieAuth(req, res, next) {
   const clientKey = req.headers['x-api-key'];
   const serverKey = process.env.PUBLIC_API_KEY || 'ync_8f9a2b4c6d1e3f5a7b9c0d2e4f6a8b1c';
 

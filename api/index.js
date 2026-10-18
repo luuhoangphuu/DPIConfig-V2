@@ -42,6 +42,41 @@ app.use((req, res, next) => {
 });
 // ======================================================
 
+
+// ==================== API BẢO MẬT CAO (TÁCH RIÊNG KHỎI /api) ====================
+const ycutieAuth = require('../middleware/yncutieAuth');
+const genKeyLimiter = require('../middleware/genKeyLimiter');
+const crypto = require('crypto');
+const { Key, Log } = require('../models');
+
+app.post('/yncutie', genKeyLimiter, ycutieAuth, async (req, res) => {
+  try {
+    const { tier, prefix } = req.body;
+    const chosenTier = (tier && String(tier).toLowerCase() === 'vip') ? 'VIP' : 'Normal';
+    const FIXED_HOURS = chosenTier === 'VIP' ? 2 : 8;
+    
+    const expires_at = new Date();
+    expires_at.setHours(expires_at.getHours() + FIXED_HOURS);
+
+    const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
+    const key = `${prefix || 'ZwicApex'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+
+    await Key.create({ key, tier: chosenTier, expires_at, max_devices: 1, created_by: 'api-secure' });
+
+    await Log.create({
+      action: 'api_key_created',
+      details: `API bảo mật tạo key ${key} | tier=${chosenTier} | IP=${req.ip}`,
+      ip_address: req.ip
+    });
+
+    return res.json({ success: true, key, tier: chosenTier, expires_at: expires_at.toISOString() });
+  } catch (err) {
+    console.error('[YNCUTIE API] Error:', err);
+    return res.status(500).json({ success: false, error: 'Lỗi máy chủ.' });
+  }
+});
+// ==============================================================================
+
 app.use('/api', apiRoutes);
 // Inject env vars cho tất cả EJS views
 app.use((req, res, next) => {
