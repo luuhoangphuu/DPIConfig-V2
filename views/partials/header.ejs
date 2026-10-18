@@ -2748,3 +2748,121 @@ document.addEventListener('DOMContentLoaded', function() {
   100% { background-position: -200% 0; }
 }
 </style>
+
+<style>
+/* ===== CONTROL CENTER MODULE CARDS ===== */
+.sn-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.sn-module-card {
+  background: rgba(10, 30, 63, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sn-module-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255, 215, 0, 0.1);
+  background: rgba(15, 35, 70, 0.8);
+}
+
+.sn-module-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 4px;
+  background: linear-gradient(90deg, var(--mc-color, #4fc3f7), transparent);
+  opacity: 0.8;
+}
+
+/* Màu chủ đạo cho từng module */
+.mc-key       { --mc-color: #4fc3f7; } /* Xanh dương */
+.mc-noti      { --mc-color: #ffd700; } /* Vàng */
+.mc-seller    { --mc-color: #81c784; } /* Xanh lá */
+.mc-admin     { --mc-color: #ab47bc; } /* Tím */
+.mc-version   { --mc-color: #ff8a65; } /* Cam */
+.mc-api       { --mc-color: #ce93d8; } /* Hồng */
+
+.sn-mc-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sn-mc-icon {
+  width: 54px; height: 54px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--mc-color);
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.sn-mc-title {
+  font-family: 'Caveat', cursive;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.sn-mc-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: #b8c5d9;
+}
+
+.sn-mc-body {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.sn-mc-stat {
+  font-family: 'Caveat', cursive;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--mc-color);
+  line-height: 1;
+}
+
+.sn-mc-stat span {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: #b8c5d9;
+  font-weight: 500;
+}
+
+.sn-mc-action {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  transition: 0.3s;
+}
+.sn-module-card:hover .sn-mc-action {
+  background: var(--mc-color);
+  color: #0a1e3f;
+  transform: rotate(-45deg);
+}
+</style>
