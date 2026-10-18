@@ -3215,3 +3215,88 @@ document.addEventListener('DOMContentLoaded', function() {
   .sn-stat-value { font-size: 2rem !important; }
 }
 </style>
+
+<style>
+/* ==========================================
+   2026 NEXT-GEN UI: AURORA & 3D TILT
+   ========================================== */
+/* 1. AURORA MESH BACKGROUND (Cực quang) */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.15), transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(79, 195, 247, 0.15), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(171, 71, 188, 0.15), transparent 40%);
+  animation: aurora-move 20s linear infinite;
+  z-index: -3;
+  pointer-events: none;
+  filter: blur(40px);
+}
+@keyframes aurora-move {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* 2. 3D PARALLAX TILT (Nghiêng 3D) */
+.sn-tilt-card {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.1s ease-out, box-shadow 0.3s;
+}
+.sn-tilt-inner {
+  transform: translateZ(30px); /* Đẩy nội dung nổi lên trên */
+  transition: transform 0.1s ease-out;
+}
+/* Hiệu ứng phát sáng viền khi lia chuột */
+.sn-tilt-card:hover {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.5) !important;
+}
+
+/* 3. CYBER NEON GLOW (Hiệu ứng Neon) */
+.vg-btn:hover, .sn-quick-btn:hover {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+.sn-stat-value {
+  text-shadow: 0 0 15px currentColor;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // KÍCH HOẠT 3D TILT
+  const tiltCards = document.querySelectorAll('.sn-stat, .sn-module-card, .sn-chart-card');
+  
+  tiltCards.forEach(card => {
+    card.classList.add('sn-tilt-card');
+    // Bọc nội dung để đẩy nổi lên
+    if(!card.querySelector('.sn-tilt-inner')) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'sn-tilt-inner';
+      while (card.firstChild) wrapper.appendChild(card.firstChild);
+      card.appendChild(wrapper);
+    }
+
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = ((y - centerY) / centerY) * -10; // Độ nghiêng tối đa 10 độ
+      const rotateY = ((x - centerX) / centerX) * 10;
+
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = `rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+  });
+});
+</script>
