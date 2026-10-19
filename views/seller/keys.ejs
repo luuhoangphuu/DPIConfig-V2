@@ -105,14 +105,14 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Hạng</label>
-            <select name="tier" class="form-select">
+            <select name="tier" class="form-select" id="tierSelectSeller" required>
               <option value="VIP">★ VIP</option>
               <option value="Normal" selected>Thường</option>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Thời hạn</label>
-            <select name="duration" class="form-select" id="durationSelect">
+            <select name="duration" class="form-select" id="durationSelectSeller" required>
               <option value="0.333333" selected>8 giờ (Mặc định Thường)</option>
               <option value="0.083333">2 giờ (Mặc định VIP)</option>
             </select>
@@ -136,6 +136,24 @@
   </div>
   <div class="sn-drawer-body" id="devicesDrawerBody"></div>
 </div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tierSeller = document.getElementById('tierSelectSeller');
+    const durSeller = document.getElementById('durationSelectSeller');
+    
+    if (tierSeller && durSeller) {
+      tierSeller.addEventListener('change', function() {
+        if (this.value === 'VIP') {
+          durSeller.value = '0.083333'; // 2 giờ
+        } else {
+          durSeller.value = '0.333333'; // 8 giờ
+        }
+      });
+    }
+  });
+</script>
 
 <%- include('../partials/scripts') %>
 <script>
