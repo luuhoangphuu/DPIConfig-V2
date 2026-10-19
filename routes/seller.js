@@ -104,22 +104,23 @@ router.post('/keys/create', async (req, res) => {
     if (!seller || !seller.is_active) return res.redirect('/seller/login');
     if (seller.quota_used >= seller.quota) return res.redirect('/seller/keys?error=' + encodeURIComponent('Bạn đã hết quota.'));
 
-    const { tier, duration, prefix } = req.body;
+    const { tier } = req.body;
     const chosenTier = seller.can_choose_tier ? (tier === 'VIP' ? 'VIP' : 'Normal') : seller.default_tier;
-    // 🔒 Ép cứng Seller: VIP = 2h, Normal = 8h (Bỏ qua mọi input duration từ form)
+    
+    // 🔒 Ép cứng thời gian: VIP = 2h, Normal = 8h
     const hours = chosenTier === 'VIP' ? 2 : 8;
     const expires_at = new Date(); 
     expires_at.setHours(expires_at.getHours() + hours);
-    }
 
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `ZwicApex-${randomPart.match(/.{1,4}/g).join('-')}`; // Ép cứng tiền tố ZwicApex
+    // 🔒 Ép cứng tiền tố ZwicApex
+    const key = `ZwicApex-${randomPart.match(/.{1,4}/g).join('-')}`;
 
     await Key.create({
       key, tier: chosenTier, expires_at, max_devices: seller.max_devices_default, created_by: seller.email, seller_id: seller.id
     });
     
-    // 🔥 CẬP NHẬT QUOTA
+    // Cập nhật Quota
     seller.quota_used = (seller.quota_used || 0) + 1;
     await seller.save();
     
