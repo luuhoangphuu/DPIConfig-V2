@@ -37,15 +37,17 @@ router.get('/gen-key', genKeyLimiter, async (req, res) => {
 
 router.post('/gen-key', genKeyLimiter, async (req, res) => {
   try {
-    const { secret, tier, prefix, max_devices } = req.body;
+    // 🔒 Bỏ hoàn toàn biến prefix, không cho phép client gửi lên
+    const { secret, tier, max_devices } = req.body;
 
     if (secret !== process.env.AUTO_KEY_SECRET) {
-      console.warn('[GEN-KEY] Secret sai từ IP:', req.ip);
       return res.status(403).json({ success: false, error: 'Secret không hợp lệ.' });
     }
 
+    // 🔒 Ép cứng thời gian 2h / 8h
     const chosenTier = (tier && String(tier).toLowerCase() === 'normal') ? 'Normal' : 'VIP';
     const FIXED_HOURS = chosenTier === 'VIP' ? 2 : 8;
+    
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + FIXED_HOURS);
 
@@ -57,24 +59,21 @@ router.post('/gen-key', genKeyLimiter, async (req, res) => {
     }
 
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
-    const key = `${prefix || 'HoangPhu'}-${randomPart.match(/.{1,4}/g).join('-')}`;
+    // 🔒 ÉP CỨNG TIỀN TỐ ZwicApex
+    const key = `ZwicApex-${randomPart.match(/.{1,4}/g).join('-')}`;
 
     await Key.create({
       key,
       tier: chosenTier,
       expires_at,
       max_devices: maxDev,
-      created_by: 'auto-api'
+      created_by: 'auto-api-post'
     });
-
-    const ua = (req.headers['user-agent'] || 'unknown').substring(0, 200);
-    const referer = (req.headers['referer'] || req.headers['referrer'] || 'direct').substring(0, 200);
-    const realIp = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
 
     await Log.create({
       action: 'auto_key_created',
-      details: `API tạo key ${key} | tier=${chosenTier} | ${FIXED_HOURS}h | IP=${realIp} | UA=${ua} | Ref=${referer}`,
-      ip_address: realIp
+      details: `API (Secret) tạo key ${key} | tier=${chosenTier} | ${FIXED_HOURS}h | IP=${req.ip}`,
+      ip_address: req.ip
     });
 
     return res.json({
