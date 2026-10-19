@@ -191,9 +191,11 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Thời hạn (Ngày)</label>
-            <select name="duration" class="form-select" required>
+            <select name="duration" class="form-select" id="durationSelect" required>
+              <option value="0.333333" selected>8 giờ (Mặc định Thường)</option>
+              <option value="0.083333">2 giờ (Mặc định VIP)</option>
               <option value="0.5">12 giờ</option>
-              <option value="1" selected>1 ngày</option>
+              <option value="1">1 ngày</option>
               <option value="7">7 ngày</option>
               <option value="30">30 ngày</option>
               <option value="365">1 năm</option>

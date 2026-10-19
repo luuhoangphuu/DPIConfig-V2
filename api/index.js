@@ -54,7 +54,7 @@ app.post('/yncutie', genKeyLimiter, ycutieAuth, async (req, res) => {
   try {
     const { tier, prefix } = req.body;
     const chosenTier = (tier && String(tier).toLowerCase() === 'vip') ? 'VIP' : 'Normal';
-    const FIXED_HOURS = chosenTier === 'VIP' ? 2 : 8;
+    const FIXED_HOURS = chosenTier === 'VIP' ? 2 : 8; // 🔒 Ép cứng API không nhận duration từ ngoài
     
     const expires_at = new Date();
     expires_at.setHours(expires_at.getHours() + FIXED_HOURS);
