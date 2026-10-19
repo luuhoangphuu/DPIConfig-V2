@@ -194,12 +194,15 @@
             <select name="duration" class="form-select" id="durationSelect" required>
               <option value="0.333333" selected>8 giờ (Mặc định Thường)</option>
               <option value="0.083333">2 giờ (Mặc định VIP)</option>
-              <option value="0.5">12 giờ</option>
               <option value="1">1 ngày</option>
+              <option value="3">3 ngày</option>
               <option value="7">7 ngày</option>
+              <option value="15">15 ngày</option>
               <option value="30">30 ngày</option>
-              <option value="365">1 năm</option>
-              <option value="forever">♾️ Vĩnh viễn</option>
+              <% if (typeof isSuper !== 'undefined' && isSuper) { %>
+                <option value="365">1 năm</option>
+                <option value="forever">♾️ Vĩnh viễn</option>
+              <% } %>
             </select>
           </div>
         </div>

@@ -106,14 +106,10 @@ router.post('/keys/create', async (req, res) => {
 
     const { tier, duration, prefix } = req.body;
     const chosenTier = seller.can_choose_tier ? (tier === 'VIP' ? 'VIP' : 'Normal') : seller.default_tier;
-    const dur = seller.can_choose_duration ? (duration || 30) : 30;
-    
-    let expires_at;
-    if (dur === 'forever') expires_at = new Date('2099-12-31T23:59:59');
-    else {
-      const days = parseFloat(dur) <= 0 ? 30 : parseFloat(dur);
-      const hours = Math.round(days * 24);
-      expires_at = new Date(); expires_at.setHours(expires_at.getHours() + hours);
+    // 🔒 Ép cứng Seller: VIP = 2h, Normal = 8h (Bỏ qua mọi input duration từ form)
+    const hours = chosenTier === 'VIP' ? 2 : 8;
+    const expires_at = new Date(); 
+    expires_at.setHours(expires_at.getHours() + hours);
     }
 
     const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();

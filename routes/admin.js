@@ -184,7 +184,12 @@ router.get('/keys', async (req, res) => {
 router.post('/keys/create', async (req, res) => {
   try {
     const isSuper = req.admin.role === 'super' || req.admin.is_super === true;
-    const { tier, duration, prefix, max_devices } = req.body;
+    let { tier, duration, prefix, max_devices } = req.body;
+    // 🔒 CHẶN ADMIN THƯỜNG: Không được vượt quá 30 ngày
+    if (!isSuper) {
+      if (duration === 'forever') duration = '30';
+      if (parseFloat(duration) > 30) duration = '30';
+    }
     
     let adminRecord = null;
     if (!isSuper && req.admin.id) {
